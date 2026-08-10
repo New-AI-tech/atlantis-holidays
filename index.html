@@ -1,298 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlantis Holidays & Wellness - Proposal Generator</title>
-
-    <!-- Client-Side Document Processing Libraries (Loaded via CDN in explicit order) -->
-    <!-- 1. PizZip must load FIRST -->
-    <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.min.js"></script>
-    <!-- 2. Docxtemplater must load SECOND -->
-    <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js"></script>
-    <!-- 3. FileSaver loads THIRD -->
+    <title>Atlantis Holidays — Proposal Generator</title>
+    <!-- Libraries for reading, templating, and saving Word documents -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 2rem;
-            background: #f8f9fa;
-            color: #333;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        h1,
-        h2 {
-            color: #0a2540;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        input[type="text"],
-        input[type="number"] {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .item-row {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            align-items: center;
-        }
-
-        .item-row input:nth-child(1) {
-            flex: 3;
-        }
-
-        .item-row input:nth-child(2) {
-            flex: 1;
-        }
-
-        .item-row input:nth-child(3) {
-            flex: 1;
-        }
-
-        .btn {
-            padding: 0.6rem 1.2rem;
-            background: #0066cc;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s ease-in-out;
-        }
-
-        .btn:hover {
-            background: #004b99;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            font-size: 0.85rem;
-            padding: 0.4rem 0.8rem;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.85rem;
-        }
-
-        .btn-danger:hover {
-            background: #bd2130;
-        }
-
-        .section-box {
-            border: 1px solid #e9ecef;
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1.5rem;
-            background: #fdfdfd;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1, h3 { color: #004085; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .item-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .item-row input { flex: 1; }
+        .btn { padding: 10px 20px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-add { background-color: #28a745; margin-bottom: 15px; }
+        .btn:hover { opacity: 0.9; }
+        .section { margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
     </style>
 </head>
-
 <body>
 
-    <div class="container">
-        <h1>Atlantis Holidays & Wellness</h1>
-        <p>Generate professional proposals directly in your browser.</p>
-        <hr style="margin-bottom: 1.5rem; border: 0; border-top: 1px solid #eee;">
-
-        <form id="proposalForm">
-            <!-- General Information -->
-            <h2>1. General Information</h2>
+<div class="container">
+    <h1>Atlantis Holidays Proposal Generator</h1>
+    <form id="proposalForm">
+        
+        <!-- General Info -->
+        <div class="section">
+            <h3>Event Information</h3>
             <div class="form-group">
-                <label for="event_name">Event / Client Name</label>
-                <input type="text" id="event_name" placeholder="e.g., Executive VIP Wellness Retreat" required>
-            </div>
-            <div class="form-group">
-                <label for="event_dates">Dates</label>
-                <input type="text" id="event_dates" placeholder="e.g., November 10 - November 15, 2026" required>
+                <label for="event_name">Event Name:</label>
+                <input type="text" id="event_name" value="Atlantis EADV Congress 2026" required>
             </div>
             <div class="form-group">
-                <label for="venue">Venue / Location</label>
-                <input type="text" id="venue" placeholder="e.g., Atlantis The Royal, Dubai" required>
+                <label for="event_dates">Event Dates:</label>
+                <input type="text" id="event_dates" value="October 12 – October 16, 2026" required>
             </div>
+        </div>
 
-            <!-- Accommodation & Hotel Services -->
-            <h2>2. Accommodation & Hotel Services</h2>
-            <div class="section-box">
-                <div id="hotelContainer"></div>
-                <button type="button" class="btn btn-secondary" onclick="addRow('hotelContainer', 'hotel')">+ Add Room /
-                    Service</button>
+        <!-- Hotel Section -->
+        <div class="section">
+            <h3>Hotel Options</h3>
+            <div id="hotel-container">
+                <div class="item-row hotel-row">
+                    <input type="text" placeholder="Hotel Name" class="name" value="Atlantis The Royal - Deluxe Room" required>
+                    <input type="number" placeholder="Qty" class="quantity" value="1" required>
+                    <input type="text" placeholder="Unit (e.g. Nights)" class="unit" value="Nights" required>
+                    <input type="number" placeholder="Rate (AED)" class="rate" value="1800" required>
+                </div>
             </div>
+            <button type="button" class="btn btn-add" onclick="addRow('hotel-container', 'hotel-row')">+ Add Hotel</button>
+        </div>
 
-            <!-- Transportation -->
-            <h2>3. Transportation</h2>
-            <div class="section-box">
-                <div id="transContainer"></div>
-                <button type="button" class="btn btn-secondary" onclick="addRow('transContainer', 'trans')">+ Add
-                    Transport Service</button>
+        <!-- Transport Section -->
+        <div class="section">
+            <h3>Transportation</h3>
+            <div id="trans-container">
+                <div class="item-row trans-row">
+                    <input type="text" placeholder="Service" class="name" value="Airport Arrival Transfer (Luxury Sedan)" required>
+                    <input type="number" placeholder="Qty" class="quantity" value="1" required>
+                    <input type="text" placeholder="Unit" class="unit" value="Vehicle" required>
+                    <input type="number" placeholder="Rate (AED)" class="rate" value="350" required>
+                </div>
             </div>
+            <button type="button" class="btn btn-add" onclick="addRow('trans-container', 'trans-row')">+ Add Transport</button>
+        </div>
 
-            <!-- Submit Button -->
-            <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem; margin-top: 1rem;">Generate &
-                Download .DOCX</button>
-        </form>
-    </div>
+        <!-- Tours Section -->
+        <div class="section">
+            <h3>Tours & Activities</h3>
+            <div id="tour-container">
+                <div class="item-row tour-row">
+                    <input type="text" placeholder="Activity Name" class="name" value="Private Desert Safari with VIP Dinner" required>
+                    <input type="number" placeholder="Qty" class="quantity" value="2" required>
+                    <input type="text" placeholder="Unit" class="unit" value="Guests" required>
+                    <input type="number" placeholder="Rate (AED)" class="rate" value="450" required>
+                </div>
+            </div>
+            <button type="button" class="btn btn-add" onclick="addRow('tour-container', 'tour-row')">+ Add Activity</button>
+        </div>
 
-    <script>
-        /**
-         * Appends a new item row into a specified container element.
-         * @param {string} containerId - The ID of the target container DIV.
-         * @param {string} prefix - Class name prefix ('hotel' or 'trans').
-         */
-        function addRow(containerId, prefix) {
-            const container = document.getElementById(containerId);
-            const div = document.createElement('div');
-            div.className = 'item-row';
-            div.innerHTML = `
-            <input type="text" placeholder="Description / Item Name" class="${prefix}-name" required>
-            <input type="number" placeholder="Qty" class="${prefix}-qty" value="1" min="1" step="any" required>
-            <input type="number" placeholder="Rate (AED/USD)" class="${prefix}-rate" value="0" min="0" step="any" required>
-            <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()" title="Delete Row">✕</button>
+        <button type="submit" class="btn" style="width: 100%; font-size: 18px;">Generate Word Proposal (.docx)</button>
+    </form>
+</div>
+
+<script>
+    // Dynamically add a new row to input sections
+    function addRow(containerId, rowClass) {
+        const container = document.getElementById(containerId);
+        const newRow = document.createElement('div');
+        newRow.className = `item-row ${rowClass}`;
+        newRow.innerHTML = `
+            <input type="text" placeholder="Service / Item Name" class="name" required>
+            <input type="number" placeholder="Qty" class="quantity" value="1" required>
+            <input type="text" placeholder="Unit" class="unit" value="Item" required>
+            <input type="number" placeholder="Rate (AED)" class="rate" value="0" required>
         `;
-            container.appendChild(div);
-        }
+        container.appendChild(newRow);
+    }
 
-        /**
-         * Reads input fields matching a section prefix and calculates line/section totals.
-         * @param {string} prefix - Class prefix ('hotel' or 'trans').
-         * @returns {Object} Object containing structured items array and numeric section total.
-         */
-        function parseSection(prefix) {
-            const names = document.querySelectorAll(`.${prefix}-name`);
-            const quantities = document.querySelectorAll(`.${prefix}-qty`);
-            const rates = document.querySelectorAll(`.${prefix}-rate`);
+    // Extract item details and calculate line totals
+    function parseSection(rowClass) {
+        const rows = document.querySelectorAll(`.${rowClass}`);
+        let sectionTotal = 0;
+        const items = [];
 
-            let items = [];
-            let sectionTotal = 0;
+        rows.forEach(row => {
+            const name = row.querySelector('.name').value;
+            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+            const unit = row.querySelector('.unit').value;
+            const rate = parseFloat(row.querySelector('.rate').value) || 0;
+            const total = quantity * rate;
 
-            for (let i = 0; i < names.length; i++) {
-                const name = names[i].value.trim();
-                const qty = parseFloat(quantities[i].value) || 0;
-                const rate = parseFloat(rates[i].value) || 0;
-                const total = qty * rate;
+            sectionTotal += total;
 
-                if (name !== "") {
-                    sectionTotal += total;
-                    items.push({
-                        name: name,
-                        quantity: qty.toLocaleString('en-US'),
-                        rate: rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                        total: total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                    });
-                }
-            }
-            return { items, sectionTotal };
-        }
-
-        // Initialize default rows on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            addRow('hotelContainer', 'hotel');
-            addRow('transContainer', 'trans');
+            items.push({
+                name: name,
+                quantity: quantity,
+                unit: unit,
+                rate: rate.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                total: total.toLocaleString('en-US', { minimumFractionDigits: 2 })
+            });
         });
 
-        // Form submission handling
-        document.getElementById('proposalForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+        return { items, sectionTotal };
+    }
 
-            // Verify library loading
-            if (typeof window.PizZip === 'undefined' || typeof window.docxtemplater === 'undefined') {
-                alert("Error: Processing libraries (PizZip/Docxtemplater) are missing. Check your script tags.");
-                return;
+    // Handle form submission and document generation
+    document.getElementById('proposalForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const hotelData = parseSection('hotel-row');
+        const transData = parseSection('trans-row');
+        const tourData = parseSection('tour-row');
+
+        const grandTotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
+
+        const dataContext = {
+            event_name: document.getElementById('event_name').value,
+            event_dates: document.getElementById('event_dates').value,
+            hotel_services: hotelData.items,
+            transportation: transData.items,
+            tours: tourData.items,
+            grand_total: grandTotalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        };
+
+        try {
+            // Load template.docx bypassing browser cache
+            const cacheBuster = new Date().getTime();
+            const response = await fetch(`template.docx?t=${cacheBuster}`, { cache: "no-store" });
+
+            if (!response.ok) {
+                throw new Error("Could not load template.docx from server.");
             }
 
-            const hotelData = parseSection('hotel');
-            const transData = parseSection('trans');
-            const grandTotalValue = hotelData.sectionTotal + transData.sectionTotal;
+            const templateBuffer = await response.arrayBuffer();
+            const zip = new window.PizZip(templateBuffer);
+            const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-            const dataContext = {
-                company_name: "Atlantis Holidays & Wellness",
-                event_name: document.getElementById('event_name').value,
-                event_dates: document.getElementById('event_dates').value,
-                venue: document.getElementById('venue').value,
-                hotel_services: hotelData.items,
-                transportation: transData.items,
-                grand_total: grandTotalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                footer_text: "Atlantis Holidays & Wellness — Curated Luxury Experiences"
-            };
+            // Inject data into placeholders
+            doc.render(dataContext);
 
-            try {
-                // CACHE-BUSTING FIX: Add a unique timestamp parameter (?t=...) to bypass browser cache
-                const cacheBuster = new Date().getTime();
-                const response = await fetch(`template.docx?t=${cacheBuster}`, {
-                    cache: "no-store" // Requests fresh copy directly from server
-                });
+            // Generate output blob
+            const outputBlob = doc.getZip().generate({
+                type: "blob",
+                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            });
 
-                if (!response.ok) {
-                    throw new Error("Could not find 'template.docx' in project directory.");
-                }
-                const templateBuffer = await response.arrayBuffer();
+            // Save file
+            saveAs(outputBlob, `Proposal_${dataContext.event_name.replace(/\s+/g, '_')}.docx`);
 
-                // Process Word document
-                const zip = new window.PizZip(templateBuffer);
-                const doc = new window.docxtemplater(zip, {
-                    paragraphLoop: true,
-                    linebreaks: true,
-                });
-
-                // Render template with user data
-                doc.render(dataContext);
-
-                // Generate blob output
-                const outputBlob = doc.getZip().generate({
-                    type: "blob",
-                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                });
-
-                // UNIQUE FILENAME FIX: Append current timestamp so files don't overwrite
-                const clientName = dataContext.event_name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                const timestamp = new Date().toISOString().replace(/[:.-]/g, '_');
-                const fileName = `Proposal_${clientName}_${timestamp}.docx`;
-
-                saveAs(outputBlob, fileName);
-
-            } catch (error) {
-                console.error("Docxtemplater Error Details:", error);
-                if (error.properties && error.properties.errors) {
-                    const detailedErrors = error.properties.errors.map(e => e.message).join("\n");
-                    alert("Template XML Tag Error:\n" + detailedErrors);
-                } else {
-                    alert("Error generating document: " + error.message);
-                }
-            }
-        });
-    </script>
+        } catch (error) {
+            console.error("Proposal Generation Error:", error);
+            alert("Error generating proposal: " + error.message);
+        }
+    });
+</script>
 
 </body>
-
 </html>
