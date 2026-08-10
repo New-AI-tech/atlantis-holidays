@@ -171,7 +171,7 @@
             flex-direction: column;
         }
 
-        a, button, input, [tabindex] {
+        a, button, input, textarea, select, [tabindex] {
             font-family: inherit;
         }
 
@@ -306,12 +306,54 @@
            ============================================================ */
         .main-wrapper {
             display: flex;
+            flex-direction: column;
             flex: 1;
-            justify-content: center;
             max-width: 900px;
             margin: 0 auto;
             width: 100%;
             padding: var(--space-5);
+        }
+
+        /* ============================================================
+           TABS
+           ============================================================ */
+        .tabs {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-5);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: var(--space-3) var(--space-2);
+            font-family: inherit;
+            font-size: var(--text-base);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: color var(--transition-fast), border-color var(--transition-fast);
+        }
+
+        .tab-btn:hover {
+            color: var(--color-heading);
+        }
+
+        .tab-btn.active {
+            color: var(--color-heading);
+            font-weight: var(--weight-semibold);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
         }
 
         /* ============================================================
@@ -342,6 +384,23 @@
             margin-bottom: var(--space-4);
         }
 
+        .voucher-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 var(--space-4);
+        }
+
+        .form-hint {
+            margin-top: var(--space-2);
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            min-height: 1.2em;
+        }
+
+        .form-hint.is-error {
+            color: var(--color-danger);
+        }
+
         label {
             display: block;
             font-weight: var(--weight-medium);
@@ -352,7 +411,7 @@
             text-transform: uppercase;
         }
 
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea {
             width: 100%;
             padding: 10px 12px;
             font-size: var(--text-base);
@@ -363,14 +422,30 @@
             transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
         }
 
-        input[type="text"]:hover, input[type="number"]:hover {
+        textarea {
+            resize: vertical;
+            min-height: 84px;
+            line-height: var(--leading-normal);
+        }
+
+        input[type="text"]:hover, input[type="number"]:hover, input[type="date"]:hover, input[type="time"]:hover, textarea:hover {
             border-color: var(--color-primary);
         }
 
-        input[type="text"]:focus, input[type="number"]:focus {
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, input[type="time"]:focus, textarea:focus {
             outline: none;
             border-color: var(--color-primary);
             box-shadow: 0 0 0 3px rgba(124, 26, 168, 0.25);
+        }
+
+        input[readonly] {
+            background: var(--color-surface-raised);
+            color: var(--color-text-muted);
+            cursor: not-allowed;
+        }
+
+        input[readonly]:hover {
+            border-color: var(--color-border-strong);
         }
 
         /* ============================================================
@@ -613,6 +688,15 @@
                 width: 100%;
                 height: 40px;
             }
+
+            .tab-btn {
+                font-size: var(--text-sm);
+                padding: var(--space-2) var(--space-1);
+            }
+
+            .voucher-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -641,9 +725,15 @@
         <p>Interactive Proposal & Quotation Generator</p>
     </header>
 
-    <div class="main-wrapper">
-        <!-- Main Form Content -->
-        <main class="content-area">
+    <main class="main-wrapper">
+        <!-- Document Type Tabs -->
+        <div class="tabs" role="tablist" aria-label="Document type">
+            <button type="button" class="tab-btn active" role="tab" id="tab-proposal" aria-selected="true" aria-controls="panel-proposal" onclick="switchTab('proposal')">Proposal Generator</button>
+            <button type="button" class="tab-btn" role="tab" id="tab-voucher" aria-selected="false" aria-controls="panel-voucher" onclick="switchTab('voucher')">Hotel Confirmation Voucher</button>
+        </div>
+
+        <!-- Proposal Generator Panel -->
+        <section class="content-area tab-panel active" id="panel-proposal" role="tabpanel" aria-labelledby="tab-proposal">
             <form id="proposalForm" novalidate>
 
                 <!-- Event Information -->
@@ -687,8 +777,98 @@
 
                 <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
             </form>
-        </main>
-    </div>
+        </section>
+
+        <!-- Hotel Confirmation Voucher Panel -->
+        <section class="content-area tab-panel" id="panel-voucher" role="tabpanel" aria-labelledby="tab-voucher" hidden>
+            <form id="voucherForm" novalidate>
+
+                <!-- Hotel Details -->
+                <div class="section">
+                    <h3>Hotel Details</h3>
+                    <div class="form-group">
+                        <label for="hotel_search">Hotel Name, City & Country</label>
+                        <input type="text" id="hotel_search" placeholder="e.g. Atlantis The Royal, Dubai, UAE" value="Atlantis The Royal, Dubai, UAE" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hotel_address">Captured Address</label>
+                        <input type="text" id="hotel_address" placeholder="Auto-filled from hotel search, or enter manually">
+                        <div class="form-hint" id="addressHint"></div>
+                    </div>
+                </div>
+
+                <!-- Guest & Booking Details -->
+                <div class="section">
+                    <h3>Guest & Booking Details</h3>
+                    <div class="form-group">
+                        <label for="guest_name">Guest Name</label>
+                        <input type="text" id="guest_name" placeholder="Full name as on passport" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmation_num">Hotel Confirmation Number</label>
+                        <input type="text" id="confirmation_num" placeholder="e.g. ATL-2026-00123" required>
+                    </div>
+                    <div class="voucher-grid">
+                        <div class="form-group">
+                            <label for="arrival_date">Arrival Date</label>
+                            <input type="date" id="arrival_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="departure_date">Departure Date</label>
+                            <input type="date" id="departure_date" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="duration_stay">Duration of Stay</label>
+                        <input type="text" id="duration_stay" readonly placeholder="Select both dates to calculate">
+                    </div>
+                </div>
+
+                <!-- Stay Details -->
+                <div class="section">
+                    <h3>Stay Details</h3>
+                    <div class="voucher-grid">
+                        <div class="form-group">
+                            <label for="num_guests">Number of Guests</label>
+                            <input type="text" id="num_guests" value="2 Adults" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="room_type">Room Type</label>
+                            <input type="text" id="room_type" value="Deluxe Ocean View Room" required>
+                        </div>
+                    </div>
+                    <div class="voucher-grid">
+                        <div class="form-group">
+                            <label for="meal_plan">Meal Plan</label>
+                            <input type="text" id="meal_plan" value="Bed & Breakfast" required>
+                        </div>
+                        <div class="form-group"></div>
+                    </div>
+                    <div class="voucher-grid">
+                        <div class="form-group">
+                            <label for="check_in">Check-in Time</label>
+                            <input type="time" id="check_in" value="15:00" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="check_out">Check-out Time</label>
+                            <input type="time" id="check_out" value="12:00" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="special_requests">Amenities / Special Requests</label>
+                        <textarea id="special_requests" placeholder="e.g. High floor, honeymoon setup, late check-out"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-submit" id="voucherSubmitBtn">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span id="voucherSubmitLabel">Generate Confirmation Voucher (.docx)</span>
+                </button>
+
+                <div class="form-status" id="voucherFormStatus" role="status" aria-live="polite"></div>
+            </form>
+        </section>
+    </main>
 
     <!-- Footer Rights -->
     <footer>
@@ -771,7 +951,7 @@
             } else {
                 row.classList.add('is-shaking');
                 row.addEventListener('animationend', () => row.classList.remove('is-shaking'), { once: true });
-                showStatus('At least one entry row must remain in this section.', 'error');
+                showStatus(formStatus, 'At least one entry row must remain in this section.', 'error');
             }
         }
 
@@ -789,15 +969,18 @@
         // ------------------------------------------------------------
         // Inline status banner (replaces alert() for both success and
         // error feedback so it doesn't block the UI thread or require
-        // dismissing a native dialog).
+        // dismissing a native dialog). Shared by both forms — each
+        // status element tracks its own dismiss timeout so a message on
+        // one tab can't cut off a message on the other.
         // ------------------------------------------------------------
         const formStatus = document.getElementById('formStatus');
-        let statusTimeout;
-        function showStatus(message, type) {
-            clearTimeout(statusTimeout);
-            formStatus.textContent = message;
-            formStatus.className = `form-status is-visible is-${type}`;
-            statusTimeout = setTimeout(() => formStatus.classList.remove('is-visible'), 6000);
+        const voucherFormStatus = document.getElementById('voucherFormStatus');
+        const statusTimeouts = new WeakMap();
+        function showStatus(el, message, type) {
+            clearTimeout(statusTimeouts.get(el));
+            el.textContent = message;
+            el.className = `form-status is-visible is-${type}`;
+            statusTimeouts.set(el, setTimeout(() => el.classList.remove('is-visible'), 6000));
         }
 
         // ------------------------------------------------------------
@@ -843,7 +1026,7 @@
             const DocxtemplaterLib = window.docxtemplater;
 
             if (!PizZipLib || !DocxtemplaterLib) {
-                showStatus('Document template libraries failed to load. Please check your network connection.', 'error');
+                showStatus(formStatus, 'Document template libraries failed to load. Please check your network connection.', 'error');
                 return;
             }
 
@@ -892,15 +1075,188 @@
                 const filename = `Proposal_${dataContext.event_name.replace(/[^a-z0-9]/gi, '_')}.docx`;
                 saveAs(outputBlob, filename);
 
-                showStatus(`Proposal generated: ${filename}`, 'success');
+                showStatus(formStatus, `Proposal generated: ${filename}`, 'success');
 
             } catch (error) {
                 console.error("Error generating proposal:", error);
-                showStatus('Error generating proposal: ' + error.message, 'error');
+                showStatus(formStatus, 'Error generating proposal: ' + error.message, 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('is-loading');
                 submitLabel.textContent = 'Generate Word Proposal (.docx)';
+            }
+        });
+
+        // ------------------------------------------------------------
+        // Tab navigation — clean .active toggling between the two
+        // document-generator panels.
+        // ------------------------------------------------------------
+        const tabButtons = { proposal: document.getElementById('tab-proposal'), voucher: document.getElementById('tab-voucher') };
+        const tabPanels = { proposal: document.getElementById('panel-proposal'), voucher: document.getElementById('panel-voucher') };
+
+        function switchTab(name) {
+            Object.keys(tabButtons).forEach(key => {
+                const isActive = key === name;
+                tabButtons[key].classList.toggle('active', isActive);
+                tabButtons[key].setAttribute('aria-selected', String(isActive));
+                tabPanels[key].classList.toggle('active', isActive);
+                tabPanels[key].toggleAttribute('hidden', !isActive);
+            });
+        }
+
+        // ------------------------------------------------------------
+        // Hotel Confirmation Voucher — duration-of-stay auto-calculation
+        // ------------------------------------------------------------
+        const arrivalInput = document.getElementById('arrival_date');
+        const departureInput = document.getElementById('departure_date');
+        const durationInput = document.getElementById('duration_stay');
+
+        function updateDuration() {
+            if (!arrivalInput.value || !departureInput.value) {
+                durationInput.value = '';
+                return;
+            }
+            const arrival = new Date(arrivalInput.value + 'T00:00:00');
+            const departure = new Date(departureInput.value + 'T00:00:00');
+            const msPerNight = 24 * 60 * 60 * 1000;
+            const nights = Math.round((departure - arrival) / msPerNight);
+
+            if (nights <= 0) {
+                durationInput.value = '';
+                showStatus(voucherFormStatus, 'Departure date must be after the arrival date.', 'error');
+                return;
+            }
+            durationInput.value = `${nights} Night${nights === 1 ? '' : 's'}`;
+        }
+        arrivalInput.addEventListener('change', updateDuration);
+        departureInput.addEventListener('change', updateDuration);
+
+        function formatDisplayDate(isoDate) {
+            if (!isoDate) return '';
+            const date = new Date(isoDate + 'T00:00:00');
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        // ------------------------------------------------------------
+        // Hotel Confirmation Voucher — address auto-capture via the
+        // OpenStreetMap Nominatim API on blur of the hotel search field.
+        // Never blocks submission: on any failure the address field is
+        // simply left for manual entry.
+        // ------------------------------------------------------------
+        const hotelSearchInput = document.getElementById('hotel_search');
+        const hotelAddressInput = document.getElementById('hotel_address');
+        const addressHint = document.getElementById('addressHint');
+
+        hotelSearchInput.addEventListener('blur', async () => {
+            const query = hotelSearchInput.value.trim();
+            if (!query) return;
+
+            addressHint.textContent = 'Looking up address…';
+            addressHint.classList.remove('is-error');
+
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error('Address lookup failed (HTTP ' + response.status + ')');
+                }
+
+                const results = await response.json();
+
+                if (!results.length) {
+                    addressHint.textContent = 'No address match found — enter it manually.';
+                    addressHint.classList.add('is-error');
+                    return;
+                }
+
+                hotelAddressInput.value = results[0].display_name;
+                addressHint.textContent = 'Address captured from OpenStreetMap.';
+            } catch (error) {
+                console.error('Nominatim address lookup failed:', error);
+                addressHint.textContent = 'Could not auto-fill address — enter it manually.';
+                addressHint.classList.add('is-error');
+            }
+        });
+
+        // ------------------------------------------------------------
+        // Hotel Confirmation Voucher — generation submit logic. Field
+        // names below match voucher_template.docx's actual tags exactly.
+        // ------------------------------------------------------------
+        const voucherSubmitBtn = document.getElementById('voucherSubmitBtn');
+        const voucherSubmitLabel = document.getElementById('voucherSubmitLabel');
+
+        document.getElementById('voucherForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const PizZipLib = window.PizZip;
+            const DocxtemplaterLib = window.docxtemplater;
+
+            if (!PizZipLib || !DocxtemplaterLib) {
+                showStatus(voucherFormStatus, 'Document template libraries failed to load. Please check your network connection.', 'error');
+                return;
+            }
+
+            if (!durationInput.value) {
+                showStatus(voucherFormStatus, 'Select a valid arrival and departure date before generating the voucher.', 'error');
+                return;
+            }
+
+            voucherSubmitBtn.disabled = true;
+            voucherSubmitBtn.classList.add('is-loading');
+            voucherSubmitLabel.textContent = 'Generating…';
+
+            try {
+                const guestName = document.getElementById('guest_name').value;
+                const specialRequests = document.getElementById('special_requests').value;
+
+                const dataContext = {
+                    hotel_name: hotelSearchInput.value,
+                    hotel_address: hotelAddressInput.value,
+                    guest_name: guestName,
+                    confirmation_number: document.getElementById('confirmation_num').value,
+                    arrival_date: formatDisplayDate(arrivalInput.value),
+                    departure_date: formatDisplayDate(departureInput.value),
+                    duration_of_stay: durationInput.value,
+                    number_of_guests: document.getElementById('num_guests').value,
+                    room_type: document.getElementById('room_type').value,
+                    meal_plan: document.getElementById('meal_plan').value,
+                    checkin_time: document.getElementById('check_in').value,
+                    checkout_time: document.getElementById('check_out').value,
+                    special_requests: specialRequests,
+                    special_request_note: specialRequests
+                };
+
+                const cacheBuster = new Date().getTime();
+                const response = await fetch(`voucher_template.docx?t=${cacheBuster}`, { cache: "no-store" });
+
+                if (!response.ok) {
+                    throw new Error("Could not fetch voucher_template.docx from server.");
+                }
+
+                const templateBuffer = await response.arrayBuffer();
+                const zip = new PizZipLib(templateBuffer);
+                const doc = new DocxtemplaterLib(zip, { paragraphLoop: true, linebreaks: true });
+
+                doc.render(dataContext);
+
+                const outputBlob = doc.getZip().generate({
+                    type: "blob",
+                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                });
+
+                const filename = `Voucher_${guestName.replace(/[^a-z0-9]/gi, '_')}.docx`;
+                saveAs(outputBlob, filename);
+
+                showStatus(voucherFormStatus, `Voucher generated: ${filename}`, 'success');
+
+            } catch (error) {
+                console.error("Error generating voucher:", error);
+                showStatus(voucherFormStatus, 'Error generating voucher: ' + error.message, 'error');
+            } finally {
+                voucherSubmitBtn.disabled = false;
+                voucherSubmitBtn.classList.remove('is-loading');
+                voucherSubmitLabel.textContent = 'Generate Confirmation Voucher (.docx)';
             }
         });
     </script>
