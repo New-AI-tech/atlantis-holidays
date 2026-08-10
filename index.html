@@ -3,206 +3,438 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlantis Holidays — Proposal Generator</title>
+    <title>Atlantis Holidays & Wellness — Proposal Generator</title>
     
-    <!-- Updated CDN Scripts: Standalone browser builds for PizZip, docxtemplater, and FileSaver -->
+    <!-- CDN Dependencies -->
     <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
     <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; color: #333; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1, h3 { color: #004085; }
+        /* CSS Variables for Dynamic Theme Switching */
+        :root {
+            --bg-color: #0f111a;
+            --card-bg: #1a1d2e;
+            --text-color: #e2e8f0;
+            --heading-color: #a855f7;
+            --border-color: #2d3748;
+            --input-bg: #0f111a;
+            --input-text: #ffffff;
+            --lamp-glow: rgba(255, 255, 255, 0.05);
+            --accent-purple: #6A0D91;
+        }
+
+        body.light-mode {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --heading-color: #6A0D91;
+            --border-color: #e2e8f0;
+            --input-bg: #ffffff;
+            --input-text: #1a202c;
+            --lamp-glow: rgba(255, 223, 0, 0.35);
+        }
+
+        * { box-sizing: border-box; transition: background-color 0.4s ease, color 0.4s ease; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header Welcome Note */
+        .header-banner {
+            text-align: center;
+            padding: 25px 20px 10px;
+        }
+
+        .header-banner h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            color: var(--heading-color);
+            letter-spacing: 1px;
+        }
+
+        .header-banner p {
+            margin-top: 5px;
+            font-size: 1.05rem;
+            opacity: 0.8;
+        }
+
+        /* Main Layout Grid */
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+            gap: 40px;
+        }
+
+        /* Left Sidebar (Lamp & Logo) */
+        .sidebar-left {
+            width: 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Lamp Container & Interactive Cord */
+        .lamp-container {
+            position: relative;
+            width: 160px;
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .lamp-shade {
+            width: 120px;
+            height: 70px;
+            background: #2a2a3a;
+            border-top-left-radius: 40px;
+            border-top-right-radius: 40px;
+            border-bottom: 4px solid var(--heading-color);
+            box-shadow: 0 0 15px var(--lamp-glow);
+            z-index: 2;
+        }
+
+        body.light-mode .lamp-shade {
+            background: #ffffff;
+            box-shadow: 0 15px 40px var(--lamp-glow);
+        }
+
+        .lamp-pole {
+            width: 6px;
+            height: 80px;
+            background: #4a5568;
+        }
+
+        .lamp-base {
+            width: 80px;
+            height: 12px;
+            background: #4a5568;
+            border-radius: 6px 6px 0 0;
+        }
+
+        /* Pull Cord Animation */
+        .pull-cord-wrapper {
+            position: absolute;
+            top: 68px;
+            right: 35px;
+            cursor: pointer;
+            z-index: 3;
+            user-select: none;
+        }
+
+        .pull-line {
+            width: 2px;
+            height: 60px;
+            background: #a0aec0;
+            margin: 0 auto;
+            transition: height 0.1s ease;
+        }
+
+        .pull-handle {
+            width: 12px;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            margin: 0 auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        }
+
+        .pull-cord-wrapper:active .pull-line {
+            height: 75px;
+        }
+
+        /* Company Logo Box */
+        .logo-box {
+            margin-top: 30px;
+            padding: 15px;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            width: 100%;
+        }
+
+        .logo-box img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+
+        /* Form Area */
+        .content-area {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 60px;
+        }
+
+        h3 { color: var(--heading-color); margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--input-bg);
+            color: var(--input-text);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            outline: none;
+        }
+
         .item-row { display: flex; gap: 10px; margin-bottom: 10px; }
         .item-row input { flex: 1; }
-        .btn { padding: 10px 20px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-add { background-color: #28a745; margin-bottom: 15px; }
+
+        .btn {
+            padding: 10px 18px;
+            background-color: var(--accent-purple);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-add {
+            background-color: #2b6cb0;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+
         .btn:hover { opacity: 0.9; }
-        .section { margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+
+        .section { margin-bottom: 25px; }
+
+        /* Footer */
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--card-bg);
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Atlantis Holidays Proposal Generator</h1>
-    <form id="proposalForm">
+    <!-- Top Welcome Note -->
+    <header class="header-banner">
+        <h1>Atlantis Holidays & Wellness</h1>
+        <p>Interactive Proposal & Quotation Generator</p>
+    </header>
+
+    <div class="main-wrapper">
         
-        <!-- General Info -->
-        <div class="section">
-            <h3>Event Information</h3>
-            <div class="form-group">
-                <label for="event_name">Event Name:</label>
-                <input type="text" id="event_name" value="Atlantis EADV Congress 2026" required>
+        <!-- Left Sidebar: Lamp Switch & Logo -->
+        <aside class="sidebar-left">
+            <div class="lamp-container">
+                <div class="lamp-shade"></div>
+                <div class="pull-cord-wrapper" id="themeToggle" title="Pull cord to toggle light mode">
+                    <div class="pull-line"></div>
+                    <div class="pull-handle"></div>
+                </div>
+                <div class="lamp-pole"></div>
+                <div class="lamp-base"></div>
             </div>
-            <div class="form-group">
-                <label for="event_dates">Event Dates:</label>
-                <input type="text" id="event_dates" value="October 12 – October 16, 2026" required>
-            </div>
-        </div>
 
-        <!-- Hotel Section -->
-        <div class="section">
-            <h3>Hotel Options</h3>
-            <div id="hotel-container">
-                <div class="item-row hotel-row">
-                    <input type="text" placeholder="Hotel Name" class="name" value="Atlantis The Royal - Deluxe Room" required>
-                    <input type="number" placeholder="Qty" class="quantity" value="1" required>
-                    <input type="text" placeholder="Unit (e.g. Nights)" class="unit" value="Nights" required>
-                    <input type="number" placeholder="Rate (AED)" class="rate" value="1800" required>
+            <!-- Logo Section Below Lamp -->
+            <div class="logo-box">
+                <img src="logo.png" alt="Atlantis Holidays & Wellness Logo" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+                <div id="logo-fallback" style="display:none; font-weight:bold; color:var(--heading-color);">
+                    ATLANTIS<br><span style="font-size:0.8rem; font-weight:normal;">HOLIDAYS & WELLNESS</span>
                 </div>
             </div>
-            <button type="button" class="btn btn-add" onclick="addRow('hotel-container', 'hotel-row')">+ Add Hotel</button>
-        </div>
+        </aside>
 
-        <!-- Transport Section -->
-        <div class="section">
-            <h3>Transportation</h3>
-            <div id="trans-container">
-                <div class="item-row trans-row">
-                    <input type="text" placeholder="Service" class="name" value="Airport Arrival Transfer (Luxury Sedan)" required>
-                    <input type="number" placeholder="Qty" class="quantity" value="1" required>
-                    <input type="text" placeholder="Unit" class="unit" value="Vehicle" required>
-                    <input type="number" placeholder="Rate (AED)" class="rate" value="350" required>
+        <!-- Main Form Content -->
+        <main class="content-area">
+            <form id="proposalForm">
+                
+                <!-- Event Information -->
+                <div class="section">
+                    <h3>Event Information</h3>
+                    <div class="form-group">
+                        <label for="event_name">Event Name:</label>
+                        <input type="text" id="event_name" value="Atlantis EADV Congress 2026" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="event_dates">Event Dates:</label>
+                        <input type="text" id="event_dates" value="October 12 – October 16, 2026" required>
+                    </div>
                 </div>
-            </div>
-            <button type="button" class="btn btn-add" onclick="addRow('trans-container', 'trans-row')">+ Add Transport</button>
-        </div>
 
-        <!-- Tours Section -->
-        <div class="section">
-            <h3>Tours & Activities</h3>
-            <div id="tour-container">
-                <div class="item-row tour-row">
-                    <input type="text" placeholder="Activity Name" class="name" value="Private Desert Safari with VIP Dinner" required>
-                    <input type="number" placeholder="Qty" class="quantity" value="2" required>
-                    <input type="text" placeholder="Unit" class="unit" value="Guests" required>
-                    <input type="number" placeholder="Rate (AED)" class="rate" value="450" required>
+                <!-- Hotel Section -->
+                <div class="section">
+                    <h3>Hotel Options</h3>
+                    <div id="hotel-container">
+                        <div class="item-row hotel-row">
+                            <input type="text" placeholder="Hotel Name" class="name" value="Atlantis The Royal - Deluxe Room" required>
+                            <input type="number" placeholder="Qty" class="quantity" value="1" required>
+                            <input type="text" placeholder="Unit" class="unit" value="Nights" required>
+                            <input type="number" placeholder="Rate (AED)" class="rate" value="1800" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-add" onclick="addRow('hotel-container', 'hotel-row')">+ Add Hotel</button>
                 </div>
-            </div>
-            <button type="button" class="btn btn-add" onclick="addRow('tour-container', 'tour-row')">+ Add Activity</button>
-        </div>
 
-        <button type="submit" class="btn" style="width: 100%; font-size: 18px;">Generate Word Proposal (.docx)</button>
-    </form>
-</div>
+                <!-- Transport Section -->
+                <div class="section">
+                    <h3>Transportation</h3>
+                    <div id="trans-container">
+                        <div class="item-row trans-row">
+                            <input type="text" placeholder="Service" class="name" value="Airport Arrival Transfer (Luxury Sedan)" required>
+                            <input type="number" placeholder="Qty" class="quantity" value="1" required>
+                            <input type="text" placeholder="Unit" class="unit" value="Vehicle" required>
+                            <input type="number" placeholder="Rate (AED)" class="rate" value="350" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-add" onclick="addRow('trans-container', 'trans-row')">+ Add Transport</button>
+                </div>
 
-<script>
-    // Dynamically add a new row to input sections
-    function addRow(containerId, rowClass) {
-        const container = document.getElementById(containerId);
-        const newRow = document.createElement('div');
-        newRow.className = `item-row ${rowClass}`;
-        newRow.innerHTML = `
-            <input type="text" placeholder="Service / Item Name" class="name" required>
-            <input type="number" placeholder="Qty" class="quantity" value="1" required>
-            <input type="text" placeholder="Unit" class="unit" value="Item" required>
-            <input type="number" placeholder="Rate (AED)" class="rate" value="0" required>
-        `;
-        container.appendChild(newRow);
-    }
+                <!-- Tours Section -->
+                <div class="section">
+                    <h3>Tours & Activities</h3>
+                    <div id="tour-container">
+                        <div class="item-row tour-row">
+                            <input type="text" placeholder="Activity Name" class="name" value="Private Desert Safari with VIP Dinner" required>
+                            <input type="number" placeholder="Qty" class="quantity" value="2" required>
+                            <input type="text" placeholder="Unit" class="unit" value="Guests" required>
+                            <input type="number" placeholder="Rate (AED)" class="rate" value="450" required>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-add" onclick="addRow('tour-container', 'tour-row')">+ Add Activity</button>
+                </div>
 
-    // Extract item details and calculate line totals
-    function parseSection(rowClass) {
-        const rows = document.querySelectorAll(`.${rowClass}`);
-        let sectionTotal = 0;
-        const items = [];
+                <button type="submit" class="btn" style="width: 100%; padding: 14px; font-size: 1.1rem; margin-top: 10px;">Generate Word Proposal (.docx)</button>
+            </form>
+        </main>
+    </div>
 
-        rows.forEach(row => {
-            const name = row.querySelector('.name').value;
-            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
-            const unit = row.querySelector('.unit').value;
-            const rate = parseFloat(row.querySelector('.rate').value) || 0;
-            const total = quantity * rate;
+    <!-- Footer Rights -->
+    <footer>
+        © 2026 Ahmed Bakr. All Rights Reserved | Developed for Atlantis Holidays & Wellness
+    </footer>
 
-            sectionTotal += total;
-
-            items.push({
-                name: name,
-                quantity: quantity,
-                unit: unit,
-                rate: rate.toLocaleString('en-US', { minimumFractionDigits: 2 }),
-                total: total.toLocaleString('en-US', { minimumFractionDigits: 2 })
-            });
+    <script>
+        // Pull-cord Theme Switch Handler
+        const pullCord = document.getElementById('themeToggle');
+        pullCord.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
         });
 
-        return { items, sectionTotal };
-    }
-
-    // Handle form submission and document generation
-    document.getElementById('proposalForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-
-        // Safely access libraries from the global window object
-        const PizZipLib = window.PizZip;
-        const DocxtemplaterLib = window.docxtemplater;
-
-        if (!PizZipLib) {
-            alert("PizZip library failed to load. Please check your network connection.");
-            return;
-        }
-        if (!DocxtemplaterLib) {
-            alert("docxtemplater library failed to load. Please check your network connection.");
-            return;
+        // Add Dynamic Row Handler
+        function addRow(containerId, rowClass) {
+            const container = document.getElementById(containerId);
+            const newRow = document.createElement('div');
+            newRow.className = `item-row ${rowClass}`;
+            newRow.innerHTML = `
+                <input type="text" placeholder="Service / Item Name" class="name" required>
+                <input type="number" placeholder="Qty" class="quantity" value="1" required>
+                <input type="text" placeholder="Unit" class="unit" value="Item" required>
+                <input type="number" placeholder="Rate (AED)" class="rate" value="0" required>
+            `;
+            container.appendChild(newRow);
         }
 
-        // Parse section inputs
-        const hotelData = parseSection('hotel-row');
-        const transData = parseSection('trans-row');
-        const tourData = parseSection('tour-row');
+        // Parse Section Data
+        function parseSection(rowClass) {
+            const rows = document.querySelectorAll(`.${rowClass}`);
+            let sectionTotal = 0;
+            const items = [];
 
-        const grandTotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
+            rows.forEach(row => {
+                const name = row.querySelector('.name').value;
+                const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+                const unit = row.querySelector('.unit').value;
+                const rate = parseFloat(row.querySelector('.rate').value) || 0;
+                const total = quantity * rate;
 
-        // Build data object matching docxtemplater placeholders
-        const dataContext = {
-            event_name: document.getElementById('event_name').value,
-            event_dates: document.getElementById('event_dates').value,
-            hotel_services: hotelData.items,
-            transportation: transData.items,
-            tours: tourData.items,
-            grand_total: grandTotalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        };
+                sectionTotal += total;
 
-        try {
-            // Load template.docx bypassing browser cache
-            const cacheBuster = new Date().getTime();
-            const response = await fetch(`template.docx?t=${cacheBuster}`, { cache: "no-store" });
+                items.push({
+                    name: name,
+                    quantity: quantity,
+                    unit: unit,
+                    rate: rate.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                    total: total.toLocaleString('en-US', { minimumFractionDigits: 2 })
+                });
+            });
 
-            if (!response.ok) {
-                throw new Error("Could not fetch template.docx from server (HTTP status: " + response.status + ")");
+            return { items, sectionTotal };
+        }
+
+        // Proposal Generation Submit Logic
+        document.getElementById('proposalForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const PizZipLib = window.PizZip;
+            const DocxtemplaterLib = window.docxtemplater;
+
+            if (!PizZipLib || !DocxtemplaterLib) {
+                alert("Document template libraries failed to load. Please check network connection.");
+                return;
             }
 
-            const templateBuffer = await response.arrayBuffer();
+            const hotelData = parseSection('hotel-row');
+            const transData = parseSection('trans-row');
+            const tourData = parseSection('tour-row');
 
-            // Initialize PizZip and docxtemplater
-            const zip = new PizZipLib(templateBuffer);
-            const doc = new DocxtemplaterLib(zip, {
-                paragraphLoop: true,
-                linebreaks: true,
-            });
+            const grandTotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
 
-            // Inject dynamic form data into Word placeholders
-            doc.render(dataContext);
+            const dataContext = {
+                event_name: document.getElementById('event_name').value,
+                event_dates: document.getElementById('event_dates').value,
+                hotel_services: hotelData.items,
+                transportation: transData.items,
+                tours: tourData.items,
+                grand_total: grandTotalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            };
 
-            // Output document as a blob
-            const outputBlob = doc.getZip().generate({
-                type: "blob",
-                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            });
+            try {
+                const cacheBuster = new Date().getTime();
+                const response = await fetch(`template.docx?t=${cacheBuster}`, { cache: "no-store" });
 
-            // Trigger file download using FileSaver.js saveAs
-            const filename = `Proposal_${dataContext.event_name.replace(/[^a-z0-9]/gi, '_')}.docx`;
-            saveAs(outputBlob, filename);
+                if (!response.ok) {
+                    throw new Error("Could not fetch template.docx from server.");
+                }
 
-        } catch (error) {
-            console.error("Proposal Generation Error:", error);
-            alert("Error generating proposal: " + error.message);
-        }
-    });
-</script>
+                const templateBuffer = await response.arrayBuffer();
+                const zip = new PizZipLib(templateBuffer);
+                const doc = new DocxtemplaterLib(zip, { paragraphLoop: true, linebreaks: true });
 
+                doc.render(dataContext);
+
+                const outputBlob = doc.getZip().generate({
+                    type: "blob",
+                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                });
+
+                const filename = `Proposal_${dataContext.event_name.replace(/[^a-z0-9]/gi, '_')}.docx`;
+                saveAs(outputBlob, filename);
+
+            } catch (error) {
+                console.error("Error generating proposal:", error);
+                alert("Error generating proposal: " + error.message);
+            }
+        });
+    </script>
 </body>
 </html>
