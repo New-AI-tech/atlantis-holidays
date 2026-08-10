@@ -22,6 +22,7 @@
             --input-text: #ffffff;
             --lamp-glow: rgba(255, 255, 255, 0.05);
             --accent-purple: #6A0D91;
+            --btn-remove: #e53e3e;
         }
 
         body.light-mode {
@@ -35,7 +36,10 @@
             --lamp-glow: rgba(255, 223, 0, 0.35);
         }
 
-        * { box-sizing: border-box; transition: background-color 0.4s ease, color 0.4s ease; }
+        * { 
+            box-sizing: border-box; 
+            transition: background-color 0.4s ease, color 0.4s ease; 
+        }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -184,7 +188,12 @@
             margin-bottom: 60px;
         }
 
-        h3 { color: var(--heading-color); margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        h3 { 
+            color: var(--heading-color); 
+            margin-top: 0; 
+            border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 8px; 
+        }
 
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
@@ -198,7 +207,7 @@
             outline: none;
         }
 
-        .item-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .item-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         .item-row input { flex: 1; }
 
         .btn {
@@ -214,6 +223,12 @@
         .btn-add {
             background-color: #2b6cb0;
             margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+
+        .btn-remove {
+            background-color: var(--btn-remove);
+            padding: 10px 12px;
             font-size: 0.85rem;
         }
 
@@ -290,9 +305,10 @@
                             <input type="number" placeholder="Qty" class="quantity" value="1" required>
                             <input type="text" placeholder="Unit" class="unit" value="Nights" required>
                             <input type="number" placeholder="Rate (AED)" class="rate" value="1800" required>
+                            <button type="button" class="btn btn-remove" onclick="removeRow(this)">✕</button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-add" onclick="addRow('hotel-container', 'hotel-row')">+ Add Hotel</button>
+                    <button type="button" class="btn btn-add" onclick="addRow('hotel-container', 'hotel-row', 'Hotel Name')">+ Add Hotel</button>
                 </div>
 
                 <!-- Transport Section -->
@@ -304,9 +320,10 @@
                             <input type="number" placeholder="Qty" class="quantity" value="1" required>
                             <input type="text" placeholder="Unit" class="unit" value="Vehicle" required>
                             <input type="number" placeholder="Rate (AED)" class="rate" value="350" required>
+                            <button type="button" class="btn btn-remove" onclick="removeRow(this)">✕</button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-add" onclick="addRow('trans-container', 'trans-row')">+ Add Transport</button>
+                    <button type="button" class="btn btn-add" onclick="addRow('trans-container', 'trans-row', 'Service')">+ Add Transport</button>
                 </div>
 
                 <!-- Tours Section -->
@@ -318,9 +335,10 @@
                             <input type="number" placeholder="Qty" class="quantity" value="2" required>
                             <input type="text" placeholder="Unit" class="unit" value="Guests" required>
                             <input type="number" placeholder="Rate (AED)" class="rate" value="450" required>
+                            <button type="button" class="btn btn-remove" onclick="removeRow(this)">✕</button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-add" onclick="addRow('tour-container', 'tour-row')">+ Add Activity</button>
+                    <button type="button" class="btn btn-add" onclick="addRow('tour-container', 'tour-row', 'Activity Name')">+ Add Activity</button>
                 </div>
 
                 <button type="submit" class="btn" style="width: 100%; padding: 14px; font-size: 1.1rem; margin-top: 10px;">Generate Word Proposal (.docx)</button>
@@ -341,17 +359,30 @@
         });
 
         // Add Dynamic Row Handler
-        function addRow(containerId, rowClass) {
+        function addRow(containerId, rowClass, placeholderName) {
             const container = document.getElementById(containerId);
             const newRow = document.createElement('div');
             newRow.className = `item-row ${rowClass}`;
             newRow.innerHTML = `
-                <input type="text" placeholder="Service / Item Name" class="name" required>
+                <input type="text" placeholder="${placeholderName || 'Service / Item Name'}" class="name" required>
                 <input type="number" placeholder="Qty" class="quantity" value="1" required>
                 <input type="text" placeholder="Unit" class="unit" value="Item" required>
                 <input type="number" placeholder="Rate (AED)" class="rate" value="0" required>
+                <button type="button" class="btn btn-remove" onclick="removeRow(this)">✕</button>
             `;
             container.appendChild(newRow);
+        }
+
+        // Remove Row Handler
+        function removeRow(button) {
+            const row = button.closest('.item-row');
+            const container = row.parentElement;
+            // Prevent deleting the last row if you want at least one row, or allow total clearing:
+            if (container.querySelectorAll('.item-row').length > 1) {
+                row.remove();
+            } else {
+                alert("At least one entry row must remain in this section.");
+            }
         }
 
         // Parse Section Data
