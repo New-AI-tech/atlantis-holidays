@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atlantis Holidays — Proposal Generator</title>
-    <!-- Libraries for reading, templating, and saving Word documents -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
+    
+    <!-- Updated CDN Scripts: Standalone browser builds for PizZip, docxtemplater, and FileSaver -->
+    <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
+    <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; color: #333; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -134,12 +136,27 @@
     document.getElementById('proposalForm').addEventListener('submit', async function (e) {
         e.preventDefault();
 
+        // Safely access libraries from the global window object
+        const PizZipLib = window.PizZip;
+        const DocxtemplaterLib = window.docxtemplater;
+
+        if (!PizZipLib) {
+            alert("PizZip library failed to load. Please check your network connection.");
+            return;
+        }
+        if (!DocxtemplaterLib) {
+            alert("docxtemplater library failed to load. Please check your network connection.");
+            return;
+        }
+
+        // Parse section inputs
         const hotelData = parseSection('hotel-row');
         const transData = parseSection('trans-row');
         const tourData = parseSection('tour-row');
 
         const grandTotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
 
+        // Build data object matching docxtemplater placeholders
         const dataContext = {
             event_name: document.getElementById('event_name').value,
             event_dates: document.getElementById('event_dates').value,
@@ -155,24 +172,30 @@
             const response = await fetch(`template.docx?t=${cacheBuster}`, { cache: "no-store" });
 
             if (!response.ok) {
-                throw new Error("Could not load template.docx from server.");
+                throw new Error("Could not fetch template.docx from server (HTTP status: " + response.status + ")");
             }
 
             const templateBuffer = await response.arrayBuffer();
-            const zip = new window.PizZip(templateBuffer);
-            const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-            // Inject data into placeholders
+            // Initialize PizZip and docxtemplater
+            const zip = new PizZipLib(templateBuffer);
+            const doc = new DocxtemplaterLib(zip, {
+                paragraphLoop: true,
+                linebreaks: true,
+            });
+
+            // Inject dynamic form data into Word placeholders
             doc.render(dataContext);
 
-            // Generate output blob
+            // Output document as a blob
             const outputBlob = doc.getZip().generate({
                 type: "blob",
                 mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             });
 
-            // Save file
-            saveAs(outputBlob, `Proposal_${dataContext.event_name.replace(/\s+/g, '_')}.docx`);
+            // Trigger file download using FileSaver.js saveAs
+            const filename = `Proposal_${dataContext.event_name.replace(/[^a-z0-9]/gi, '_')}.docx`;
+            saveAs(outputBlob, filename);
 
         } catch (error) {
             console.error("Proposal Generation Error:", error);
