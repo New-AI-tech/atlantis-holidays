@@ -58,8 +58,28 @@ for (const value of Object.values(dataContext)) {
   assert.ok(plainText.includes(value), `expected value not found in rendered voucher: "${value}"`);
 }
 
+// Static Terms & Conditions section (not template data — same on every
+// voucher). Checked here so an edit to the .docx that breaks this text
+// is caught the same way a broken placeholder would be.
+const termsAndConditions = [
+  "Terms & Conditions",
+  "Tourism Dirham:",
+  "Applicable Tourism Dirham fees will be charged by the hotel as per prevailing UAE/DET regulations and payable by the guest at check-in.",
+  "Security Deposit:",
+  "Any refundable security deposit required by the hotel must be paid directly by the guest and will be released after check-out, subject to hotel policy.",
+  "Hotel Extras:",
+  "All personal expenses, including laundry, food & beverages, minibar, room service, spa/massage, delivery, and other additional services, are payable directly by the guest.",
+  "Additional Charges:",
+  "Any charges for damages, lost items, late check-out, early check-in, or services not included in the booking are payable by the guest.",
+  "Hotel Policies:",
+  "All guests are subject to the hotel's applicable check-in, check-out, identification, and other policies.",
+];
+for (const line of termsAndConditions) {
+  assert.ok(plainText.includes(line), `Terms & Conditions text missing/altered in rendered voucher: "${line}"`);
+}
+
 const outPath = path.join(__dirname, "voucher-output.docx");
 fs.writeFileSync(outPath, outZip.generate({ type: "nodebuffer" }));
 
-console.log("\nPASS: voucher_template.docx renders all fields correctly, no \"undefined\" anywhere.");
+console.log("\nPASS: voucher_template.docx renders all fields correctly, no \"undefined\" anywhere, and the Terms & Conditions section is intact.");
 console.log("Rendered file written to:", outPath);
