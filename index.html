@@ -428,7 +428,9 @@
             const transData = parseSection('trans-row');
             const tourData = parseSection('tour-row');
 
-            const grandTotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
+            const subtotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
+            const vatValue = subtotalValue * 0.05;
+            const grandTotalValue = subtotalValue + vatValue;
 
             const dataContext = {
                 event_name: document.getElementById('event_name').value,
@@ -436,7 +438,9 @@
                 hotel_services: hotelData.items,
                 transportation: transData.items,
                 tours: tourData.items,
-                grand_total: grandTotalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                subtotal: subtotalValue.toFixed(2),
+                vat_amount: vatValue.toFixed(2),
+                grand_total: grandTotalValue.toFixed(2)
             };
 
             try {
