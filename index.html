@@ -4,47 +4,115 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atlantis Holidays & Wellness — Proposal Generator</title>
-    
-    <!-- CDN Dependencies -->
-    <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
-    <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link rel="icon" href="favicon.ico">
+
+    <!-- CDN Dependencies (deferred — not needed until form submit) -->
+    <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js" defer></script>
+    <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
 
     <style>
-        /* CSS Variables for Dynamic Theme Switching */
+        /* ============================================================
+           DESIGN TOKENS
+           ============================================================ */
         :root {
-            --bg-color: #0f111a;
-            --card-bg: #1a1d2e;
-            --text-color: #e2e8f0;
-            --heading-color: #a855f7;
-            --border-color: #2d3748;
+            /* Color — dark theme (default) */
+            --color-bg: #0f111a;
+            --color-surface: #1a1d2e;
+            --color-surface-raised: #23273c;
+            --color-border: #2d3748;
+            --color-border-strong: #3f495c;
+            --color-text: #e2e8f0;
+            --color-text-muted: #98a4b8;
+            --color-heading: #a855f7;
+            --color-primary: #7c1aa8;
+            --color-primary-hover: #8f22bf;
+            --color-primary-active: #6a0d91;
+            --color-secondary: #2b6cb0;
+            --color-secondary-hover: #3579c2;
+            --color-danger: #e53e3e;
+            --color-danger-hover: #f56565;
+            --color-success: #48bb78;
+            --color-success-bg: rgba(72, 187, 120, 0.12);
+            --color-danger-bg: rgba(229, 62, 62, 0.12);
+            --color-focus-ring: #c084fc;
             --input-bg: #0f111a;
             --input-text: #ffffff;
             --lamp-glow: rgba(255, 255, 255, 0.05);
-            --accent-purple: #6A0D91;
-            --btn-remove: #e53e3e;
+
+            /* Typography */
+            --font-body: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --text-xs: 0.75rem;
+            --text-sm: 0.8125rem;
+            --text-base: 1rem;
+            --text-md: 1.0625rem;
+            --text-lg: 1.25rem;
+            --text-xl: 1.5rem;
+            --text-display: clamp(1.75rem, 1.45rem + 1.4vw, 2.25rem);
+            --leading-tight: 1.25;
+            --leading-normal: 1.55;
+            --tracking-wide: 0.03em;
+
+            /* Spacing scale (4px base) */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 24px;
+            --space-6: 32px;
+            --space-7: 48px;
+            --space-8: 64px;
+
+            /* Radius / shadow / motion */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
+            --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.22);
+            --transition-fast: 150ms ease;
+            --transition-base: 240ms ease;
         }
 
         body.light-mode {
-            --bg-color: #f4f6f9;
-            --card-bg: #ffffff;
-            --text-color: #2d3748;
-            --heading-color: #6A0D91;
-            --border-color: #e2e8f0;
+            --color-bg: #f4f6f9;
+            --color-surface: #ffffff;
+            --color-surface-raised: #f7f8fb;
+            --color-border: #e2e8f0;
+            --color-border-strong: #cbd5e0;
+            --color-text: #2d3748;
+            --color-text-muted: #64748b;
+            --color-heading: #6a0d91;
+            --color-primary: #6a0d91;
+            --color-primary-hover: #7c1aa8;
+            --color-primary-active: #56077a;
             --input-bg: #ffffff;
             --input-text: #1a202c;
             --lamp-glow: rgba(255, 223, 0, 0.35);
         }
 
-        * { 
-            box-sizing: border-box; 
-            transition: background-color 0.4s ease, color 0.4s ease; 
+        * {
+            box-sizing: border-box;
+        }
+
+        * {
+            transition: background-color var(--transition-base), color var(--transition-base), border-color var(--transition-base);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: var(--font-body);
+            font-size: var(--text-base);
+            line-height: var(--leading-normal);
+            background-color: var(--color-bg);
+            color: var(--color-text);
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -52,45 +120,79 @@
             flex-direction: column;
         }
 
-        /* Top Header Welcome Note */
+        a, button, input, [tabindex] {
+            font-family: inherit;
+        }
+
+        /* Visible, consistent focus ring everywhere — replaces the removed
+           native outline on inputs so keyboard users don't lose their place. */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        [tabindex]:focus-visible {
+            outline: 2px solid var(--color-focus-ring);
+            outline-offset: 2px;
+            border-radius: var(--radius-sm);
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
         .header-banner {
             text-align: center;
-            padding: 25px 20px 10px;
+            padding: var(--space-6) var(--space-5) var(--space-3);
         }
 
         .header-banner h1 {
             margin: 0;
-            font-size: 2.2rem;
-            color: var(--heading-color);
-            letter-spacing: 1px;
+            font-size: var(--text-display);
+            line-height: var(--leading-tight);
+            color: var(--color-heading);
+            letter-spacing: 0.5px;
         }
 
         .header-banner p {
-            margin-top: 5px;
-            font-size: 1.05rem;
-            opacity: 0.8;
+            margin-top: var(--space-2);
+            font-size: var(--text-md);
+            color: var(--color-text-muted);
         }
 
-        /* Main Layout Grid */
+        /* ============================================================
+           LAYOUT
+           ============================================================ */
         .main-wrapper {
             display: flex;
             flex: 1;
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
-            padding: 20px;
-            gap: 40px;
+            padding: var(--space-5);
+            gap: var(--space-7);
+            align-items: flex-start;
         }
 
-        /* Left Sidebar (Lamp & Logo) */
         .sidebar-left {
             width: 260px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: sticky;
+            top: var(--space-5);
         }
 
-        /* Lamp Container & Interactive Cord */
         .lamp-container {
             position: relative;
             width: 160px;
@@ -106,9 +208,10 @@
             background: #2a2a3a;
             border-top-left-radius: 40px;
             border-top-right-radius: 40px;
-            border-bottom: 4px solid var(--heading-color);
+            border-bottom: 4px solid var(--color-heading);
             box-shadow: 0 0 15px var(--lamp-glow);
             z-index: 2;
+            transition: box-shadow var(--transition-base), background-color var(--transition-base), border-color var(--transition-base);
         }
 
         body.light-mode .lamp-shade {
@@ -129,44 +232,50 @@
             border-radius: 6px 6px 0 0;
         }
 
-        /* Pull Cord Animation */
-        .pull-cord-wrapper {
+        .theme-toggle {
             position: absolute;
             top: 68px;
             right: 35px;
-            cursor: pointer;
             z-index: 3;
-            user-select: none;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .pull-line {
             width: 2px;
             height: 60px;
             background: #a0aec0;
-            margin: 0 auto;
-            transition: height 0.1s ease;
+            transition: height var(--transition-fast);
         }
 
         .pull-handle {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             background: #e2e8f0;
             border-radius: 50%;
-            margin: 0 auto;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            transition: transform var(--transition-fast);
         }
 
-        .pull-cord-wrapper:active .pull-line {
-            height: 75px;
+        .theme-toggle:hover .pull-handle {
+            transform: scale(1.1);
         }
 
-        /* Company Logo Box */
+        .theme-toggle:active .pull-line {
+            height: 74px;
+        }
+
         .logo-box {
-            margin-top: 30px;
-            padding: 15px;
-            border-radius: 12px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
+            margin-top: var(--space-6);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
             text-align: center;
             width: 100%;
         }
@@ -174,77 +283,319 @@
         .logo-box img {
             max-width: 100%;
             height: auto;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
         }
 
-        /* Form Area */
+        #logo-fallback {
+            display: none;
+            font-weight: 700;
+            color: var(--color-heading);
+        }
+
+        /* ============================================================
+           FORM CONTENT
+           ============================================================ */
         .content-area {
             flex: 1;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 60px;
+            min-width: 0;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            padding: var(--space-6);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-8);
         }
 
-        h3 { 
-            color: var(--heading-color); 
-            margin-top: 0; 
-            border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 8px; 
+        h3 {
+            color: var(--color-heading);
+            font-size: var(--text-lg);
+            margin-top: 0;
+            margin-bottom: var(--space-4);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: var(--space-2);
         }
 
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: var(--text-sm);
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-2);
+            letter-spacing: var(--tracking-wide);
+            text-transform: uppercase;
+        }
+
         input[type="text"], input[type="number"] {
             width: 100%;
             padding: 10px 12px;
+            font-size: var(--text-base);
             background: var(--input-bg);
             color: var(--input-text);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            outline: none;
+            border: 1px solid var(--color-border-strong);
+            border-radius: var(--radius-sm);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
         }
 
-        .item-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .item-row input { flex: 1; }
+        input[type="text"]:hover, input[type="number"]:hover {
+            border-color: var(--color-primary);
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(124, 26, 168, 0.25);
+        }
+
+        /* ============================================================
+           LINE-ITEM ROWS
+           ============================================================ */
+        .item-row {
+            display: grid;
+            grid-template-columns: 2.2fr 0.7fr 0.9fr 1fr auto;
+            gap: var(--space-3);
+            align-items: end;
+            padding: var(--space-3);
+            margin-bottom: var(--space-3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-surface-raised);
+            transition: opacity var(--transition-base), transform var(--transition-base), background-color var(--transition-base), border-color var(--transition-base), box-shadow 160ms ease;
+        }
+
+        .item-row.is-entering {
+            opacity: 0;
+            transform: translateY(-6px);
+        }
+
+        .item-row.is-leaving {
+            opacity: 0;
+            transform: translateY(-6px) scale(0.98);
+        }
+
+        .item-row.is-shaking {
+            animation: shake 320ms ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+            min-width: 0;
+        }
+
+        .field label {
+            margin-bottom: 0;
+            font-size: var(--text-xs);
+        }
+
+        .item-row .btn-remove {
+            height: 42px;
+            width: 42px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
 
         .btn {
-            padding: 10px 18px;
-            background-color: var(--accent-purple);
+            padding: 10px 20px;
+            background-color: var(--color-primary);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: var(--text-base);
+            transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+        }
+
+        .btn:hover {
+            background-color: var(--color-primary-hover);
+        }
+
+        .btn:active {
+            background-color: var(--color-primary-active);
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-add {
-            background-color: #2b6cb0;
-            margin-bottom: 20px;
-            font-size: 0.85rem;
+            background-color: transparent;
+            color: var(--color-secondary);
+            border: 1px solid var(--color-secondary);
+            margin-bottom: var(--space-5);
+            font-size: var(--text-sm);
+            padding: 8px 16px;
+        }
+
+        .btn-add:hover {
+            background-color: var(--color-secondary);
+            color: #ffffff;
+        }
+
+        .btn-add:active {
+            background-color: #245a91;
         }
 
         .btn-remove {
-            background-color: var(--btn-remove);
-            padding: 10px 12px;
-            font-size: 0.85rem;
+            background-color: transparent;
+            color: var(--color-danger);
+            border: 1px solid var(--color-danger);
+            font-size: var(--text-base);
         }
 
-        .btn:hover { opacity: 0.9; }
+        .btn-remove:hover {
+            background-color: var(--color-danger);
+            color: #ffffff;
+        }
 
-        .section { margin-bottom: 25px; }
+        .btn-remove:active {
+            background-color: var(--color-danger-hover);
+        }
 
-        /* Footer */
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            font-size: var(--text-md);
+            margin-top: var(--space-3);
+            box-shadow: var(--shadow-sm);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+        }
+
+        .btn-submit:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 700ms linear infinite;
+        }
+
+        .btn-submit.is-loading .spinner {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .section {
+            margin-bottom: var(--space-6);
+        }
+
+        .form-status {
+            margin-top: var(--space-4);
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-sm);
+            display: none;
+        }
+
+        .form-status.is-visible {
+            display: block;
+        }
+
+        .form-status.is-success {
+            background: var(--color-success-bg);
+            color: var(--color-success);
+            border: 1px solid var(--color-success);
+        }
+
+        .form-status.is-error {
+            background: var(--color-danger-bg);
+            color: var(--color-danger);
+            border: 1px solid var(--color-danger);
+        }
+
+        /* ============================================================
+           FOOTER
+           ============================================================ */
         footer {
             margin-top: auto;
             text-align: center;
-            padding: 15px;
-            font-size: 0.85rem;
-            border-top: 1px solid var(--border-color);
-            background: var(--card-bg);
-            opacity: 0.9;
+            padding: var(--space-4);
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            border-top: 1px solid var(--color-border);
+            background: var(--color-surface);
+        }
+
+        /* ============================================================
+           RESPONSIVE — 1440 desktop (default) / 768 tablet / 375 mobile
+           ============================================================ */
+        @media (max-width: 900px) {
+            .main-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: var(--space-5);
+            }
+
+            .sidebar-left {
+                width: 100%;
+                max-width: 320px;
+                position: static;
+            }
+
+            .content-area {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header-banner {
+                padding: var(--space-5) var(--space-4) var(--space-2);
+            }
+
+            .main-wrapper {
+                padding: var(--space-4);
+            }
+
+            .content-area {
+                padding: var(--space-4);
+                border-radius: var(--radius-md);
+            }
+
+            .item-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .item-row .field-name {
+                grid-column: 1 / -1;
+            }
+
+            .item-row .btn-remove {
+                grid-column: 1 / -1;
+                justify-self: end;
+                width: 100%;
+                height: 40px;
+            }
         }
     </style>
 </head>
@@ -257,23 +608,23 @@
     </header>
 
     <div class="main-wrapper">
-        
+
         <!-- Left Sidebar: Lamp Switch & Logo -->
         <aside class="sidebar-left">
             <div class="lamp-container">
                 <div class="lamp-shade"></div>
-                <div class="pull-cord-wrapper" id="themeToggle" title="Pull cord to toggle light mode">
-                    <div class="pull-line"></div>
-                    <div class="pull-handle"></div>
-                </div>
+                <button type="button" class="theme-toggle" id="themeToggle" aria-pressed="false" aria-label="Switch to light theme">
+                    <span class="pull-line" aria-hidden="true"></span>
+                    <span class="pull-handle" aria-hidden="true"></span>
+                </button>
                 <div class="lamp-pole"></div>
                 <div class="lamp-base"></div>
             </div>
 
             <!-- Logo Section Below Lamp -->
             <div class="logo-box">
-                <img src="logo.png" alt="Atlantis Holidays & Wellness Logo" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
-                <div id="logo-fallback" style="display:none; font-weight:bold; color:var(--heading-color);">
+                <img src="logo.png" alt="Atlantis Holidays & Wellness Logo" width="229" height="101" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+                <div id="logo-fallback">
                     ATLANTIS<br><span style="font-size:0.8rem; font-weight:normal;">HOLIDAYS & WELLNESS</span>
                 </div>
             </div>
@@ -281,17 +632,17 @@
 
         <!-- Main Form Content -->
         <main class="content-area">
-            <form id="proposalForm">
-                
+            <form id="proposalForm" novalidate>
+
                 <!-- Event Information -->
                 <div class="section">
                     <h3>Event Information</h3>
                     <div class="form-group">
-                        <label for="event_name">Event Name:</label>
+                        <label for="event_name">Event Name</label>
                         <input type="text" id="event_name" value="Atlantis EADV Congress 2026" required>
                     </div>
                     <div class="form-group">
-                        <label for="event_dates">Event Dates:</label>
+                        <label for="event_dates">Event Dates</label>
                         <input type="text" id="event_dates" value="October 12 – October 16, 2026" required>
                     </div>
                 </div>
@@ -299,49 +650,30 @@
                 <!-- Hotel Section -->
                 <div class="section">
                     <h3>Hotel Options</h3>
-                    <div id="hotel-container">
-                        <div class="item-row hotel-row">
-                            <input type="text" placeholder="Hotel Name" class="name" value="Atlantis The Royal - Deluxe Room" required>
-                            <input type="number" placeholder="Qty" class="quantity" value="1" required>
-                            <input type="text" placeholder="Unit" class="unit" value="Nights" required>
-                            <input type="number" placeholder="Rate (AED)" class="rate" value="1800" required>
-                            <button type="button" class="btn btn-remove" onclick="removeRow(this)">✕</button>
-                        </div>
-                    </div>
+                    <div id="hotel-container"></div>
                     <button type="button" class="btn btn-add" onclick="addRow('hotel-container', 'hotel-row', 'Hotel Name')">+ Add Hotel</button>
                 </div>
 
                 <!-- Transport Section -->
                 <div class="section">
                     <h3>Transportation</h3>
-                    <div id="trans-container">
-                        <div class="item-row trans-row">
-                            <input type="text" placeholder="Service" class="name" value="Airport Arrival Transfer (Luxury Sedan)" required>
-                            <input type="number" placeholder="Qty" class="quantity" value="1" required>
-                            <input type="text" placeholder="Unit" class="unit" value="Vehicle" required>
-                            <input type="number" placeholder="Rate (AED)" class="rate" value="350" required>
-                            <button type="button" class="btn btn-remove" onclick="removeRow(this)">✕</button>
-                        </div>
-                    </div>
+                    <div id="trans-container"></div>
                     <button type="button" class="btn btn-add" onclick="addRow('trans-container', 'trans-row', 'Service')">+ Add Transport</button>
                 </div>
 
                 <!-- Tours Section -->
                 <div class="section">
                     <h3>Tours & Activities</h3>
-                    <div id="tour-container">
-                        <div class="item-row tour-row">
-                            <input type="text" placeholder="Activity Name" class="name" value="Private Desert Safari with VIP Dinner" required>
-                            <input type="number" placeholder="Qty" class="quantity" value="2" required>
-                            <input type="text" placeholder="Unit" class="unit" value="Guests" required>
-                            <input type="number" placeholder="Rate (AED)" class="rate" value="450" required>
-                            <button type="button" class="btn btn-remove" onclick="removeRow(this)">✕</button>
-                        </div>
-                    </div>
+                    <div id="tour-container"></div>
                     <button type="button" class="btn btn-add" onclick="addRow('tour-container', 'tour-row', 'Activity Name')">+ Add Activity</button>
                 </div>
 
-                <button type="submit" class="btn" style="width: 100%; padding: 14px; font-size: 1.1rem; margin-top: 10px;">Generate Word Proposal (.docx)</button>
+                <button type="submit" class="btn btn-submit" id="submitBtn">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span id="submitLabel">Generate Word Proposal (.docx)</span>
+                </button>
+
+                <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
             </form>
         </main>
     </div>
@@ -352,40 +684,114 @@
     </footer>
 
     <script>
-        // Pull-cord Theme Switch Handler
-        const pullCord = document.getElementById('themeToggle');
-        pullCord.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode');
+        // ------------------------------------------------------------
+        // Theme toggle (real <button>, keyboard-accessible by default,
+        // remembers the visitor's choice)
+        // ------------------------------------------------------------
+        const themeToggle = document.getElementById('themeToggle');
+        function applyTheme(isLight) {
+            document.body.classList.toggle('light-mode', isLight);
+            themeToggle.setAttribute('aria-pressed', String(isLight));
+            themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+        }
+        applyTheme(localStorage.getItem('atlantis-theme') === 'light');
+        themeToggle.addEventListener('click', () => {
+            const isLight = !document.body.classList.contains('light-mode');
+            applyTheme(isLight);
+            localStorage.setItem('atlantis-theme', isLight ? 'light' : 'dark');
         });
 
-        // Add Dynamic Row Handler
-        function addRow(containerId, rowClass, placeholderName) {
-            const container = document.getElementById(containerId);
-            const newRow = document.createElement('div');
-            newRow.className = `item-row ${rowClass}`;
-            newRow.innerHTML = `
-                <input type="text" placeholder="${placeholderName || 'Service / Item Name'}" class="name" required>
-                <input type="number" placeholder="Qty" class="quantity" value="1" required>
-                <input type="text" placeholder="Unit" class="unit" value="Item" required>
-                <input type="number" placeholder="Rate (AED)" class="rate" value="0" required>
-                <button type="button" class="btn btn-remove" onclick="removeRow(this)">✕</button>
+        // ------------------------------------------------------------
+        // Row template — single source of truth for line-item markup,
+        // used both for the default pre-filled row and the "+ Add" button
+        // (previously duplicated as static HTML in three places).
+        // ------------------------------------------------------------
+        function createRow(rowClass, fieldLabel, values) {
+            values = values || {};
+            const row = document.createElement('div');
+            row.className = `item-row ${rowClass}`;
+            row.setAttribute('role', 'group');
+            row.setAttribute('aria-label', fieldLabel || 'Line item');
+            row.innerHTML = `
+                <div class="field field-name">
+                    <label>${fieldLabel || 'Item Name'}</label>
+                    <input type="text" class="name" required value="${values.name ? escapeHtml(values.name) : ''}">
+                </div>
+                <div class="field field-qty">
+                    <label>Qty</label>
+                    <input type="number" class="quantity" min="0" step="1" required value="${values.quantity != null ? values.quantity : 1}">
+                </div>
+                <div class="field field-unit">
+                    <label>Unit</label>
+                    <input type="text" class="unit" required value="${values.unit ? escapeHtml(values.unit) : 'Item'}">
+                </div>
+                <div class="field field-rate">
+                    <label>Rate (AED)</label>
+                    <input type="number" class="rate" min="0" step="0.01" required value="${values.rate != null ? values.rate : 0}">
+                </div>
+                <button type="button" class="btn btn-remove" aria-label="Remove this ${(fieldLabel || 'line item').toLowerCase()}" onclick="removeRow(this)">✕</button>
             `;
-            container.appendChild(newRow);
+            return row;
         }
 
-        // Remove Row Handler
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function addRow(containerId, rowClass, placeholderName) {
+            const container = document.getElementById(containerId);
+            const row = createRow(rowClass, placeholderName, {});
+            row.classList.add('is-entering');
+            container.appendChild(row);
+            requestAnimationFrame(() => requestAnimationFrame(() => row.classList.remove('is-entering')));
+            row.querySelector('.name').focus();
+        }
+
         function removeRow(button) {
             const row = button.closest('.item-row');
             const container = row.parentElement;
-            // Prevent deleting the last row if you want at least one row, or allow total clearing:
             if (container.querySelectorAll('.item-row').length > 1) {
-                row.remove();
+                row.classList.add('is-leaving');
+                row.addEventListener('transitionend', () => row.remove(), { once: true });
+                setTimeout(() => row.remove(), 400); // fallback if transitionend doesn't fire
             } else {
-                alert("At least one entry row must remain in this section.");
+                row.classList.add('is-shaking');
+                row.addEventListener('animationend', () => row.classList.remove('is-shaking'), { once: true });
+                showStatus('At least one entry row must remain in this section.', 'error');
             }
         }
 
-        // Parse Section Data
+        // Populate the three sections with their original default rows.
+        document.getElementById('hotel-container').appendChild(createRow('hotel-row', 'Hotel Name', {
+            name: 'Atlantis The Royal - Deluxe Room', quantity: 1, unit: 'Nights', rate: 1800
+        }));
+        document.getElementById('trans-container').appendChild(createRow('trans-row', 'Service', {
+            name: 'Airport Arrival Transfer (Luxury Sedan)', quantity: 1, unit: 'Vehicle', rate: 350
+        }));
+        document.getElementById('tour-container').appendChild(createRow('tour-row', 'Activity Name', {
+            name: 'Private Desert Safari with VIP Dinner', quantity: 2, unit: 'Guests', rate: 450
+        }));
+
+        // ------------------------------------------------------------
+        // Inline status banner (replaces alert() for both success and
+        // error feedback so it doesn't block the UI thread or require
+        // dismissing a native dialog).
+        // ------------------------------------------------------------
+        const formStatus = document.getElementById('formStatus');
+        let statusTimeout;
+        function showStatus(message, type) {
+            clearTimeout(statusTimeout);
+            formStatus.textContent = message;
+            formStatus.className = `form-status is-visible is-${type}`;
+            statusTimeout = setTimeout(() => formStatus.classList.remove('is-visible'), 6000);
+        }
+
+        // ------------------------------------------------------------
+        // Parse Section Data — unchanged calculation logic
+        // (quantity * rate per item; section total = sum of item totals)
+        // ------------------------------------------------------------
         function parseSection(rowClass) {
             const rows = document.querySelectorAll(`.${rowClass}`);
             let sectionTotal = 0;
@@ -412,7 +818,12 @@
             return { items, sectionTotal };
         }
 
+        // ------------------------------------------------------------
         // Proposal Generation Submit Logic
+        // ------------------------------------------------------------
+        const submitBtn = document.getElementById('submitBtn');
+        const submitLabel = document.getElementById('submitLabel');
+
         document.getElementById('proposalForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -420,30 +831,34 @@
             const DocxtemplaterLib = window.docxtemplater;
 
             if (!PizZipLib || !DocxtemplaterLib) {
-                alert("Document template libraries failed to load. Please check network connection.");
+                showStatus('Document template libraries failed to load. Please check your network connection.', 'error');
                 return;
             }
 
-            const hotelData = parseSection('hotel-row');
-            const transData = parseSection('trans-row');
-            const tourData = parseSection('tour-row');
-
-            const subtotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
-            const vatValue = subtotalValue * 0.05;
-            const grandTotalValue = subtotalValue + vatValue;
-
-            const dataContext = {
-                event_name: document.getElementById('event_name').value,
-                event_dates: document.getElementById('event_dates').value,
-                hotel_services: hotelData.items,
-                transportation: transData.items,
-                tours: tourData.items,
-                subtotal: subtotalValue.toFixed(2),
-                vat_amount: vatValue.toFixed(2),
-                grand_total: grandTotalValue.toFixed(2)
-            };
+            submitBtn.disabled = true;
+            submitBtn.classList.add('is-loading');
+            submitLabel.textContent = 'Generating…';
 
             try {
+                const hotelData = parseSection('hotel-row');
+                const transData = parseSection('trans-row');
+                const tourData = parseSection('tour-row');
+
+                const subtotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
+                const vatValue = subtotalValue * 0.05;
+                const grandTotalValue = subtotalValue + vatValue;
+
+                const dataContext = {
+                    event_name: document.getElementById('event_name').value,
+                    event_dates: document.getElementById('event_dates').value,
+                    hotel_services: hotelData.items,
+                    transportation: transData.items,
+                    tours: tourData.items,
+                    subtotal: subtotalValue.toFixed(2),
+                    vat_amount: vatValue.toFixed(2),
+                    grand_total: grandTotalValue.toFixed(2)
+                };
+
                 const cacheBuster = new Date().getTime();
                 const response = await fetch(`template.docx?t=${cacheBuster}`, { cache: "no-store" });
 
@@ -465,9 +880,15 @@
                 const filename = `Proposal_${dataContext.event_name.replace(/[^a-z0-9]/gi, '_')}.docx`;
                 saveAs(outputBlob, filename);
 
+                showStatus(`Proposal generated: ${filename}`, 'success');
+
             } catch (error) {
                 console.error("Error generating proposal:", error);
-                alert("Error generating proposal: " + error.message);
+                showStatus('Error generating proposal: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('is-loading');
+                submitLabel.textContent = 'Generate Word Proposal (.docx)';
             }
         });
     </script>
