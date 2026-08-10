@@ -1,0 +1,24 @@
+{
+  "name": "atlantis-holidays",
+  "version": "1.0.0",
+  "description": "Client-side Word proposal generator for Atlantis Holidays & Wellness.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/render.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/New-AI-tech/atlantis-holidays.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/New-AI-tech/atlantis-holidays/issues"
+  },
+  "homepage": "https://github.com/New-AI-tech/atlantis-holidays#readme",
+  "dependencies": {
+    "docxtemplater": "^3.69.3",
+    "pizzip": "^3.2.0"
+  }
+}
