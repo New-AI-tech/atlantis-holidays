@@ -70,7 +70,7 @@ assert(duration === "3 Nights", `expected "3 Nights", got "${duration}"`);
 
 // --- Nominatim lookup: graceful failure (expected — blocked in this sandbox) ---
 await page.fill("#hotel_search", "Atlantis The Royal, Dubai, UAE");
-await page.focus("#confirmation_num"); // triggers blur on hotel_search
+await page.focus("#guest_name"); // triggers blur on hotel_search
 await page.waitForTimeout(800);
 const hint = await page.evaluate(() => ({
   text: document.getElementById("addressHint").textContent,
