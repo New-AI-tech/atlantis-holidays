@@ -10,6 +10,8 @@
     <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js" defer></script>
     <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
+    <!-- Self-hosted (not a CDN — see assets/js/HTML2PDF-LICENSE.txt), used only for the voucher's "Download PDF" button -->
+    <script src="assets/js/html2pdf.bundle.min.js" defer></script>
 
     <style>
         /* ============================================================
@@ -85,6 +87,9 @@
             --color-focus-ring: #c084fc;
             --input-bg: #0f111a;
             --input-text: #ffffff;
+            --color-accent-teal: #4fc1cc;
+            --color-accent-teal-hover: #6fd0d9;
+            --color-accent-teal-contrast: #062024;
 
             /* Typography — single typeface (Fraunces), weight carries hierarchy */
             --font-body: 'Fraunces', Georgia, 'Times New Roman', serif;
@@ -138,6 +143,9 @@
             --color-primary-active: #56077a;
             --input-bg: #ffffff;
             --input-text: #1a202c;
+            --color-accent-teal: #1f6f78;
+            --color-accent-teal-hover: #26858f;
+            --color-accent-teal-contrast: #ffffff;
         }
 
         * {
@@ -603,6 +611,195 @@
             to { transform: rotate(360deg); }
         }
 
+        .btn.is-loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--color-text-muted);
+            border: 1px solid var(--color-border-strong);
+        }
+
+        .btn-outline:hover {
+            color: var(--color-text);
+            border-color: var(--color-text-muted);
+            background-color: transparent;
+        }
+
+        .btn-teal {
+            background-color: var(--color-accent-teal);
+            color: var(--color-accent-teal-contrast);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .btn-teal:hover {
+            background-color: var(--color-accent-teal-hover);
+        }
+
+        .voucher-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            margin-top: var(--space-3);
+        }
+
+        .voucher-actions .btn {
+            flex: 1;
+            min-width: 160px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            padding: 14px 20px;
+        }
+
+        .voucher-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .checkbox-field {
+            display: flex !important;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--text-base) !important;
+            font-weight: var(--weight-regular) !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+            color: var(--color-text) !important;
+            padding-top: 10px;
+        }
+
+        .checkbox-field input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--color-primary);
+        }
+
+        .hotel-image-preview {
+            display: block;
+            width: 100%;
+            max-width: 320px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            margin-top: var(--space-2);
+        }
+
+        .hotel-image-preview[hidden] {
+            display: none;
+        }
+
+        .reservation-row {
+            display: flex;
+            gap: var(--space-3);
+            align-items: flex-end;
+            margin-bottom: var(--space-3);
+        }
+
+        .reservation-row .field {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .reservation-row .btn-remove {
+            height: 42px;
+            width: 42px;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        /* ---- Voucher preview modal ---- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 8, 14, 0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-5);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-base);
+        }
+
+        .modal-overlay.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            transform: translateY(12px) scale(0.98);
+            transition: transform var(--transition-base);
+        }
+
+        .modal-overlay.is-open .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .voucher-preview-modal {
+            width: 100%;
+            max-width: 900px;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            padding: var(--space-4);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-4);
+            margin-bottom: var(--space-3);
+        }
+
+        .modal-title {
+            font-size: var(--text-lg);
+            font-weight: var(--weight-semibold);
+            color: var(--color-heading);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            font-size: var(--text-lg);
+            cursor: pointer;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+        }
+
+        .modal-close:hover { color: var(--color-text); }
+
+        .voucher-preview-body {
+            flex: 1;
+            overflow: hidden;
+            border-radius: var(--radius-md);
+            background: #525659;
+        }
+
+        .voucher-preview-body iframe {
+            width: 100%;
+            height: 78vh;
+            border: none;
+            display: block;
+        }
+
+        @media (max-width: 640px) {
+            .voucher-grid-3 { grid-template-columns: 1fr; }
+            .voucher-actions .btn { flex: 1 1 100%; }
+        }
+
         .section {
             margin-bottom: var(--space-6);
         }
@@ -792,6 +989,29 @@
         <section class="content-area tab-panel" id="panel-voucher" role="tabpanel" aria-labelledby="tab-voucher" hidden>
             <form id="voucherForm" novalidate>
 
+                <!-- Booking Info -->
+                <div class="section">
+                    <h3>Booking Info</h3>
+                    <div class="voucher-grid voucher-grid-3">
+                        <div class="form-group">
+                            <label for="voucher_number">Voucher Number</label>
+                            <input type="text" id="voucher_number" readonly>
+                            <div class="form-hint">Auto-generated: AH-&lt;hotel code&gt;-&lt;date code&gt;</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="issue_date">Date of Issue</label>
+                            <input type="text" id="issue_date" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="voucher_status">Status</label>
+                            <select id="voucher_status">
+                                <option value="Confirmed" selected>Confirmed</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Hotel Details -->
                 <div class="section">
                     <h3>Hotel Details</h3>
@@ -804,26 +1024,33 @@
                         <input type="text" id="hotel_address" placeholder="Auto-filled from hotel search, or enter manually">
                         <div class="form-hint" id="addressHint"></div>
                     </div>
+                    <div class="voucher-grid">
+                        <div class="form-group">
+                            <label for="hotel_website">Hotel Website</label>
+                            <input type="text" id="hotel_website" placeholder="e.g. atlantistheroyal.com" value="atlantistheroyal.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="hotel_image_url">Exterior Photo URL</label>
+                            <input type="text" id="hotel_image_url" placeholder="https://…/hotel-exterior.jpg">
+                        </div>
+                    </div>
+                    <img id="hotelImagePreview" class="hotel-image-preview" alt="Hotel exterior preview" hidden>
                 </div>
 
-                <!-- Guest & Booking Details -->
+                <!-- Guest & Stay Dates -->
                 <div class="section">
-                    <h3>Guest & Booking Details</h3>
+                    <h3>Guest & Stay Dates</h3>
                     <div class="form-group">
                         <label for="guest_name">Guest Name</label>
                         <input type="text" id="guest_name" placeholder="Full name as on passport" required>
                     </div>
-                    <div class="form-group">
-                        <label for="confirmation_num">Hotel Confirmation Number</label>
-                        <input type="text" id="confirmation_num" placeholder="e.g. ATL-2026-00123" required>
-                    </div>
                     <div class="voucher-grid">
                         <div class="form-group">
-                            <label for="arrival_date">Arrival Date</label>
+                            <label for="arrival_date">Check-in Date</label>
                             <input type="date" id="arrival_date" required>
                         </div>
                         <div class="form-group">
-                            <label for="departure_date">Departure Date</label>
+                            <label for="departure_date">Check-out Date</label>
                             <input type="date" id="departure_date" required>
                         </div>
                     </div>
@@ -833,25 +1060,39 @@
                     </div>
                 </div>
 
+                <!-- Reservation Numbers -->
+                <div class="section">
+                    <h3>Reservation Numbers</h3>
+                    <div id="reservation-container"></div>
+                    <button type="button" class="btn btn-add" id="addReservationBtn">+ Add Reservation Number</button>
+                </div>
+
                 <!-- Stay Details -->
                 <div class="section">
                     <h3>Stay Details</h3>
                     <div class="voucher-grid">
                         <div class="form-group">
-                            <label for="num_guests">Number of Guests</label>
-                            <input type="text" id="num_guests" value="2 Adults" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="room_type">Room Type</label>
-                            <input type="text" id="room_type" value="Deluxe Ocean View Room" required>
-                        </div>
-                    </div>
-                    <div class="voucher-grid">
-                        <div class="form-group">
                             <label for="meal_plan">Meal Plan</label>
                             <input type="text" id="meal_plan" value="Bed & Breakfast" required>
                         </div>
-                        <div class="form-group"></div>
+                        <div class="form-group">
+                            <label for="number_of_rooms">Number of Rooms</label>
+                            <input type="number" id="number_of_rooms" min="1" step="1" value="1" required>
+                        </div>
+                    </div>
+                    <div class="voucher-grid voucher-grid-3">
+                        <div class="form-group">
+                            <label for="adults">Adults</label>
+                            <input type="number" id="adults" min="0" step="1" value="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="children">Children</label>
+                            <input type="number" id="children" min="0" step="1" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="infants">Infants</label>
+                            <input type="number" id="infants" min="0" step="1" value="0">
+                        </div>
                     </div>
                     <div class="voucher-grid">
                         <div class="form-group">
@@ -863,20 +1104,120 @@
                             <input type="time" id="check_out" value="12:00" required>
                         </div>
                     </div>
+                </div>
+
+                <!-- Room Details -->
+                <div class="section">
+                    <h3>Room Details</h3>
                     <div class="form-group">
-                        <label for="special_requests">Amenities / Special Requests</label>
+                        <label for="room_type">Room Type</label>
+                        <input type="text" id="room_type" value="Deluxe Ocean View Room" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="room_description">Room Description</label>
+                        <textarea id="room_description" placeholder="Short descriptive line for the voucher">Spacious room with panoramic views and premium in-room amenities.</textarea>
+                    </div>
+                    <div class="voucher-grid voucher-grid-3">
+                        <div class="form-group">
+                            <label for="room_size">Room Size (sqm)</label>
+                            <input type="number" id="room_size" min="0" step="1" value="40">
+                        </div>
+                        <div class="form-group">
+                            <label for="bed_type">Bed Type</label>
+                            <input type="text" id="bed_type" value="King Bed">
+                        </div>
+                        <div class="form-group">
+                            <label for="room_view">View</label>
+                            <input type="text" id="room_view" value="Ocean View">
+                        </div>
+                    </div>
+                    <div class="voucher-grid">
+                        <div class="form-group">
+                            <label for="floor">Floor</label>
+                            <input type="text" id="floor" value="High Floor">
+                        </div>
+                        <div class="form-group">
+                            <label for="connecting_rooms">Connecting Rooms</label>
+                            <label class="checkbox-field">
+                                <input type="checkbox" id="connecting_rooms">
+                                <span>Available on request</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="room_inclusions">Room Inclusions</label>
+                        <textarea id="room_inclusions" placeholder="e.g. Complimentary WiFi, minibar, daily housekeeping">Complimentary WiFi, minibar (non-alcoholic), daily housekeeping.</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="special_requests">Special Notes</label>
                         <textarea id="special_requests" placeholder="e.g. High floor, honeymoon setup, late check-out"></textarea>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-submit" id="voucherSubmitBtn">
-                    <span class="spinner" aria-hidden="true"></span>
-                    <span id="voucherSubmitLabel">Generate Confirmation Voucher (.docx)</span>
-                </button>
+                <!-- Policies -->
+                <div class="section">
+                    <h3>Policies</h3>
+                    <div class="form-group">
+                        <label for="cancellation_policy">Cancellation Policy</label>
+                        <textarea id="cancellation_policy">Free cancellation up to 7 days before arrival. Cancellations within 7 days of arrival are subject to a one-night charge.</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="important_info">Important Information</label>
+                        <textarea id="important_info">A valid passport/Emirates ID and the credit card used for booking are required at check-in.</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="no_show_policy">No-Show Policy</label>
+                        <textarea id="no_show_policy">No-shows will be charged the full stay value and the reservation will be released.</textarea>
+                    </div>
+                </div>
+
+                <!-- Consultant -->
+                <div class="section">
+                    <h3>Consultant Contact</h3>
+                    <div class="voucher-grid voucher-grid-3">
+                        <div class="form-group">
+                            <label for="consultant_name">Name</label>
+                            <input type="text" id="consultant_name" value="Ahmed Backer">
+                        </div>
+                        <div class="form-group">
+                            <label for="consultant_phone">Phone</label>
+                            <input type="text" id="consultant_phone" value="+971 4 000 0000">
+                        </div>
+                        <div class="form-group">
+                            <label for="consultant_email">Email</label>
+                            <input type="text" id="consultant_email" value="reservations@atlantisholidays.com">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="voucher-actions">
+                    <button type="button" class="btn btn-outline" id="voucherPreviewBtn">Preview</button>
+                    <button type="button" class="btn btn-teal" id="voucherPdfBtn">
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span id="voucherPdfLabel">Download PDF</span>
+                    </button>
+                    <button type="submit" class="btn" id="voucherSubmitBtn">
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span id="voucherSubmitLabel">Download Word</span>
+                    </button>
+                </div>
 
                 <div class="form-status" id="voucherFormStatus" role="status" aria-live="polite"></div>
             </form>
         </section>
+
+        <!-- Voucher preview modal -->
+        <div class="modal-overlay" id="voucherPreviewOverlay">
+            <div class="modal voucher-preview-modal" role="dialog" aria-modal="true" aria-labelledby="voucherPreviewTitle">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="voucherPreviewTitle">Voucher Preview</h4>
+                    <button type="button" class="modal-close" id="voucherPreviewCloseBtn" aria-label="Close preview">✕</button>
+                </div>
+                <div class="modal-body voucher-preview-body">
+                    <iframe id="voucherPreviewFrame" title="Hotel confirmation voucher preview"></iframe>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Footer Rights -->
@@ -1116,7 +1457,32 @@
         }
 
         // ------------------------------------------------------------
-        // Hotel Confirmation Voucher — duration-of-stay auto-calculation
+        // Hotel Confirmation Voucher — shared helpers
+        // ------------------------------------------------------------
+        function pad2(n) { return String(n).padStart(2, '0'); }
+
+        // "DD Month YYYY (DayOfWeek)" — e.g. "07 July 2026 (Tuesday)"
+        function formatVoucherDate(isoDate) {
+            if (!isoDate) return '';
+            const date = new Date(isoDate + 'T00:00:00');
+            const day = pad2(date.getDate());
+            const month = date.toLocaleDateString('en-US', { month: 'long' });
+            const year = date.getFullYear();
+            const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+            return `${day} ${month} ${year} (${weekday})`;
+        }
+
+        function todayISO() {
+            const d = new Date();
+            return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+        }
+
+        function nl2br(str) {
+            return escapeHtml(str || '').replace(/\n/g, '<br>');
+        }
+
+        // ------------------------------------------------------------
+        // Duration-of-stay auto-calculation
         // ------------------------------------------------------------
         const arrivalInput = document.getElementById('arrival_date');
         const departureInput = document.getElementById('departure_date');
@@ -1139,25 +1505,54 @@
             }
             durationInput.value = `${nights} Night${nights === 1 ? '' : 's'}`;
         }
-        arrivalInput.addEventListener('change', updateDuration);
-        departureInput.addEventListener('change', updateDuration);
-
-        function formatDisplayDate(isoDate) {
-            if (!isoDate) return '';
-            const date = new Date(isoDate + 'T00:00:00');
-            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        }
 
         // ------------------------------------------------------------
-        // Hotel Confirmation Voucher — address auto-capture via the
-        // OpenStreetMap Nominatim API on blur of the hotel search field.
-        // Never blocks submission: on any failure the address field is
-        // simply left for manual entry.
+        // Voucher number auto-generation: AH-<HotelCode>-<DateCode>.
+        // Hotel-code lookup is a plain object — edit VOUCHER_HOTEL_CODES
+        // to add real property codes as they come up; unrecognized
+        // hotel names fall back to initials derived from what was typed.
+        // ------------------------------------------------------------
+        const VOUCHER_HOTEL_CODES = {
+            'atlantis the royal': 'TR',
+            'atlantis the palm': 'AP',
+            'waldorf astoria dubai': 'WBCN',
+        };
+        function deriveHotelCode(hotelText) {
+            const key = (hotelText || '').trim().toLowerCase();
+            for (const name in VOUCHER_HOTEL_CODES) {
+                if (key.includes(name)) return VOUCHER_HOTEL_CODES[name];
+            }
+            const words = (hotelText || '').trim().split(/\s+/).filter(Boolean);
+            const code = words.slice(0, 4).map(w => w[0]).join('').toUpperCase();
+            return code || 'GEN';
+        }
+        function dateCodeDDMMYY(isoDate) {
+            if (!isoDate) return '000000';
+            const [y, m, d] = isoDate.split('-');
+            return d + m + y.slice(2);
+        }
+        const voucherNumberInput = document.getElementById('voucher_number');
+        const issueDateInput = document.getElementById('issue_date');
+        function updateVoucherNumber() {
+            const code = deriveHotelCode(hotelSearchInput.value);
+            voucherNumberInput.value = `AH-${code}-${dateCodeDDMMYY(arrivalInput.value)}`;
+        }
+
+        arrivalInput.addEventListener('change', () => { updateDuration(); updateVoucherNumber(); });
+        departureInput.addEventListener('change', updateDuration);
+
+        issueDateInput.value = formatVoucherDate(todayISO());
+
+        // ------------------------------------------------------------
+        // Address auto-capture via the OpenStreetMap Nominatim API on
+        // blur of the hotel search field. Never blocks submission: on
+        // any failure the address field is simply left for manual entry.
         // ------------------------------------------------------------
         const hotelSearchInput = document.getElementById('hotel_search');
         const hotelAddressInput = document.getElementById('hotel_address');
         const addressHint = document.getElementById('addressHint');
 
+        hotelSearchInput.addEventListener('input', updateVoucherNumber);
         hotelSearchInput.addEventListener('blur', async () => {
             const query = hotelSearchInput.value.trim();
             if (!query) return;
@@ -1190,9 +1585,380 @@
             }
         });
 
+        updateVoucherNumber();
+
         // ------------------------------------------------------------
-        // Hotel Confirmation Voucher — generation submit logic. Field
-        // names below match voucher_template.docx's actual tags exactly.
+        // Hotel exterior image preview
+        // ------------------------------------------------------------
+        const hotelImageUrlInput = document.getElementById('hotel_image_url');
+        const hotelImagePreview = document.getElementById('hotelImagePreview');
+        function updateHotelImagePreview() {
+            const url = hotelImageUrlInput.value.trim();
+            if (url) {
+                hotelImagePreview.src = url;
+                hotelImagePreview.hidden = false;
+            } else {
+                hotelImagePreview.hidden = true;
+                hotelImagePreview.removeAttribute('src');
+            }
+        }
+        hotelImagePreview.addEventListener('error', () => { hotelImagePreview.hidden = true; });
+        hotelImageUrlInput.addEventListener('input', updateHotelImagePreview);
+
+        // ------------------------------------------------------------
+        // Reservation numbers — dynamic list (Logistics: reservationNumbers)
+        // ------------------------------------------------------------
+        function createReservationRow(value) {
+            const row = document.createElement('div');
+            row.className = 'reservation-row';
+            row.innerHTML = `
+                <div class="field">
+                    <label class="sr-only">Reservation number</label>
+                    <input type="text" class="reservation-number input" placeholder="e.g. ATL-2026-00123" value="${value ? escapeHtml(value) : ''}">
+                </div>
+                <button type="button" class="btn btn-remove" aria-label="Remove this reservation number">✕</button>
+            `;
+            row.querySelector('.btn-remove').addEventListener('click', () => {
+                const container = row.parentElement;
+                if (container.querySelectorAll('.reservation-row').length > 1) {
+                    row.remove();
+                } else {
+                    row.querySelector('input').value = '';
+                }
+            });
+            return row;
+        }
+        function addReservationRow(value) {
+            document.getElementById('reservation-container').appendChild(createReservationRow(value || ''));
+        }
+        document.getElementById('addReservationBtn').addEventListener('click', () => addReservationRow(''));
+        addReservationRow('ATL-2026-00123');
+
+        // ------------------------------------------------------------
+        // Central data model — Layer 2 (form values) + Layer 3 (computed
+        // values) combined into one object consumed identically by the
+        // preview, the PDF export, and the Word export, so all three
+        // outputs can never drift from each other.
+        // ------------------------------------------------------------
+        function buildVoucherData() {
+            const reservationNumbers = [...document.querySelectorAll('.reservation-number')]
+                .map(el => el.value.trim())
+                .filter(Boolean);
+
+            const adults = parseInt(document.getElementById('adults').value, 10) || 0;
+            const children = parseInt(document.getElementById('children').value, 10) || 0;
+            const infants = parseInt(document.getElementById('infants').value, 10) || 0;
+            const guestsParts = [];
+            if (adults) guestsParts.push(`${adults} Adult${adults === 1 ? '' : 's'}`);
+            if (children) guestsParts.push(`${children} Child${children === 1 ? '' : 'ren'}`);
+            if (infants) guestsParts.push(`${infants} Infant${infants === 1 ? '' : 's'}`);
+
+            return {
+                voucherNumber: voucherNumberInput.value,
+                issueDate: issueDateInput.value,
+                status: document.getElementById('voucher_status').value,
+                hotelName: hotelSearchInput.value,
+                hotelAddress: hotelAddressInput.value,
+                hotelWebsite: document.getElementById('hotel_website').value,
+                hotelImageUrl: hotelImageUrlInput.value.trim(),
+                guestName: document.getElementById('guest_name').value,
+                arrivalDate: formatVoucherDate(arrivalInput.value),
+                departureDate: formatVoucherDate(departureInput.value),
+                duration: durationInput.value,
+                reservationNumbers,
+                mealPlan: document.getElementById('meal_plan').value,
+                numberOfRooms: document.getElementById('number_of_rooms').value,
+                adults, children, infants,
+                guestsSummary: guestsParts.join(', ') || '—',
+                checkInTime: document.getElementById('check_in').value,
+                checkOutTime: document.getElementById('check_out').value,
+                roomType: document.getElementById('room_type').value,
+                roomDescription: document.getElementById('room_description').value,
+                roomSize: document.getElementById('room_size').value,
+                bedType: document.getElementById('bed_type').value,
+                roomView: document.getElementById('room_view').value,
+                floor: document.getElementById('floor').value,
+                connectingRooms: document.getElementById('connecting_rooms').checked,
+                roomInclusions: document.getElementById('room_inclusions').value,
+                specialNotes: document.getElementById('special_requests').value,
+                cancellationPolicy: document.getElementById('cancellation_policy').value,
+                importantInfo: document.getElementById('important_info').value,
+                noShowPolicy: document.getElementById('no_show_policy').value,
+                consultantName: document.getElementById('consultant_name').value,
+                consultantPhone: document.getElementById('consultant_phone').value,
+                consultantEmail: document.getElementById('consultant_email').value,
+            };
+        }
+
+        // ------------------------------------------------------------
+        // Layer 1 (static branding/icons/colors) — the luxury A4 voucher
+        // template. Self-contained CSS (own #4A1C40 palette, not the
+        // site's interactive-UI purple) so it renders identically
+        // in the preview iframe and in the PDF export.
+        // ------------------------------------------------------------
+        const VOUCHER_ICONS = {
+            pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+            globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+            bed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9v9M2 13h20M22 9v9M6 13V9a2 2 0 0 1 2-2h3M13 13V9a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v4"/></svg>',
+            eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+            floor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01"/></svg>',
+            link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1-1"/></svg>',
+            phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+            mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+        };
+
+        const VOUCHER_STYLES = `
+            * { box-sizing: border-box; }
+            body {
+                margin: 0;
+                font-family: 'Helvetica Neue', Arial, sans-serif;
+                color: #1A1A1A;
+                background: #FFFFFF;
+                font-size: 11px;
+                line-height: 1.5;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .voucher-page { width: 210mm; margin: 0 auto; padding: 14mm 14mm 10mm; background: #FFFFFF; }
+            .v-header { text-align: center; margin-bottom: 6mm; }
+            .v-logo { font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; letter-spacing: 3px; color: #4A1C40; }
+            .v-logo span { font-weight: 400; font-size: 10px; letter-spacing: 5px; display: block; color: #1A1A1A; margin-top: 1mm; }
+            .v-title { margin-top: 4mm; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; border-top: 1px solid #4A1C40; border-bottom: 1px solid #4A1C40; padding: 3mm 0; }
+            .v-infobar { display: flex; margin: 5mm 0; background: #F8F8F8; border-radius: 3px; overflow: hidden; }
+            .v-infobar > div { flex: 1; padding: 3mm 4mm; border-right: 1px solid #DDD3DA; }
+            .v-infobar > div:last-child { border-right: none; }
+            .v-infobar .v-label { font-size: 8px; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; font-weight: 700; margin-bottom: 1mm; }
+            .v-infobar .v-value { font-size: 11px; font-weight: 600; }
+            .v-body-grid { display: flex; gap: 6mm; margin-bottom: 5mm; }
+            .v-hotel-info { flex: 1.15; }
+            .v-hotel-info h2 { font-family: Georgia, serif; font-size: 16px; margin: 0 0 2mm; color: #4A1C40; }
+            .v-hotel-info p { margin: 0 0 2mm; font-size: 10.5px; }
+            .v-icon-line { display: flex; align-items: flex-start; gap: 2mm; margin-bottom: 1.5mm; }
+            .v-icon-line svg { width: 12px; height: 12px; color: #4A1C40; flex-shrink: 0; margin-top: 1px; }
+            .v-hotel-image-wrap { flex: 1; }
+            .v-hotel-image-wrap img { width: 100%; height: 42mm; object-fit: cover; border-radius: 3px; display: block; }
+            .v-hotel-image-placeholder { width: 100%; height: 42mm; background: #F8F8F8; border: 1px dashed #DDD3DA; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 9px; text-align: center; padding: 4mm; }
+            .v-guest-line { font-size: 12px; font-weight: 700; margin: 4mm 0; padding-bottom: 2mm; border-bottom: 2px solid #4A1C40; }
+            .v-guest-line .v-sublabel { font-weight: 400; color: #555; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 1mm; }
+            table.v-stay-table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
+            table.v-stay-table th, table.v-stay-table td { border: 1px solid #DDD3DA; padding: 2.2mm 3mm; text-align: left; font-size: 10px; }
+            table.v-stay-table th { background: #4A1C40; color: #FFFFFF; font-weight: 600; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+            .v-room-section { display: flex; gap: 6mm; margin-bottom: 5mm; }
+            .v-room-left { flex: 1.3; }
+            .v-room-left h3 { font-family: Georgia, serif; font-size: 13px; color: #4A1C40; margin: 0 0 2mm; }
+            .v-room-left ul { margin: 0; padding-left: 4mm; font-size: 10px; }
+            .v-room-left li { margin-bottom: 1.2mm; }
+            .v-room-right { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; align-content: start; }
+            .v-room-icon-item { display: flex; align-items: center; gap: 2mm; }
+            .v-room-icon-item svg { width: 16px; height: 16px; color: #4A1C40; flex-shrink: 0; }
+            .v-room-icon-item .v-icon-label { font-size: 7.5px; text-transform: uppercase; color: #777; letter-spacing: 0.5px; display: block; }
+            .v-room-icon-item .v-icon-value { font-size: 10px; font-weight: 600; }
+            .v-section-heading { font-family: Georgia, serif; font-size: 12px; color: #4A1C40; margin: 0 0 2mm; border-bottom: 1px solid #DDD3DA; padding-bottom: 1.5mm; }
+            .v-reservation-table { display: grid; gap: 3mm; margin-bottom: 5mm; }
+            .v-reservation-cell { border: 1px solid #DDD3DA; border-radius: 3px; padding: 2.5mm 3mm; text-align: center; font-size: 10px; font-weight: 600; background: #F8F8F8; }
+            .v-lower-grid { display: flex; gap: 6mm; margin-top: 2mm; }
+            .v-policies-col { flex: 1.5; font-size: 9.5px; }
+            .v-policies-col p { margin: 0 0 2.5mm; }
+            .v-policies-col strong { color: #4A1C40; }
+            .v-contact-box { flex: 1; background: #F8F8F8; border-radius: 3px; padding: 4mm; align-self: flex-start; }
+            .v-contact-box h4 { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; margin: 0 0 3mm; }
+            .v-contact-line { display: flex; align-items: center; gap: 2mm; margin-bottom: 2mm; font-size: 10px; }
+            .v-contact-line svg { width: 13px; height: 13px; color: #4A1C40; flex-shrink: 0; }
+            .v-footer { margin-top: 8mm; padding-top: 4mm; border-top: 1px solid #DDD3DA; text-align: center; font-size: 8px; color: #777; }
+            .v-footer .v-hq { font-weight: 600; color: #4A1C40; margin-bottom: 1mm; }
+        `;
+
+        function voucherRoomDetailsHTML(d) {
+            const items = [];
+            if (d.roomSize) items.push(`Room size: ${escapeHtml(String(d.roomSize))} sqm`);
+            if (d.roomInclusions) items.push(escapeHtml(d.roomInclusions));
+            if (d.specialNotes) items.push(`Special notes: ${escapeHtml(d.specialNotes)}`);
+            return items.map(i => `<li>${i}</li>`).join('');
+        }
+
+        function voucherReservationTableHTML(d) {
+            const numbers = d.reservationNumbers.length ? d.reservationNumbers : ['—'];
+            const cells = numbers.map(n => `<div class="v-reservation-cell">${escapeHtml(n)}</div>`).join('');
+            return `<div class="v-reservation-table" style="grid-template-columns: repeat(${numbers.length}, 1fr);">${cells}</div>`;
+        }
+
+        function buildVoucherHTML(d) {
+            const imagePlaceholder = `<div class="v-hotel-image-placeholder">Hotel exterior photo not provided</div>`;
+            const imageHTML = d.hotelImageUrl
+                ? `<img src="${escapeHtml(d.hotelImageUrl)}" alt="${escapeHtml(d.hotelName)}" onerror="this.outerHTML='<div class=&quot;v-hotel-image-placeholder&quot;>Photo could not be loaded</div>'">`
+                : imagePlaceholder;
+
+            const body = `
+                <div class="voucher-page">
+                    <div class="v-header">
+                        <div class="v-logo">ATLANTIS<span>HOLIDAYS &amp; WELLNESS</span></div>
+                        <div class="v-title">HOTEL BOOKING CONFIRMATION VOUCHER</div>
+                    </div>
+
+                    <div class="v-infobar">
+                        <div><span class="v-label">Voucher No</span><span class="v-value">${escapeHtml(d.voucherNumber)}</span></div>
+                        <div><span class="v-label">Date of Issue</span><span class="v-value">${escapeHtml(d.issueDate)}</span></div>
+                        <div><span class="v-label">Status</span><span class="v-value">${escapeHtml(d.status)}</span></div>
+                    </div>
+
+                    <div class="v-body-grid">
+                        <div class="v-hotel-info">
+                            <h2>${escapeHtml(d.hotelName)}</h2>
+                            <div class="v-icon-line">${VOUCHER_ICONS.pin}<span>${escapeHtml(d.hotelAddress || 'Address not provided')}</span></div>
+                            ${d.hotelWebsite ? `<div class="v-icon-line">${VOUCHER_ICONS.globe}<span>${escapeHtml(d.hotelWebsite)}</span></div>` : ''}
+                        </div>
+                        <div class="v-hotel-image-wrap">${imageHTML}</div>
+                    </div>
+
+                    <div class="v-guest-line"><span class="v-sublabel">Guest Name</span>${escapeHtml(d.guestName)}</div>
+
+                    <table class="v-stay-table">
+                        <tr><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Meal Plan</th><th>Guests</th><th>Rooms</th><th>Room Type</th></tr>
+                        <tr>
+                            <td>${escapeHtml(d.arrivalDate)}</td>
+                            <td>${escapeHtml(d.departureDate)}</td>
+                            <td>${escapeHtml(d.duration)}</td>
+                            <td>${escapeHtml(d.mealPlan)}</td>
+                            <td>${escapeHtml(d.guestsSummary)}</td>
+                            <td>${escapeHtml(String(d.numberOfRooms))}</td>
+                            <td>${escapeHtml(d.roomType)}</td>
+                        </tr>
+                    </table>
+
+                    <div class="v-room-section">
+                        <div class="v-room-left">
+                            <h3>${escapeHtml(d.roomType)}</h3>
+                            <p style="font-size:10px;margin:0 0 2mm;">${escapeHtml(d.roomDescription)}</p>
+                            <ul>${voucherRoomDetailsHTML(d)}</ul>
+                        </div>
+                        <div class="v-room-right">
+                            <div class="v-room-icon-item">${VOUCHER_ICONS.bed}<span><span class="v-icon-label">Bed Type</span><span class="v-icon-value">${escapeHtml(d.bedType)}</span></span></div>
+                            <div class="v-room-icon-item">${VOUCHER_ICONS.eye}<span><span class="v-icon-label">View</span><span class="v-icon-value">${escapeHtml(d.roomView)}</span></span></div>
+                            <div class="v-room-icon-item">${VOUCHER_ICONS.floor}<span><span class="v-icon-label">Floor</span><span class="v-icon-value">${escapeHtml(d.floor)}</span></span></div>
+                            <div class="v-room-icon-item">${VOUCHER_ICONS.link}<span><span class="v-icon-label">Connecting Rooms</span><span class="v-icon-value">${d.connectingRooms ? 'Available' : 'Not Available'}</span></span></div>
+                        </div>
+                    </div>
+
+                    <div class="v-section-heading">Reservation / Confirmation Numbers</div>
+                    ${voucherReservationTableHTML(d)}
+
+                    <div class="v-lower-grid">
+                        <div class="v-policies-col">
+                            <div class="v-section-heading">Cancellation Policy</div>
+                            <p>${nl2br(d.cancellationPolicy)}</p>
+                            <div class="v-section-heading">Important Information</div>
+                            <p>${nl2br(d.importantInfo)}</p>
+                            <div class="v-section-heading">No-Show Policy</div>
+                            <p>${nl2br(d.noShowPolicy)}</p>
+                        </div>
+                        <div class="v-contact-box">
+                            <h4>For Assistance, Please Contact</h4>
+                            <div style="font-weight:600;margin-bottom:2mm;">${escapeHtml(d.consultantName)}</div>
+                            <div class="v-contact-line">${VOUCHER_ICONS.phone}<span>${escapeHtml(d.consultantPhone)}</span></div>
+                            <div class="v-contact-line">${VOUCHER_ICONS.mail}<span>${escapeHtml(d.consultantEmail)}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="v-footer">
+                        <div class="v-hq">Atlantis Holidays &amp; Wellness</div>
+                        <div>Dubai, United Arab Emirates &nbsp;|&nbsp; +971 4 000 0000 &nbsp;|&nbsp; reservations@atlantisholidays.com &nbsp;|&nbsp; atlantisholidays.com</div>
+                    </div>
+                </div>
+            `;
+            return { styles: VOUCHER_STYLES, body };
+        }
+
+        // ------------------------------------------------------------
+        // Preview modal — renders buildVoucherHTML() into an iframe.
+        // ------------------------------------------------------------
+        const voucherPreviewOverlay = document.getElementById('voucherPreviewOverlay');
+        const voucherPreviewFrame = document.getElementById('voucherPreviewFrame');
+        const voucherPreviewBtn = document.getElementById('voucherPreviewBtn');
+        const voucherPreviewCloseBtn = document.getElementById('voucherPreviewCloseBtn');
+
+        function renderVoucherPreview() {
+            const { styles, body } = buildVoucherHTML(buildVoucherData());
+            voucherPreviewFrame.srcdoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${styles}</style></head><body>${body}</body></html>`;
+        }
+
+        voucherPreviewBtn.addEventListener('click', () => {
+            renderVoucherPreview();
+            voucherPreviewOverlay.classList.add('is-open');
+        });
+        function closeVoucherPreview() {
+            voucherPreviewOverlay.classList.remove('is-open');
+            voucherPreviewFrame.srcdoc = '';
+        }
+        voucherPreviewCloseBtn.addEventListener('click', closeVoucherPreview);
+        voucherPreviewOverlay.addEventListener('click', (e) => { if (e.target === voucherPreviewOverlay) closeVoucherPreview(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && voucherPreviewOverlay.classList.contains('is-open')) closeVoucherPreview();
+        });
+
+        // ------------------------------------------------------------
+        // Download PDF — renders the same buildVoucherHTML() output into
+        // an off-screen container in the main document (html2canvas needs
+        // real, attached DOM to rasterize) and converts it with the
+        // self-hosted html2pdf bundle.
+        // ------------------------------------------------------------
+        const voucherPdfBtn = document.getElementById('voucherPdfBtn');
+        const voucherPdfLabel = document.getElementById('voucherPdfLabel');
+
+        voucherPdfBtn.addEventListener('click', async () => {
+            if (!window.html2pdf) {
+                showStatus(voucherFormStatus, 'PDF library failed to load. Please refresh and try again.', 'error');
+                return;
+            }
+            if (!durationInput.value) {
+                showStatus(voucherFormStatus, 'Select a valid arrival and departure date before generating the voucher.', 'error');
+                return;
+            }
+
+            voucherPdfBtn.disabled = true;
+            voucherPdfBtn.classList.add('is-loading');
+            voucherPdfLabel.textContent = 'Generating…';
+
+            const data = buildVoucherData();
+            const { styles, body } = buildVoucherHTML(data);
+
+            const styleEl = document.createElement('style');
+            styleEl.textContent = styles;
+            const container = document.createElement('div');
+            container.style.position = 'fixed';
+            container.style.left = '-9999px';
+            container.style.top = '0';
+            container.innerHTML = body;
+            document.head.appendChild(styleEl);
+            document.body.appendChild(container);
+
+            try {
+                const filename = `Voucher_${(data.guestName || 'Guest').replace(/[^a-z0-9]/gi, '_')}.pdf`;
+                await window.html2pdf()
+                    .from(container.querySelector('.voucher-page'))
+                    .set({
+                        margin: 0,
+                        filename,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    })
+                    .save();
+                showStatus(voucherFormStatus, `Voucher PDF generated: ${filename}`, 'success');
+            } catch (error) {
+                console.error('Error generating voucher PDF:', error);
+                showStatus(voucherFormStatus, 'Error generating PDF: ' + error.message, 'error');
+            } finally {
+                container.remove();
+                styleEl.remove();
+                voucherPdfBtn.disabled = false;
+                voucherPdfBtn.classList.remove('is-loading');
+                voucherPdfLabel.textContent = 'Download PDF';
+            }
+        });
+
+        // ------------------------------------------------------------
+        // Download Word — field names below match voucher_template.docx's
+        // actual tags exactly (see the template for the full layout).
         // ------------------------------------------------------------
         const voucherSubmitBtn = document.getElementById('voucherSubmitBtn');
         const voucherSubmitLabel = document.getElementById('voucherSubmitLabel');
@@ -1218,24 +1984,40 @@
             voucherSubmitLabel.textContent = 'Generating…';
 
             try {
-                const guestName = document.getElementById('guest_name').value;
-                const specialRequests = document.getElementById('special_requests').value;
+                const data = buildVoucherData();
 
                 const dataContext = {
-                    hotel_name: hotelSearchInput.value,
-                    hotel_address: hotelAddressInput.value,
-                    guest_name: guestName,
-                    confirmation_number: document.getElementById('confirmation_num').value,
-                    arrival_date: formatDisplayDate(arrivalInput.value),
-                    departure_date: formatDisplayDate(departureInput.value),
-                    duration_of_stay: durationInput.value,
-                    number_of_guests: document.getElementById('num_guests').value,
-                    room_type: document.getElementById('room_type').value,
-                    meal_plan: document.getElementById('meal_plan').value,
-                    checkin_time: document.getElementById('check_in').value,
-                    checkout_time: document.getElementById('check_out').value,
-                    special_requests: specialRequests,
-                    special_request_note: specialRequests
+                    voucher_number: data.voucherNumber,
+                    issue_date: data.issueDate,
+                    status: data.status,
+                    hotel_name: data.hotelName,
+                    hotel_address: data.hotelAddress,
+                    hotel_website: data.hotelWebsite,
+                    guest_name: data.guestName,
+                    reservation_numbers: data.reservationNumbers.length ? data.reservationNumbers.join(', ') : '—',
+                    arrival_date: data.arrivalDate,
+                    departure_date: data.departureDate,
+                    duration_of_stay: data.duration,
+                    number_of_guests: data.guestsSummary,
+                    room_type: data.roomType,
+                    room_description: data.roomDescription,
+                    room_size: data.roomSize,
+                    bed_type: data.bedType,
+                    room_view: data.roomView,
+                    floor: data.floor,
+                    connecting_rooms: data.connectingRooms ? 'Available' : 'Not Available',
+                    room_inclusions: data.roomInclusions,
+                    meal_plan: data.mealPlan,
+                    checkin_time: data.checkInTime,
+                    checkout_time: data.checkOutTime,
+                    special_requests: data.specialNotes,
+                    special_request_note: data.specialNotes,
+                    cancellation_policy: data.cancellationPolicy,
+                    important_info: data.importantInfo,
+                    no_show_policy: data.noShowPolicy,
+                    consultant_name: data.consultantName,
+                    consultant_phone: data.consultantPhone,
+                    consultant_email: data.consultantEmail,
                 };
 
                 const cacheBuster = new Date().getTime();
@@ -1256,7 +2038,7 @@
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 });
 
-                const filename = `Voucher_${guestName.replace(/[^a-z0-9]/gi, '_')}.docx`;
+                const filename = `Voucher_${data.guestName.replace(/[^a-z0-9]/gi, '_')}.docx`;
                 saveAs(outputBlob, filename);
 
                 showStatus(voucherFormStatus, `Voucher generated: ${filename}`, 'success');
@@ -1267,7 +2049,7 @@
             } finally {
                 voucherSubmitBtn.disabled = false;
                 voucherSubmitBtn.classList.remove('is-loading');
-                voucherSubmitLabel.textContent = 'Generate Confirmation Voucher (.docx)';
+                voucherSubmitLabel.textContent = 'Download Word';
             }
         });
     </script>
