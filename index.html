@@ -575,24 +575,6 @@
             background-color: var(--color-danger-hover);
         }
 
-        .btn-submit {
-            width: 100%;
-            padding: 16px;
-            font-size: var(--text-md);
-            font-weight: var(--weight-bold);
-            margin-top: var(--space-3);
-            box-shadow: var(--shadow-sm);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--space-2);
-        }
-
-        .btn-submit:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-1px);
-        }
-
         .spinner {
             display: none;
             width: 16px;
@@ -601,10 +583,6 @@
             border-top-color: #ffffff;
             border-radius: 50%;
             animation: spin 700ms linear infinite;
-        }
-
-        .btn-submit.is-loading .spinner {
-            display: inline-block;
         }
 
         @keyframes spin {
@@ -639,14 +617,14 @@
             background-color: var(--color-accent-teal-hover);
         }
 
-        .voucher-actions {
+        .doc-actions {
             display: flex;
             flex-wrap: wrap;
             gap: var(--space-3);
             margin-top: var(--space-3);
         }
 
-        .voucher-actions .btn {
+        .doc-actions .btn {
             flex: 1;
             min-width: 160px;
             display: inline-flex;
@@ -654,6 +632,7 @@
             justify-content: center;
             gap: var(--space-2);
             padding: 14px 20px;
+            font-weight: var(--weight-bold);
         }
 
         .voucher-grid-3 {
@@ -745,7 +724,7 @@
             transform: translateY(0) scale(1);
         }
 
-        .voucher-preview-modal {
+        .doc-preview-modal {
             width: 100%;
             max-width: 900px;
             max-height: 92vh;
@@ -781,14 +760,14 @@
 
         .modal-close:hover { color: var(--color-text); }
 
-        .voucher-preview-body {
+        .doc-preview-body {
             flex: 1;
             overflow: hidden;
             border-radius: var(--radius-md);
             background: #525659;
         }
 
-        .voucher-preview-body iframe {
+        .doc-preview-body iframe {
             width: 100%;
             height: 78vh;
             border: none;
@@ -797,7 +776,7 @@
 
         @media (max-width: 640px) {
             .voucher-grid-3 { grid-template-columns: 1fr; }
-            .voucher-actions .btn { flex: 1 1 100%; }
+            .doc-actions .btn { flex: 1 1 100%; }
         }
 
         .section {
@@ -976,14 +955,34 @@
                     <button type="button" class="btn btn-add" onclick="addRow('tour-container', 'tour-row', 'Activity Name')">+ Add Activity</button>
                 </div>
 
-                <button type="submit" class="btn btn-submit" id="submitBtn">
-                    <span class="spinner" aria-hidden="true"></span>
-                    <span id="submitLabel">Generate Word Proposal (.docx)</span>
-                </button>
+                <div class="doc-actions">
+                    <button type="button" class="btn btn-outline" id="proposalPreviewBtn">Preview</button>
+                    <button type="button" class="btn btn-teal" id="proposalPdfBtn">
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span id="proposalPdfLabel">Download PDF</span>
+                    </button>
+                    <button type="submit" class="btn" id="submitBtn">
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span id="submitLabel">Download Word</span>
+                    </button>
+                </div>
 
                 <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
             </form>
         </section>
+
+        <!-- Proposal preview modal -->
+        <div class="modal-overlay" id="proposalPreviewOverlay">
+            <div class="modal doc-preview-modal" role="dialog" aria-modal="true" aria-labelledby="proposalPreviewTitle">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="proposalPreviewTitle">Proposal Preview</h4>
+                    <button type="button" class="modal-close" id="proposalPreviewCloseBtn" aria-label="Close preview">✕</button>
+                </div>
+                <div class="modal-body doc-preview-body">
+                    <iframe id="proposalPreviewFrame" title="Proposal preview"></iframe>
+                </div>
+            </div>
+        </div>
 
         <!-- Hotel Confirmation Voucher Panel -->
         <section class="content-area tab-panel" id="panel-voucher" role="tabpanel" aria-labelledby="tab-voucher" hidden>
@@ -1190,7 +1189,7 @@
                     </div>
                 </div>
 
-                <div class="voucher-actions">
+                <div class="doc-actions">
                     <button type="button" class="btn btn-outline" id="voucherPreviewBtn">Preview</button>
                     <button type="button" class="btn btn-teal" id="voucherPdfBtn">
                         <span class="spinner" aria-hidden="true"></span>
@@ -1208,12 +1207,12 @@
 
         <!-- Voucher preview modal -->
         <div class="modal-overlay" id="voucherPreviewOverlay">
-            <div class="modal voucher-preview-modal" role="dialog" aria-modal="true" aria-labelledby="voucherPreviewTitle">
+            <div class="modal doc-preview-modal" role="dialog" aria-modal="true" aria-labelledby="voucherPreviewTitle">
                 <div class="modal-header">
                     <h4 class="modal-title" id="voucherPreviewTitle">Voucher Preview</h4>
                     <button type="button" class="modal-close" id="voucherPreviewCloseBtn" aria-label="Close preview">✕</button>
                 </div>
-                <div class="modal-body voucher-preview-body">
+                <div class="modal-body doc-preview-body">
                     <iframe id="voucherPreviewFrame" title="Hotel confirmation voucher preview"></iframe>
                 </div>
             </div>
@@ -1366,7 +1365,207 @@
         }
 
         // ------------------------------------------------------------
-        // Proposal Generation Submit Logic
+        // Proposal — central data model (Layer 2 + 3), same one-function-
+        // feeds-everything pattern as buildVoucherData().
+        // ------------------------------------------------------------
+        function buildProposalData() {
+            const hotelData = parseSection('hotel-row');
+            const transData = parseSection('trans-row');
+            const tourData = parseSection('tour-row');
+
+            const subtotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
+            const vatValue = subtotalValue * 0.05;
+            const grandTotalValue = subtotalValue + vatValue;
+
+            return {
+                eventName: document.getElementById('event_name').value,
+                eventDates: document.getElementById('event_dates').value,
+                hotelServices: hotelData.items,
+                transportation: transData.items,
+                tours: tourData.items,
+                subtotal: subtotalValue.toFixed(2),
+                vatAmount: vatValue.toFixed(2),
+                grandTotal: grandTotalValue.toFixed(2),
+            };
+        }
+
+        // ------------------------------------------------------------
+        // Proposal — Layer 1 (static branding) luxury A4 template, same
+        // self-contained-CSS approach as the voucher so it renders
+        // identically in the preview iframe and the PDF export.
+        // ------------------------------------------------------------
+        const PROPOSAL_STYLES = `
+            * { box-sizing: border-box; }
+            body {
+                margin: 0;
+                font-family: 'Helvetica Neue', Arial, sans-serif;
+                color: #1A1A1A;
+                background: #FFFFFF;
+                font-size: 11px;
+                line-height: 1.5;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .doc-page { width: 210mm; margin: 0 auto; padding: 14mm; background: #FFFFFF; }
+            .p-header { text-align: center; margin-bottom: 6mm; }
+            .p-logo { font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; letter-spacing: 3px; color: #4A1C40; }
+            .p-logo span { font-weight: 400; font-size: 10px; letter-spacing: 5px; display: block; color: #1A1A1A; margin-top: 1mm; }
+            .p-title { margin-top: 4mm; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; border-top: 1px solid #4A1C40; border-bottom: 1px solid #4A1C40; padding: 3mm 0; }
+            .p-event { margin: 5mm 0; }
+            .p-event h2 { font-family: Georgia, serif; font-size: 16px; color: #4A1C40; margin: 0 0 1mm; }
+            .p-event p { margin: 0; font-size: 10.5px; color: #555; }
+            .p-section-heading { font-family: Georgia, serif; font-size: 12px; color: #4A1C40; margin: 5mm 0 2mm; border-bottom: 1px solid #DDD3DA; padding-bottom: 1.5mm; }
+            table.p-items { width: 100%; border-collapse: collapse; margin-bottom: 2mm; }
+            table.p-items th, table.p-items td { border: 1px solid #DDD3DA; padding: 2mm 3mm; text-align: left; font-size: 9.5px; }
+            table.p-items th { background: #4A1C40; color: #FFFFFF; font-weight: 600; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+            table.p-items td.p-num { text-align: right; }
+            .p-empty-note { font-size: 9.5px; color: #999; font-style: italic; margin: 0 0 2mm; }
+            .p-totals { width: 100%; max-width: 80mm; margin: 6mm 0 0 auto; border-collapse: collapse; }
+            .p-totals td { padding: 1.8mm 3mm; font-size: 10.5px; }
+            .p-totals tr.p-subtotal td, .p-totals tr.p-vat td { border-bottom: 1px solid #DDD3DA; }
+            .p-totals tr.p-grand td { font-weight: 700; font-size: 12px; color: #4A1C40; border-top: 2px solid #4A1C40; padding-top: 2.5mm; }
+            .p-totals td.p-num { text-align: right; }
+            .p-footer { margin-top: 10mm; padding-top: 4mm; border-top: 1px solid #DDD3DA; text-align: center; font-size: 8px; color: #777; }
+            .p-footer .p-hq { font-weight: 600; color: #4A1C40; margin-bottom: 1mm; }
+        `;
+
+        function proposalItemsTableHTML(title, items) {
+            if (!items.length) {
+                return `<div class="p-section-heading">${escapeHtml(title)}</div><p class="p-empty-note">None added.</p>`;
+            }
+            const rows = items.map(i => `
+                <tr>
+                    <td>${escapeHtml(i.name)}</td>
+                    <td class="p-num">${escapeHtml(String(i.quantity))}</td>
+                    <td>${escapeHtml(i.unit)}</td>
+                    <td class="p-num">${escapeHtml(i.rate)}</td>
+                    <td class="p-num">${escapeHtml(i.total)}</td>
+                </tr>
+            `).join('');
+            return `
+                <div class="p-section-heading">${escapeHtml(title)}</div>
+                <table class="p-items">
+                    <tr><th>Item</th><th>Qty</th><th>Unit</th><th>Rate (AED)</th><th>Total (AED)</th></tr>
+                    ${rows}
+                </table>
+            `;
+        }
+
+        function buildProposalHTML(d) {
+            const body = `
+                <div class="doc-page">
+                    <div class="p-header">
+                        <div class="p-logo">ATLANTIS<span>HOLIDAYS &amp; WELLNESS</span></div>
+                        <div class="p-title">EVENT PROPOSAL &amp; QUOTATION</div>
+                    </div>
+
+                    <div class="p-event">
+                        <h2>${escapeHtml(d.eventName)}</h2>
+                        <p>${escapeHtml(d.eventDates)}</p>
+                    </div>
+
+                    ${proposalItemsTableHTML('Hotel Options', d.hotelServices)}
+                    ${proposalItemsTableHTML('Transportation', d.transportation)}
+                    ${proposalItemsTableHTML('Tours & Activities', d.tours)}
+
+                    <table class="p-totals">
+                        <tr class="p-subtotal"><td>Subtotal</td><td class="p-num">AED ${escapeHtml(d.subtotal)}</td></tr>
+                        <tr class="p-vat"><td>VAT (5%)</td><td class="p-num">AED ${escapeHtml(d.vatAmount)}</td></tr>
+                        <tr class="p-grand"><td>Estimated Total</td><td class="p-num">AED ${escapeHtml(d.grandTotal)}</td></tr>
+                    </table>
+
+                    <div class="p-footer">
+                        <div class="p-hq">Atlantis Holidays &amp; Wellness</div>
+                        <div>Dubai, United Arab Emirates &nbsp;|&nbsp; +971 4 000 0000 &nbsp;|&nbsp; reservations@atlantisholidays.com &nbsp;|&nbsp; atlantisholidays.com</div>
+                    </div>
+                </div>
+            `;
+            return { styles: PROPOSAL_STYLES, body };
+        }
+
+        // ------------------------------------------------------------
+        // Proposal — Preview modal
+        // ------------------------------------------------------------
+        const proposalPreviewOverlay = document.getElementById('proposalPreviewOverlay');
+        const proposalPreviewFrame = document.getElementById('proposalPreviewFrame');
+        const proposalPreviewBtn = document.getElementById('proposalPreviewBtn');
+        const proposalPreviewCloseBtn = document.getElementById('proposalPreviewCloseBtn');
+
+        function renderProposalPreview() {
+            const { styles, body } = buildProposalHTML(buildProposalData());
+            proposalPreviewFrame.srcdoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${styles}</style></head><body>${body}</body></html>`;
+        }
+        proposalPreviewBtn.addEventListener('click', () => {
+            renderProposalPreview();
+            proposalPreviewOverlay.classList.add('is-open');
+        });
+        function closeProposalPreview() {
+            proposalPreviewOverlay.classList.remove('is-open');
+            proposalPreviewFrame.srcdoc = '';
+        }
+        proposalPreviewCloseBtn.addEventListener('click', closeProposalPreview);
+        proposalPreviewOverlay.addEventListener('click', (e) => { if (e.target === proposalPreviewOverlay) closeProposalPreview(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && proposalPreviewOverlay.classList.contains('is-open')) closeProposalPreview();
+        });
+
+        // ------------------------------------------------------------
+        // Proposal — Download PDF (self-hosted html2pdf, same pattern
+        // as the voucher's PDF export)
+        // ------------------------------------------------------------
+        const proposalPdfBtn = document.getElementById('proposalPdfBtn');
+        const proposalPdfLabel = document.getElementById('proposalPdfLabel');
+
+        proposalPdfBtn.addEventListener('click', async () => {
+            if (!window.html2pdf) {
+                showStatus(formStatus, 'PDF library failed to load. Please refresh and try again.', 'error');
+                return;
+            }
+
+            proposalPdfBtn.disabled = true;
+            proposalPdfBtn.classList.add('is-loading');
+            proposalPdfLabel.textContent = 'Generating…';
+
+            const data = buildProposalData();
+            const { styles, body } = buildProposalHTML(data);
+
+            const styleEl = document.createElement('style');
+            styleEl.textContent = styles;
+            const container = document.createElement('div');
+            container.style.position = 'fixed';
+            container.style.left = '-9999px';
+            container.style.top = '0';
+            container.innerHTML = body;
+            document.head.appendChild(styleEl);
+            document.body.appendChild(container);
+
+            try {
+                const filename = `Proposal_${(data.eventName || 'Event').replace(/[^a-z0-9]/gi, '_')}.pdf`;
+                await window.html2pdf()
+                    .from(container.querySelector('.doc-page'))
+                    .set({
+                        margin: 0,
+                        filename,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    })
+                    .save();
+                showStatus(formStatus, `Proposal PDF generated: ${filename}`, 'success');
+            } catch (error) {
+                console.error('Error generating proposal PDF:', error);
+                showStatus(formStatus, 'Error generating PDF: ' + error.message, 'error');
+            } finally {
+                container.remove();
+                styleEl.remove();
+                proposalPdfBtn.disabled = false;
+                proposalPdfBtn.classList.remove('is-loading');
+                proposalPdfLabel.textContent = 'Download PDF';
+            }
+        });
+
+        // ------------------------------------------------------------
+        // Proposal Generation Submit Logic (Download Word)
         // ------------------------------------------------------------
         const submitBtn = document.getElementById('submitBtn');
         const submitLabel = document.getElementById('submitLabel');
@@ -1387,23 +1586,17 @@
             submitLabel.textContent = 'Generating…';
 
             try {
-                const hotelData = parseSection('hotel-row');
-                const transData = parseSection('trans-row');
-                const tourData = parseSection('tour-row');
-
-                const subtotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
-                const vatValue = subtotalValue * 0.05;
-                const grandTotalValue = subtotalValue + vatValue;
+                const data = buildProposalData();
 
                 const dataContext = {
-                    event_name: document.getElementById('event_name').value,
-                    event_dates: document.getElementById('event_dates').value,
-                    hotel_services: hotelData.items,
-                    transportation: transData.items,
-                    tours: tourData.items,
-                    subtotal: subtotalValue.toFixed(2),
-                    vat_amount: vatValue.toFixed(2),
-                    grand_total: grandTotalValue.toFixed(2)
+                    event_name: data.eventName,
+                    event_dates: data.eventDates,
+                    hotel_services: data.hotelServices,
+                    transportation: data.transportation,
+                    tours: data.tours,
+                    subtotal: data.subtotal,
+                    vat_amount: data.vatAmount,
+                    grand_total: data.grandTotal
                 };
 
                 const cacheBuster = new Date().getTime();
@@ -1424,7 +1617,7 @@
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 });
 
-                const filename = `Proposal_${dataContext.event_name.replace(/[^a-z0-9]/gi, '_')}.docx`;
+                const filename = `Proposal_${data.eventName.replace(/[^a-z0-9]/gi, '_')}.docx`;
                 saveAs(outputBlob, filename);
 
                 showStatus(formStatus, `Proposal generated: ${filename}`, 'success');
@@ -1435,7 +1628,7 @@
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('is-loading');
-                submitLabel.textContent = 'Generate Word Proposal (.docx)';
+                submitLabel.textContent = 'Download Word';
             }
         });
 
