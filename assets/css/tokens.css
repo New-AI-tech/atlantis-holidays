@@ -1,0 +1,221 @@
+/* ================================================================
+   ATLANTIS HOLIDAYS & WELLNESS — SHARED DESIGN TOKENS
+   ================================================================
+   Source of truth for the brand's color/type/spacing/motion system.
+   index.html keeps its own inline copy of the original purple-only
+   token set (untouched, to avoid any regression risk to the working
+   proposal/voucher tool) — this file is what design-system.html and
+   admin-dashboard.html import, and is the one to edit going forward.
+
+   Extends the existing purple brand (unchanged from index.html) with
+   two new accent families requested for the admin/design-system work:
+     - gold   — premium/featured accent (VIP clients, highlighted plans)
+     - teal   — a second accent tied to the "Atlantis" ocean motif,
+                used as the semantic "Viewed" status color in the
+                Proposal Manager dashboard
+
+   Every accent color below has been contrast-checked (WCAG AA, 4.5:1
+   for text / 3:1 for large text & UI components) against the surfaces
+   it's actually used on in each theme — light and dark modes use
+   different shades of gold/teal for the same reason --color-heading
+   already differs by theme, not merely for decoration.
+   ================================================================ */
+
+@font-face {
+    font-family: 'Fraunces';
+    src: url('../fonts/fraunces-latin-300-normal.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Fraunces';
+    src: url('../fonts/fraunces-latin-400-normal.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Fraunces';
+    src: url('../fonts/fraunces-latin-400-italic.woff2') format('woff2');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Fraunces';
+    src: url('../fonts/fraunces-latin-500-normal.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Fraunces';
+    src: url('../fonts/fraunces-latin-600-normal.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Fraunces';
+    src: url('../fonts/fraunces-latin-700-normal.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    /* ---- Color: brand core (identical to index.html) ---- */
+    --color-bg: #0f111a;
+    --color-surface: #1a1d2e;
+    --color-surface-raised: #23273c;
+    --color-border: #2d3748;
+    --color-border-strong: #3f495c;
+    --color-text: #e2e8f0;
+    --color-text-muted: #98a4b8;
+    --color-heading: #a855f7;
+    --color-primary: #7c1aa8;
+    --color-primary-hover: #8f22bf;
+    --color-primary-active: #6a0d91;
+    --color-secondary: #2b6cb0;
+    --color-secondary-hover: #3579c2;
+    --color-danger: #e53e3e;
+    --color-danger-hover: #f56565;
+    --color-success: #48bb78;
+    --color-success-bg: rgba(72, 187, 120, 0.12);
+    --color-danger-bg: rgba(229, 62, 62, 0.12);
+    --color-focus-ring: #c084fc;
+    --input-bg: #0f111a;
+    --input-text: #ffffff;
+
+    /* ---- Color: new accents (dark theme) ---- */
+    --color-accent-gold: #c6a15b;
+    --color-accent-gold-hover: #d9b876;
+    --color-accent-gold-bg: rgba(198, 161, 91, 0.14);
+    --color-accent-gold-contrast: #1a1508;
+    --color-accent-teal: #4fc1cc;
+    --color-accent-teal-hover: #6fd0d9;
+    --color-accent-teal-bg: rgba(79, 193, 204, 0.14);
+    --color-accent-teal-contrast: #062024;
+
+    /* ---- Typography (identical to index.html) ---- */
+    --font-body: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --weight-light: 300;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+    --text-xs: 0.75rem;
+    --text-sm: 0.8125rem;
+    --text-base: 1.0625rem;
+    --text-md: 1.1875rem;
+    --text-lg: 1.375rem;
+    --text-xl: 1.625rem;
+    --text-display: clamp(2rem, 1.6rem + 1.8vw, 2.75rem);
+    --leading-tight: 1.2;
+    --leading-normal: 1.6;
+    --tracking-wide: 0.04em;
+
+    /* ---- Spacing scale (4px base) ---- */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+
+    /* ---- Radius / shadow / motion ---- */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.22);
+    --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.35);
+    --transition-fast: 150ms ease;
+    --transition-base: 240ms ease;
+}
+
+body.light-mode {
+    --color-bg: #f4f6f9;
+    --color-surface: #ffffff;
+    --color-surface-raised: #f7f8fb;
+    --color-border: #e2e8f0;
+    --color-border-strong: #cbd5e0;
+    --color-text: #2d3748;
+    --color-text-muted: #64748b;
+    --color-heading: #6a0d91;
+    --color-primary: #6a0d91;
+    --color-primary-hover: #7c1aa8;
+    --color-primary-active: #56077a;
+    --input-bg: #ffffff;
+    --input-text: #1a202c;
+
+    /* ---- Color: new accents (light theme — deeper shades needed for
+       AA text/button contrast on white; see file header) ---- */
+    --color-accent-gold: #8a6b24;
+    --color-accent-gold-hover: #8f701f;
+    --color-accent-gold-bg: rgba(138, 107, 36, 0.1);
+    --color-accent-gold-contrast: #ffffff;
+    --color-accent-teal: #1f6f78;
+    --color-accent-teal-hover: #26858f;
+    --color-accent-teal-bg: rgba(31, 111, 120, 0.1);
+    --color-accent-teal-contrast: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+* {
+    transition: background-color var(--transition-base), color var(--transition-base), border-color var(--transition-base);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+body {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: var(--weight-regular);
+    line-height: var(--leading-normal);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+a, button, input, textarea, select, [tabindex] {
+    font-family: inherit;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
