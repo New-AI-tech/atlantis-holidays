@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposal Manager — Atlantis Holidays & Wellness</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="assets/css/tokens.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <style>
+        .dash-main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-6) var(--space-5) var(--space-8);
+        }
+
+        .dash-intro {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: var(--space-4);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-6);
+        }
+
+        .dash-intro h2 {
+            font-size: var(--text-xl);
+            font-weight: var(--weight-semibold);
+            color: var(--color-heading);
+            margin: 0;
+        }
+
+        .dash-intro p {
+            font-size: var(--text-sm);
+            color: var(--color-text-muted);
+            margin: var(--space-1) 0 0;
+        }
+
+        .dash-total {
+            font-size: var(--text-sm);
+            color: var(--color-text-muted);
+            white-space: nowrap;
+        }
+
+        .dash-total strong {
+            color: var(--color-text);
+            font-weight: var(--weight-semibold);
+        }
+
+        /* ---- Kanban board ---- */
+        .kanban-board {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(280px, 1fr);
+            gap: var(--space-4);
+            overflow-x: auto;
+            padding-bottom: var(--space-3);
+            scroll-snap-type: x proximity;
+        }
+
+        .kanban-column {
+            display: flex;
+            flex-direction: column;
+            background: var(--color-surface-raised);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            min-height: 200px;
+            scroll-snap-align: start;
+            transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .kanban-column.is-drag-over {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(124, 26, 168, 0.2);
+        }
+
+        .kanban-column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-2);
+            padding: var(--space-4) var(--space-4) var(--space-3);
+            border-top-left-radius: var(--radius-lg);
+            border-top-right-radius: var(--radius-lg);
+            border-bottom: 3px solid var(--column-accent, var(--color-border-strong));
+        }
+
+        .kanban-column-title {
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            color: var(--color-text);
+            margin: 0;
+        }
+
+        .kanban-column-count {
+            font-size: var(--text-xs);
+            font-weight: var(--weight-semibold);
+            color: var(--color-text-muted);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 999px;
+            padding: 2px 9px;
+        }
+
+        .kanban-card-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-3) var(--space-4);
+            min-height: 80px;
+        }
+
+        .kanban-empty-hint {
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            text-align: center;
+            padding: var(--space-4);
+            border: 1px dashed var(--color-border-strong);
+            border-radius: var(--radius-md);
+        }
+
+        /* ---- Proposal card ---- */
+        .proposal-card {
+            padding: var(--space-4);
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .proposal-card.is-dragging {
+            opacity: 0.4;
+        }
+
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 300;
+            width: 252px;
+            box-shadow: var(--shadow-lg);
+            transform: rotate(-2deg);
+            opacity: 0.96;
+        }
+
+        .drop-indicator {
+            height: 3px;
+            border-radius: 2px;
+            background: var(--color-primary);
+            margin: -1px 4px;
+            flex-shrink: 0;
+        }
+
+        .proposal-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+
+        .proposal-card-title {
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            color: var(--color-text);
+            line-height: 1.3;
+        }
+
+        .proposal-card-client {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin: var(--space-2) 0;
+        }
+
+        .proposal-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            color: #fff;
+            font-size: var(--text-xs);
+            font-weight: var(--weight-semibold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .proposal-card-client-name {
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+        }
+
+        .proposal-card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            margin-top: var(--space-3);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .proposal-card-value {
+            font-weight: var(--weight-semibold);
+            color: var(--color-text);
+        }
+
+        @media (max-width: 900px) {
+            .kanban-board {
+                grid-auto-columns: 82vw;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .dash-main { padding: var(--space-4); }
+            .kanban-board { grid-auto-columns: 88vw; gap: var(--space-3); }
+        }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <div class="page-header-brand">
+            <img src="logo.png" alt="Atlantis Holidays & Wellness Logo" width="229" height="101">
+            <h1>Proposal Manager</h1>
+        </div>
+        <nav class="page-nav" aria-label="Site sections">
+            <a href="index.html">Proposal Generator</a>
+            <a href="index.html">Hotel Voucher</a>
+            <a href="design-system.html">Design System</a>
+            <a href="admin-dashboard.html" class="active" aria-current="page">Admin Dashboard</a>
+        </nav>
+        <button type="button" class="theme-toggle-btn" id="themeToggle" aria-pressed="false" aria-label="Switch to light theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+    </header>
+
+    <main class="dash-main">
+        <div class="dash-intro">
+            <div>
+                <h2>Proposal Manager</h2>
+                <p>Drag a card between columns to update its status. Changes save automatically.</p>
+            </div>
+            <div class="dash-total" id="dashTotal"></div>
+        </div>
+
+        <div class="kanban-board" id="kanbanBoard" role="group" aria-label="Proposal pipeline"></div>
+    </main>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+    <script>
+        // ------------------------------------------------------------
+        // Theme toggle — same localStorage key as index.html /
+        // design-system.html so preference is shared site-wide.
+        // ------------------------------------------------------------
+        const themeToggle = document.getElementById('themeToggle');
+        function applyTheme(isLight) {
+            document.body.classList.toggle('light-mode', isLight);
+            themeToggle.setAttribute('aria-pressed', String(isLight));
+            themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+        }
+        applyTheme(localStorage.getItem('atlantis-theme') === 'light');
+        themeToggle.addEventListener('click', () => {
+            const isLight = !document.body.classList.contains('light-mode');
+            applyTheme(isLight);
+            localStorage.setItem('atlantis-theme', isLight ? 'light' : 'dark');
+        });
+
+        // ------------------------------------------------------------
+        // Toasts (same pattern as design-system.html)
+        // ------------------------------------------------------------
+        const toastStack = document.getElementById('toastStack');
+        const icons = {
+            success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+            error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>',
+        };
+        function showToast(type, message) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type]}</span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" aria-label="Dismiss notification">✕</button>
+            `;
+            toastStack.appendChild(toast);
+            const dismiss = () => {
+                toast.classList.add('is-leaving');
+                toast.addEventListener('animationend', () => toast.remove(), { once: true });
+            };
+            toast.querySelector('.toast-close').addEventListener('click', dismiss);
+            setTimeout(dismiss, 4000);
+        }
+
+        // ------------------------------------------------------------
+        // Data model — seeded once, then persisted to localStorage so
+        // reordering survives a reload like a real dashboard would.
+        // ------------------------------------------------------------
+        const COLUMNS = [
+            { id: 'draft', title: 'Draft', accent: 'var(--color-border-strong)' },
+            { id: 'sent', title: 'Sent', accent: 'var(--color-secondary)' },
+            { id: 'viewed', title: 'Viewed', accent: 'var(--color-accent-teal)' },
+            { id: 'accepted', title: 'Accepted', accent: 'var(--color-success)' },
+        ];
+
+        const SEED_PROPOSALS = [
+            { id: 'p1', title: 'Atlantis EADV Congress 2026', client: 'Dr. Amina Al Farsi', value: 12450, date: 'Oct 12, 2026', status: 'draft', vip: false },
+            { id: 'p2', title: 'Desert Safari Group Tour', client: 'Chen Wei', value: 4200, date: 'Sep 3, 2026', status: 'draft', vip: false },
+            { id: 'p3', title: 'Dubai Wellness Retreat', client: 'Sarah Whitfield', value: 8900, date: 'Nov 18, 2026', status: 'sent', vip: false },
+            { id: 'p4', title: 'Atlantis The Royal Gala Dinner', client: 'Fatima Al Nuaimi', value: 33600, date: 'Dec 5, 2026', status: 'sent', vip: true },
+            { id: 'p5', title: 'Corporate Offsite — Meridian Tech', client: 'James Okafor', value: 21300, date: 'Oct 28, 2026', status: 'viewed', vip: true },
+            { id: 'p6', title: 'Family Summer Package', client: 'Priya Nair', value: 9800, date: 'Jul 14, 2026', status: 'viewed', vip: false },
+            { id: 'p7', title: 'Honeymoon Package — The Grants', client: 'Olivia & Marcus Grant', value: 15750, date: 'Feb 20, 2027', status: 'accepted', vip: false },
+            { id: 'p8', title: 'Yacht Charter Weekend', client: 'Robert Ashworth', value: 18250, date: 'Aug 9, 2026', status: 'accepted', vip: true },
+        ];
+
+        const STORAGE_KEY = 'atlantis-proposal-board';
+
+        function loadProposals() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) return JSON.parse(stored);
+            } catch (e) {
+                console.warn('Could not read saved board state, using defaults.', e);
+            }
+            return SEED_PROPOSALS.map(p => ({ ...p }));
+        }
+
+        function saveProposals() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(proposals));
+        }
+
+        let proposals = loadProposals();
+
+        function initials(name) {
+            return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+        }
+
+        function formatAED(value) {
+            return 'AED ' + value.toLocaleString('en-US');
+        }
+
+        function renderTotal() {
+            const total = proposals.reduce((sum, p) => sum + p.value, 0);
+            document.getElementById('dashTotal').innerHTML = `${proposals.length} proposals in pipeline &middot; <strong>${formatAED(total)}</strong> total value`;
+        }
+
+        function cardHTML(p) {
+            return `
+                <div class="card proposal-card" data-id="${p.id}" tabindex="0" role="group" aria-label="${p.title}, ${p.client}, ${formatAED(p.value)}">
+                    <div class="proposal-card-top">
+                        <span class="proposal-card-title">${p.title}</span>
+                        ${p.vip ? '<span class="badge badge-gold">VIP</span>' : ''}
+                    </div>
+                    <div class="proposal-card-client">
+                        <span class="proposal-avatar">${initials(p.client)}</span>
+                        <span class="proposal-card-client-name">${p.client}</span>
+                    </div>
+                    <div class="proposal-card-meta">
+                        <span class="proposal-card-value">${formatAED(p.value)}</span>
+                        <span>${p.date}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function skeletonCardHTML() {
+            return `
+                <div class="card demo-card" style="padding:16px;">
+                    <div class="skeleton skeleton-text" style="width:70%;"></div>
+                    <div class="skeleton skeleton-text" style="width:45%;"></div>
+                    <div class="skeleton skeleton-text" style="width:55%;"></div>
+                </div>
+            `;
+        }
+
+        const board = document.getElementById('kanbanBoard');
+
+        function renderSkeleton() {
+            board.innerHTML = COLUMNS.map(col => `
+                <div class="kanban-column" style="--column-accent:${col.accent}">
+                    <div class="kanban-column-header">
+                        <h3 class="kanban-column-title">${col.title}</h3>
+                        <span class="kanban-column-count">—</span>
+                    </div>
+                    <div class="kanban-card-list">
+                        ${skeletonCardHTML()}${skeletonCardHTML()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function render() {
+            board.innerHTML = COLUMNS.map(col => {
+                const items = proposals.filter(p => p.status === col.id);
+                const cards = items.length
+                    ? items.map(cardHTML).join('')
+                    : '<div class="kanban-empty-hint">Drop a proposal here</div>';
+                return `
+                    <div class="kanban-column" style="--column-accent:${col.accent}" data-column="${col.id}">
+                        <div class="kanban-column-header">
+                            <h3 class="kanban-column-title">${col.title}</h3>
+                            <span class="kanban-column-count">${items.length}</span>
+                        </div>
+                        <div class="kanban-card-list" data-column="${col.id}">${cards}</div>
+                    </div>
+                `;
+            }).join('');
+            renderTotal();
+            attachDragHandlers();
+        }
+
+        // ------------------------------------------------------------
+        // Drag & drop — implemented with Pointer Events (not the HTML5
+        // dragstart/drop API) specifically so it works with touch on
+        // tablets/phones, not just a mouse. A small movement threshold
+        // stops a plain tap from being mistaken for a drag.
+        // ------------------------------------------------------------
+        const DRAG_THRESHOLD = 6;
+        let dragState = null;
+
+        function attachDragHandlers() {
+            board.querySelectorAll('.proposal-card').forEach(card => {
+                card.addEventListener('pointerdown', onPointerDown);
+            });
+        }
+
+        function onPointerDown(e) {
+            if (e.button !== undefined && e.button !== 0) return;
+            const card = e.currentTarget;
+            const id = card.dataset.id;
+            const rect = card.getBoundingClientRect();
+
+            dragState = {
+                id,
+                card,
+                startX: e.clientX,
+                startY: e.clientY,
+                offsetX: e.clientX - rect.left,
+                offsetY: e.clientY - rect.top,
+                width: rect.width,
+                started: false,
+                ghost: null,
+                pointerId: e.pointerId,
+            };
+
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp, { once: true });
+        }
+
+        function beginDrag() {
+            const { card, width } = dragState;
+            card.classList.add('is-dragging');
+
+            const ghost = card.cloneNode(true);
+            ghost.classList.add('drag-ghost');
+            ghost.classList.remove('is-dragging');
+            ghost.style.width = width + 'px';
+            document.body.appendChild(ghost);
+            dragState.ghost = ghost;
+            dragState.started = true;
+            document.body.style.cursor = 'grabbing';
+        }
+
+        function onPointerMove(e) {
+            if (!dragState) return;
+            const dx = e.clientX - dragState.startX;
+            const dy = e.clientY - dragState.startY;
+
+            if (!dragState.started) {
+                if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+                beginDrag();
+            }
+
+            dragState.ghost.style.left = (e.clientX - dragState.offsetX) + 'px';
+            dragState.ghost.style.top = (e.clientY - dragState.offsetY) + 'px';
+
+            updateDropTarget(e.clientX, e.clientY);
+        }
+
+        function updateDropTarget(x, y) {
+            document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('is-drag-over'));
+            clearDropIndicator();
+
+            const ghost = dragState.ghost;
+            ghost.style.visibility = 'hidden';
+            const el = document.elementFromPoint(x, y);
+            ghost.style.visibility = 'visible';
+            if (!el) return;
+
+            const column = el.closest('.kanban-column');
+            if (!column) return;
+            column.classList.add('is-drag-over');
+
+            const list = column.querySelector('.kanban-card-list');
+            dragState.targetColumn = column.dataset.column;
+
+            const siblings = [...list.querySelectorAll('.proposal-card:not(.is-dragging)')];
+            let insertBefore = null;
+            for (const sib of siblings) {
+                const r = sib.getBoundingClientRect();
+                if (y < r.top + r.height / 2) { insertBefore = sib; break; }
+            }
+
+            const indicator = document.createElement('div');
+            indicator.className = 'drop-indicator';
+            indicator.id = 'dropIndicator';
+            if (insertBefore) {
+                list.insertBefore(indicator, insertBefore);
+            } else {
+                list.appendChild(indicator);
+            }
+            dragState.insertBeforeId = insertBefore ? insertBefore.dataset.id : null;
+        }
+
+        function clearDropIndicator() {
+            const existing = document.getElementById('dropIndicator');
+            if (existing) existing.remove();
+        }
+
+        function onPointerUp() {
+            window.removeEventListener('pointermove', onPointerMove);
+            document.body.style.cursor = '';
+
+            if (!dragState) return;
+
+            if (dragState.started) {
+                finalizeDrop();
+            }
+
+            if (dragState.ghost) dragState.ghost.remove();
+            if (dragState.card) dragState.card.classList.remove('is-dragging');
+            document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('is-drag-over'));
+            clearDropIndicator();
+            dragState = null;
+        }
+
+        function finalizeDrop() {
+            const { id, targetColumn, insertBeforeId } = dragState;
+            if (!targetColumn) return;
+
+            const moving = proposals.find(p => p.id === id);
+            if (!moving) return;
+
+            const statusChanged = moving.status !== targetColumn;
+            const fromColumn = COLUMNS.find(c => c.id === moving.status);
+            const toColumn = COLUMNS.find(c => c.id === targetColumn);
+
+            // Reorder: remove, then reinsert at the target position.
+            proposals = proposals.filter(p => p.id !== id);
+            moving.status = targetColumn;
+            if (insertBeforeId) {
+                const idx = proposals.findIndex(p => p.id === insertBeforeId);
+                proposals.splice(idx === -1 ? proposals.length : idx, 0, moving);
+            } else {
+                // Append after the last item currently in the target column.
+                let lastIdx = -1;
+                proposals.forEach((p, i) => { if (p.status === targetColumn) lastIdx = i; });
+                proposals.splice(lastIdx + 1, 0, moving);
+            }
+
+            saveProposals();
+            render();
+
+            if (statusChanged) {
+                showToast('success', `Moved "${moving.title}" to ${toColumn.title}.`);
+            }
+        }
+
+        // ------------------------------------------------------------
+        // Initial load — brief skeleton state to demonstrate the
+        // loading pattern before the (locally persisted) board renders.
+        // ------------------------------------------------------------
+        renderSkeleton();
+        setTimeout(render, 550);
+    </script>
+</body>
+</html>

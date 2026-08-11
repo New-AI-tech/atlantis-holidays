@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design System — Atlantis Holidays & Wellness</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="assets/css/tokens.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <style>
+        .ds-main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: var(--space-7) var(--space-5) var(--space-8);
+        }
+
+        .ds-intro {
+            margin-bottom: var(--space-8);
+        }
+
+        .ds-intro h2 {
+            font-size: var(--text-display);
+            font-weight: var(--weight-semibold);
+            color: var(--color-heading);
+            margin: 0 0 var(--space-3);
+        }
+
+        .ds-intro p {
+            font-size: var(--text-md);
+            font-weight: var(--weight-light);
+            font-style: italic;
+            color: var(--color-text-muted);
+            max-width: 640px;
+            margin: 0;
+        }
+
+        .ds-section {
+            margin-bottom: var(--space-8);
+        }
+
+        .ds-section h3 {
+            font-size: var(--text-xl);
+            font-weight: var(--weight-semibold);
+            color: var(--color-heading);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: var(--space-3);
+            margin: 0 0 var(--space-5);
+        }
+
+        .ds-section-desc {
+            color: var(--color-text-muted);
+            font-size: var(--text-sm);
+            margin: calc(var(--space-5) * -1 + 4px) 0 var(--space-5);
+        }
+
+        /* Color swatches */
+        .swatch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .swatch {
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--color-surface);
+        }
+
+        .swatch-color {
+            height: 64px;
+        }
+
+        .swatch-info {
+            padding: var(--space-3);
+        }
+
+        .swatch-name {
+            font-size: var(--text-sm);
+            font-weight: var(--weight-semibold);
+            display: block;
+        }
+
+        .swatch-hex {
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            font-family: 'SFMono-Regular', Consolas, monospace;
+        }
+
+        /* Type scale */
+        .type-row {
+            display: flex;
+            align-items: baseline;
+            gap: var(--space-5);
+            padding: var(--space-4) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .type-row:last-child { border-bottom: none; }
+
+        .type-label {
+            width: 130px;
+            flex-shrink: 0;
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            font-family: 'SFMono-Regular', Consolas, monospace;
+        }
+
+        .type-sample {
+            color: var(--color-text);
+        }
+
+        /* Spacing scale */
+        .space-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-2) 0;
+        }
+
+        .space-label {
+            width: 90px;
+            flex-shrink: 0;
+            font-size: var(--text-xs);
+            color: var(--color-text-muted);
+            font-family: 'SFMono-Regular', Consolas, monospace;
+        }
+
+        .space-bar {
+            height: 18px;
+            background: var(--color-primary);
+            border-radius: 3px;
+        }
+
+        /* Demo clusters */
+        .demo-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-3);
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .demo-card {
+            padding: var(--space-5);
+        }
+
+        .skeleton-card-demo {
+            display: flex;
+            gap: var(--space-4);
+            align-items: center;
+        }
+
+        .skeleton-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .skeleton-lines { flex: 1; }
+        .skeleton-lines .skeleton-text:first-child { width: 40%; }
+        .skeleton-lines .skeleton-text:last-child { width: 70%; }
+
+        @media (max-width: 640px) {
+            .ds-main { padding: var(--space-5) var(--space-4) var(--space-7); }
+            .type-row { flex-direction: column; gap: var(--space-1); }
+            .type-label { width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <div class="page-header-brand">
+            <img src="logo.png" alt="Atlantis Holidays & Wellness Logo" width="229" height="101">
+            <h1>Design System</h1>
+        </div>
+        <nav class="page-nav" aria-label="Site sections">
+            <a href="index.html">Proposal Generator</a>
+            <a href="index.html">Hotel Voucher</a>
+            <a href="design-system.html" class="active" aria-current="page">Design System</a>
+            <a href="admin-dashboard.html">Admin Dashboard</a>
+        </nav>
+        <button type="button" class="theme-toggle-btn" id="themeToggle" aria-pressed="false" aria-label="Switch to light theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+    </header>
+
+    <main class="ds-main">
+        <div class="ds-intro">
+            <h2>A luxury-aligned system, documented</h2>
+            <p>Every color, type size, spacing value, and component below is the exact CSS this site's tools are built from — nothing here is illustrative-only. Change a token in <code>assets/css/tokens.css</code> and every page that imports it updates.</p>
+        </div>
+
+        <!-- COLOR -->
+        <section class="ds-section" aria-labelledby="colors-heading">
+            <h3 id="colors-heading">Color</h3>
+            <p class="ds-section-desc">Purple remains the brand's primary — it's what the actual logo uses. Gold marks premium/featured content; teal is a new secondary accent tied to the "Atlantis" ocean motif, used as the "Viewed" status color in the Proposal Manager.</p>
+            <div class="swatch-grid" id="swatchGrid"></div>
+        </section>
+
+        <!-- TYPOGRAPHY -->
+        <section class="ds-section" aria-labelledby="type-heading">
+            <h3 id="type-heading">Typography</h3>
+            <p class="ds-section-desc">Fraunces, self-hosted, six weights. One typeface throughout — hierarchy comes from weight and size, not a second typeface.</p>
+            <div class="type-row"><span class="type-label">display / 600</span><span class="type-sample" style="font-size:var(--text-display);font-weight:var(--weight-semibold);">Private Desert Safari</span></div>
+            <div class="type-row"><span class="type-label">xl / 600</span><span class="type-sample" style="font-size:var(--text-xl);font-weight:var(--weight-semibold);">Proposal Manager</span></div>
+            <div class="type-row"><span class="type-label">lg / 600</span><span class="type-sample" style="font-size:var(--text-lg);font-weight:var(--weight-semibold);">Hotel Confirmation Voucher</span></div>
+            <div class="type-row"><span class="type-label">md / 300 italic</span><span class="type-sample" style="font-size:var(--text-md);font-weight:var(--weight-light);font-style:italic;">Interactive Proposal &amp; Quotation Generator</span></div>
+            <div class="type-row"><span class="type-label">base / 400</span><span class="type-sample" style="font-size:var(--text-base);">Body copy sits here — confirmation numbers, guest names, line items.</span></div>
+            <div class="type-row"><span class="type-label">sm / 500</span><span class="type-sample" style="font-size:var(--text-sm);font-weight:var(--weight-medium);letter-spacing:var(--tracking-wide);text-transform:uppercase;">Field Label</span></div>
+            <div class="type-row"><span class="type-label">xs / 400</span><span class="type-sample" style="font-size:var(--text-xs);color:var(--color-text-muted);">Helper text and timestamps</span></div>
+        </section>
+
+        <!-- SPACING -->
+        <section class="ds-section" aria-labelledby="space-heading">
+            <h3 id="space-heading">Spacing</h3>
+            <p class="ds-section-desc">4px base scale — every margin, padding, and gap in this system is one of these eight values.</p>
+            <div id="spaceRows"></div>
+        </section>
+
+        <!-- BUTTONS -->
+        <section class="ds-section" aria-labelledby="buttons-heading">
+            <h3 id="buttons-heading">Buttons</h3>
+            <div class="demo-row">
+                <button class="btn btn-primary">Primary</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-danger">Danger</button>
+                <button class="btn btn-ghost">Ghost</button>
+                <button class="btn btn-gold">Gold — Featured</button>
+                <button class="btn btn-teal">Teal — Info</button>
+            </div>
+            <div class="demo-row">
+                <button class="btn btn-primary btn-sm">Small</button>
+                <button class="btn btn-primary" disabled>Disabled</button>
+                <button class="btn btn-primary" id="loadingBtnDemo">
+                    <span id="loadingBtnLabel">Click for loading state</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- FORM FIELDS -->
+        <section class="ds-section" aria-labelledby="fields-heading">
+            <h3 id="fields-heading">Form Fields</h3>
+            <div style="max-width:420px;">
+                <div class="field">
+                    <label for="demoText">Text input</label>
+                    <input class="input" type="text" id="demoText" placeholder="Guest name">
+                </div>
+                <div class="field">
+                    <label for="demoSelect">Select</label>
+                    <select class="input" id="demoSelect">
+                        <option>Bed & Breakfast</option>
+                        <option>Half Board</option>
+                        <option>Full Board</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="demoArea">Textarea</label>
+                    <textarea class="input" id="demoArea" rows="3" placeholder="Special requests"></textarea>
+                </div>
+                <div class="field has-error">
+                    <label for="demoError">Text input with error</label>
+                    <input class="input" type="text" id="demoError" value="ATL-26-0012">
+                    <span class="field-error-msg">Confirmation numbers must be 8 digits.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- BADGES -->
+        <section class="ds-section" aria-labelledby="badges-heading">
+            <h3 id="badges-heading">Badges</h3>
+            <div class="demo-row">
+                <span class="badge badge-neutral">Draft</span>
+                <span class="badge badge-primary">Sent</span>
+                <span class="badge badge-teal">Viewed</span>
+                <span class="badge badge-success">Accepted</span>
+                <span class="badge badge-danger">Overdue</span>
+                <span class="badge badge-gold">VIP Client</span>
+            </div>
+        </section>
+
+        <!-- MODAL -->
+        <section class="ds-section" aria-labelledby="modal-heading">
+            <h3 id="modal-heading">Modal</h3>
+            <button class="btn btn-primary" id="openModalBtn">Open modal</button>
+        </section>
+
+        <!-- TOAST -->
+        <section class="ds-section" aria-labelledby="toast-heading">
+            <h3 id="toast-heading">Toast Notifications</h3>
+            <div class="demo-row">
+                <button class="btn btn-secondary btn-sm" id="toastSuccessBtn">Trigger success</button>
+                <button class="btn btn-secondary btn-sm" id="toastErrorBtn">Trigger error</button>
+                <button class="btn btn-secondary btn-sm" id="toastInfoBtn">Trigger info</button>
+            </div>
+        </section>
+
+        <!-- SKELETON -->
+        <section class="ds-section" aria-labelledby="skeleton-heading">
+            <h3 id="skeleton-heading">Loading Skeletons</h3>
+            <div class="card demo-card skeleton-card-demo" style="max-width:420px;">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-lines">
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal markup -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modalTitle">Send Proposal</h4>
+                <button class="modal-close" id="modalCloseBtn" aria-label="Close dialog">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>This moves the proposal to the <strong>Sent</strong> column and emails the client a link to view it. This is a design-system demo — no email actually sends here.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="modalCancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="modalConfirmBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+    <script>
+        // Theme toggle — shares the same localStorage key as index.html
+        // so a visitor's preference is consistent across every page.
+        const themeToggle = document.getElementById('themeToggle');
+        function applyTheme(isLight) {
+            document.body.classList.toggle('light-mode', isLight);
+            themeToggle.setAttribute('aria-pressed', String(isLight));
+            themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+        }
+        applyTheme(localStorage.getItem('atlantis-theme') === 'light');
+        themeToggle.addEventListener('click', () => {
+            const isLight = !document.body.classList.contains('light-mode');
+            applyTheme(isLight);
+            localStorage.setItem('atlantis-theme', isLight ? 'light' : 'dark');
+        });
+
+        // Color swatches — read straight from the CSS custom properties
+        // so this page can never drift out of sync with tokens.css.
+        const swatches = [
+            { group: 'Brand', name: '--color-primary', role: 'Primary' },
+            { group: 'Brand', name: '--color-heading', role: 'Headings' },
+            { group: 'Brand', name: '--color-secondary', role: 'Secondary' },
+            { group: 'Accent', name: '--color-accent-gold', role: 'Gold — Premium' },
+            { group: 'Accent', name: '--color-accent-teal', role: 'Teal — Viewed' },
+            { group: 'Semantic', name: '--color-success', role: 'Success' },
+            { group: 'Semantic', name: '--color-danger', role: 'Danger' },
+            { group: 'Neutral', name: '--color-surface', role: 'Surface' },
+            { group: 'Neutral', name: '--color-surface-raised', role: 'Surface raised' },
+            { group: 'Neutral', name: '--color-border', role: 'Border' },
+            { group: 'Neutral', name: '--color-text', role: 'Text' },
+            { group: 'Neutral', name: '--color-text-muted', role: 'Text muted' },
+        ];
+        const swatchGrid = document.getElementById('swatchGrid');
+        const rootStyles = getComputedStyle(document.documentElement);
+        function renderSwatches() {
+            const bodyStyles = getComputedStyle(document.body);
+            swatchGrid.innerHTML = swatches.map(s => {
+                const value = bodyStyles.getPropertyValue(s.name).trim() || rootStyles.getPropertyValue(s.name).trim();
+                return `
+                    <div class="swatch">
+                        <div class="swatch-color" style="background:${value}"></div>
+                        <div class="swatch-info">
+                            <span class="swatch-name">${s.role}</span>
+                            <span class="swatch-hex">${s.name}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        renderSwatches();
+        // Re-render on theme change so swatch colors reflect the active theme
+        const themeObserver = new MutationObserver(renderSwatches);
+        themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+        // Spacing scale rows
+        const spaceTokens = ['--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-7', '--space-8'];
+        document.getElementById('spaceRows').innerHTML = spaceTokens.map(t => {
+            const px = rootStyles.getPropertyValue(t).trim();
+            return `<div class="space-row"><span class="space-label">${t} (${px})</span><span class="space-bar" style="width:${px}"></span></div>`;
+        }).join('');
+
+        // Loading-state button demo
+        const loadingBtnDemo = document.getElementById('loadingBtnDemo');
+        const loadingBtnLabel = document.getElementById('loadingBtnLabel');
+        loadingBtnDemo.addEventListener('click', () => {
+            if (loadingBtnDemo.disabled) return;
+            loadingBtnDemo.disabled = true;
+            loadingBtnLabel.textContent = 'Loading…';
+            setTimeout(() => {
+                loadingBtnDemo.disabled = false;
+                loadingBtnLabel.textContent = 'Click for loading state';
+            }, 1400);
+        });
+
+        // Modal
+        const modalOverlay = document.getElementById('modalOverlay');
+        const openModalBtn = document.getElementById('openModalBtn');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+
+        function openModal() {
+            modalOverlay.classList.add('is-open');
+            modalCloseBtn.focus();
+            document.addEventListener('keydown', onModalKeydown);
+        }
+        function closeModal() {
+            modalOverlay.classList.remove('is-open');
+            openModalBtn.focus();
+            document.removeEventListener('keydown', onModalKeydown);
+        }
+        function onModalKeydown(e) {
+            if (e.key === 'Escape') closeModal();
+        }
+        openModalBtn.addEventListener('click', openModal);
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalCancelBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+        modalConfirmBtn.addEventListener('click', () => {
+            closeModal();
+            showToast('success', 'Proposal marked as Sent.');
+        });
+
+        // Toasts
+        const toastStack = document.getElementById('toastStack');
+        const icons = {
+            success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+            error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>',
+            info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>',
+        };
+        function showToast(type, message) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type]}</span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" aria-label="Dismiss notification">✕</button>
+            `;
+            toastStack.appendChild(toast);
+            const dismiss = () => {
+                toast.classList.add('is-leaving');
+                toast.addEventListener('animationend', () => toast.remove(), { once: true });
+            };
+            toast.querySelector('.toast-close').addEventListener('click', dismiss);
+            setTimeout(dismiss, 4500);
+        }
+        document.getElementById('toastSuccessBtn').addEventListener('click', () => showToast('success', 'Proposal saved successfully.'));
+        document.getElementById('toastErrorBtn').addEventListener('click', () => showToast('error', 'Could not reach the server. Try again.'));
+        document.getElementById('toastInfoBtn').addEventListener('click', () => showToast('info', 'Client viewed the proposal 2 minutes ago.'));
+    </script>
+</body>
+</html>
