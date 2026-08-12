@@ -43,16 +43,20 @@
     background: rgba(0, 0, 0, 0.65);
 }
 
-/* Light theme only: brighter/more vivid backdrop to go with the
-   lighter glass-morphism card (see index.html's GLASS-MORPHISM block).
-   Dark theme keeps the darker/desaturated defaults above untouched —
-   it already works well and wasn't part of this request. */
+/* Light theme only: the video is the hero here — full brightness, no
+   dimming/desaturation, and only a token scrim, so the near-transparent
+   glass card (see index.html's GLASS-MORPHISM block) reads as barely
+   there over vivid footage. Legibility now rides almost entirely on
+   backdrop-filter blur + the body-level text-shadow in that block,
+   not on darkening the video itself. Dark theme keeps the darker/
+   desaturated defaults above untouched — it already works well and
+   wasn't part of this request. */
 body.light-mode .bg-video-layer video {
-    filter: brightness(0.9);
+    filter: none;
 }
 
 body.light-mode .bg-video-overlay {
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.1);
 }
 
 /* Shown instead of the video if the source fails to load (see the
