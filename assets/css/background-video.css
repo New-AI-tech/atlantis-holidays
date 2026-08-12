@@ -1,0 +1,60 @@
+/* ================================================================
+   AMBIENT BACKGROUND VIDEO
+   ================================================================
+   Full-bleed looping video sitting behind every page. It is a
+   "luxury texture", not a movie: the video itself is desaturated/
+   darkened, and a further dark scrim sits on top of it, so it never
+   competes with foreground text. Form/card surfaces elsewhere in the
+   app (.content-area, .card, etc.) already use an opaque
+   --color-surface background, so legibility does not depend on this
+   file at all — it's a second, belt-and-suspenders layer of safety,
+   not the only thing protecting text contrast.
+
+   Markup is injected by assets/js/background-video.js so every page
+   only needs to link this stylesheet + that script; nothing here
+   assumes a particular page's DOM beyond what that script creates.
+   ================================================================ */
+
+.bg-video-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    background: var(--color-bg, #0f111a);
+    pointer-events: none;
+}
+
+.bg-video-layer video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Washed-out/ambient feel, not a vivid movie playing behind the forms. */
+    filter: brightness(0.6) saturate(0.8);
+}
+
+/* Extra dark scrim on top of the (already dimmed) video, per the
+   "must read as texture, not footage" requirement. */
+.bg-video-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+}
+
+/* Shown instead of the video if the source fails to load (see the
+   video's onerror handler in background-video.js) or if the browser
+   doesn't support autoplaying video at all. Same tonal range as the
+   video+overlay combo so there's no visible jump between the two. */
+.bg-video-layer.bg-video-layer--fallback {
+    background: radial-gradient(
+        ellipse at top,
+        rgba(122, 26, 168, 0.25),
+        transparent 60%
+    ), var(--color-bg, #0f111a);
+}
+
+.bg-video-layer.bg-video-layer--fallback video {
+    display: none;
+}
