@@ -85,6 +85,8 @@
     --color-success-bg: rgba(72, 187, 120, 0.12);
     --color-danger-bg: rgba(229, 62, 62, 0.12);
     --color-focus-ring: #c084fc;
+    --color-primary-bg: rgba(124, 26, 168, 0.14);
+    --color-primary-focus: rgba(124, 26, 168, 0.25);
     --input-bg: #0f111a;
     --input-text: #ffffff;
 
@@ -149,6 +151,8 @@ body.light-mode {
     --color-primary: #6a0d91;
     --color-primary-hover: #7c1aa8;
     --color-primary-active: #56077a;
+    --color-primary-bg: rgba(106, 13, 145, 0.1);
+    --color-primary-focus: rgba(106, 13, 145, 0.2);
     --input-bg: #ffffff;
     --input-text: #1a202c;
 
