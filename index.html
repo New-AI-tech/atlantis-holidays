@@ -420,17 +420,17 @@
         }
 
         body.light-mode .content-area {
-            background: rgba(255, 255, 255, 0.75);
+            background: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
         }
 
         body.light-mode .item-row {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
 
         body.light-mode .btn-add {
@@ -937,13 +937,15 @@
             }
 
             /* backdrop-filter is GPU-heavy on mobile; keep the blur but
-               raise the base opacity so legibility doesn't depend on it. */
+               raise the opacity a bit above the desktop baseline so
+               legibility doesn't depend on it — still noticeably more
+               see-through than solid, just not as thin as desktop. */
             body.light-mode .content-area {
-                background: rgba(255, 255, 255, 0.9);
+                background: rgba(255, 255, 255, 0.65);
             }
 
             body.light-mode .item-row {
-                background: rgba(255, 255, 255, 0.85);
+                background: rgba(255, 255, 255, 0.5);
             }
 
             .item-row {

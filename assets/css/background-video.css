@@ -43,6 +43,18 @@
     background: rgba(0, 0, 0, 0.65);
 }
 
+/* Light theme only: brighter/more vivid backdrop to go with the
+   lighter glass-morphism card (see index.html's GLASS-MORPHISM block).
+   Dark theme keeps the darker/desaturated defaults above untouched —
+   it already works well and wasn't part of this request. */
+body.light-mode .bg-video-layer video {
+    filter: brightness(0.9);
+}
+
+body.light-mode .bg-video-overlay {
+    background: rgba(0, 0, 0, 0.35);
+}
+
 /* Shown instead of the video if the source fails to load (see the
    video's onerror handler in background-video.js) or if the browser
    doesn't support autoplaying video at all. Same tonal range as the
