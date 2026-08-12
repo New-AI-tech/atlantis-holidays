@@ -37,7 +37,8 @@
         video.setAttribute('loop', '');
         video.setAttribute('playsinline', '');
         video.setAttribute('poster', 'assets/images/atlantis-bg-poster.jpg');
-        video.preload = 'auto';
+        video.setAttribute('loading', 'lazy');
+        video.preload = 'metadata';
 
         var mp4 = document.createElement('source');
         mp4.src = 'assets/videos/atlantis-bg.mp4';

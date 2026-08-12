@@ -10,9 +10,6 @@ export async function launchChromium() {
   try {
     return await chromium.launch();
   } catch {
-    const base = process.env.PLAYWRIGHT_BROWSERS_PATH || "/opt/pw-browsers";
-    const entry = fs.readdirSync(base).find(d => d.startsWith("chromium-"));
-    if (!entry) throw new Error(`No fallback Chromium found under ${base}`);
-    return chromium.launch({ executablePath: `${base}/${entry}/chrome-linux/chrome` });
+    return chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox", "--disable-setuid-sandbox"] });
   }
 }

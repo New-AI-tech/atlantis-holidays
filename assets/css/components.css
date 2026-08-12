@@ -136,7 +136,7 @@ textarea.input {
 .input:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(124, 26, 168, 0.25);
+    box-shadow: 0 0 0 3px var(--color-primary-focus);
 }
 
 .field.has-error .input {
@@ -170,7 +170,7 @@ textarea.input {
 }
 
 .badge-neutral { background: var(--color-surface-raised); color: var(--color-text-muted); border: 1px solid var(--color-border-strong); }
-.badge-primary { background: rgba(124, 26, 168, 0.14); color: var(--color-heading); }
+.badge-primary { background: var(--color-primary-bg); color: var(--color-heading); }
 .badge-success { background: var(--color-success-bg); color: var(--color-success); }
 .badge-danger { background: var(--color-danger-bg); color: var(--color-danger); }
 .badge-gold { background: var(--color-accent-gold-bg); color: var(--color-accent-gold); }
