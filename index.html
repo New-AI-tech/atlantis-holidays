@@ -380,6 +380,79 @@
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md);
             margin-bottom: var(--space-8);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-primary) transparent;
+        }
+
+        .content-area::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background-color: var(--color-primary);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        .content-area::-webkit-scrollbar-thumb:hover {
+            background-color: var(--color-primary-hover);
+        }
+
+        /* ============================================================
+           GLASS-MORPHISM (light theme only) — dark theme's card is
+           already dark-on-dark and reads fine against the dimmed
+           background video, so it's untouched. In light mode the
+           previously-opaque white card sat as a flat slab on top of
+           the (dark) video; this lets it read as frosted glass instead.
+           Text color is bumped to a near-black charcoal here (rather
+           than the theme's normal --color-text) since translucent
+           backgrounds need higher-contrast text than a solid one does.
+           ============================================================ */
+        body.light-mode {
+            --color-text: #1a1a1a;
+            --input-text: #1a1a1a;
+        }
+
+        body.light-mode .content-area {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        body.light-mode .item-row {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        body.light-mode .btn-add {
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        body.light-mode .btn-add:hover {
+            background-color: var(--color-primary);
+            color: #ffffff;
+        }
+
+        /* Browsers without backdrop-filter support (or with it disabled)
+           fall back to a near-opaque card so text stays fully legible
+           even without the blur. */
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+            body.light-mode .content-area {
+                background: rgba(255, 255, 255, 0.95);
+            }
+            body.light-mode .item-row {
+                background: rgba(255, 255, 255, 0.92);
+            }
         }
 
         h3 {
@@ -861,6 +934,16 @@
             .content-area {
                 padding: var(--space-4);
                 border-radius: var(--radius-md);
+            }
+
+            /* backdrop-filter is GPU-heavy on mobile; keep the blur but
+               raise the base opacity so legibility doesn't depend on it. */
+            body.light-mode .content-area {
+                background: rgba(255, 255, 255, 0.9);
+            }
+
+            body.light-mode .item-row {
+                background: rgba(255, 255, 255, 0.85);
             }
 
             .item-row {
