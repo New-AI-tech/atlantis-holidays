@@ -10,12 +10,8 @@
     <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js" defer></script>
     <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
-    <!-- Self-hosted (not a CDN — see assets/js/HTML2PDF-LICENSE.txt), used only for the voucher's "Download PDF" button -->
+    <!-- Self-hosted (not a CDN — see assets/js/HTML2PDF-LICENSE.txt), used for all PDF export buttons on both tabs -->
     <script src="assets/js/html2pdf.bundle.min.js" defer></script>
-
-    <!-- Ambient full-page background video (see assets/videos/README.md) -->
-    <link rel="stylesheet" href="assets/css/background-video.css">
-    <script src="assets/js/background-video.js" defer></script>
 
     <style>
         /* ============================================================
@@ -882,7 +878,10 @@
             align-items: center;
             justify-content: center;
             padding: var(--space-5);
-            z-index: 100;
+            /* Above .tab-panel.active.enterprise-workspace's z-index:1000
+               (both panels now use it) so this modal isn't hidden behind
+               the full-screen Voucher workspace it opens from. */
+            z-index: 1100;
             opacity: 0;
             pointer-events: none;
             transition: opacity var(--transition-base);
@@ -1443,6 +1442,168 @@
             border: 1px solid #F3C4C1;
         }
 
+        /* ============================================================
+           HOTEL CONFIRMATION VOUCHER — enterprise workspace variant
+           ============================================================
+           The Voucher tab reuses .enterprise-workspace's fixed full-
+           viewport shell (same class as the Proposal tab, defined
+           above) plus its label/input/focus-ring token overrides. This
+           block adds only what the Voucher form needs on top of that:
+           a scrollable full-width body, its .section blocks recast as
+           cards in a 2-column grid instead of one long narrow column,
+           and enterprise-purple skinning for the button/checkbox/date-
+           time-input variants the shared block above doesn't cover
+           (the Voucher form is the only place in the app using those).
+           None of the field IDs, the form's structure, or the PDF/Word
+           export logic below changed — only how this HTML renders.
+           ============================================================ */
+        .ew-voucher-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 40px 48px;
+        }
+
+        .ew-voucher-body #voucherForm {
+            /* Multi-column (not grid) so cards balance by actual content
+               height instead of pairing up row-by-row — Room Details and
+               Policies run much longer than Reservation Numbers or
+               Consultant Contact, and a 2-col grid's row-major placement
+               left large blank gaps next to the shorter card in each
+               pair. column-fill: balance distributes them by height. */
+            column-count: 2;
+            column-gap: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .ew-voucher-body .section {
+            background: #FFFFFF;
+            border: 1px solid var(--ew-border);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            break-inside: avoid;
+        }
+
+        .ew-voucher-body .doc-actions,
+        .ew-voucher-body #voucherFormStatus {
+            column-span: all;
+        }
+
+        .enterprise-workspace h3 {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--ew-accent);
+            border-bottom: 1px solid var(--ew-border);
+            padding-bottom: 10px;
+            margin: 0 0 16px;
+        }
+
+        .enterprise-workspace input[type="date"],
+        .enterprise-workspace input[type="time"] {
+            width: 100%;
+            padding: 9px 11px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #FFFFFF;
+            color: #1A1A1A;
+            border: 1px solid #D5D8DE;
+            border-radius: 6px;
+        }
+
+        .enterprise-workspace input[type="date"]:focus,
+        .enterprise-workspace input[type="time"]:focus {
+            outline: none;
+            border-color: var(--ew-accent);
+            box-shadow: 0 0 0 3px rgba(74, 28, 64, 0.12);
+        }
+
+        .enterprise-workspace input[readonly] {
+            background: #F4F5F7;
+            color: var(--ew-text-muted);
+            cursor: not-allowed;
+        }
+
+        .enterprise-workspace .checkbox-field {
+            color: #1A1A1A !important;
+        }
+
+        .enterprise-workspace .checkbox-field input[type="checkbox"] {
+            accent-color: var(--ew-accent);
+        }
+
+        .enterprise-workspace .hotel-image-preview {
+            border-color: var(--ew-border);
+        }
+
+        /* Base .btn (solid) first, then its outline/add/remove/teal
+           modifiers after — same source order as the shared (non-
+           enterprise) button rules above, so the more specific variant
+           still wins over the plain .btn default. */
+        .enterprise-workspace .btn {
+            background-color: var(--ew-accent);
+            color: #FFFFFF;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        .enterprise-workspace .btn:hover {
+            background-color: var(--ew-accent);
+            opacity: 0.88;
+        }
+
+        .enterprise-workspace .btn:active {
+            background-color: var(--ew-accent);
+            opacity: 0.8;
+            transform: translateY(1px);
+        }
+
+        .enterprise-workspace .btn-add {
+            background-color: transparent;
+            color: var(--ew-accent);
+            border: 1px solid var(--ew-accent);
+        }
+
+        .enterprise-workspace .btn-add:hover {
+            background-color: var(--ew-accent);
+            color: #FFFFFF;
+        }
+
+        .enterprise-workspace .btn-remove {
+            background-color: transparent;
+            color: #C0392B;
+            border: 1px solid #C0392B;
+        }
+
+        .enterprise-workspace .btn-remove:hover {
+            background-color: #C0392B;
+            color: #FFFFFF;
+        }
+
+        .enterprise-workspace .btn-outline {
+            background-color: transparent;
+            color: var(--ew-text-muted);
+            border: 1px solid #D5D8DE;
+        }
+
+        .enterprise-workspace .btn-outline:hover {
+            background-color: #F4F5F7;
+            color: #1A1A1A;
+            border-color: var(--ew-text-muted);
+        }
+
+        .enterprise-workspace .btn-teal {
+            background-color: var(--ew-accent);
+            color: #FFFFFF;
+        }
+
+        .enterprise-workspace .btn-teal:hover {
+            background-color: var(--ew-accent);
+            opacity: 0.88;
+        }
+
         @media (max-width: 1100px) {
             .ew-body {
                 grid-template-columns: 1fr;
@@ -1462,6 +1623,9 @@
                 grid-column: 1 / -1;
                 justify-self: end;
                 width: 100%;
+            }
+            .ew-voucher-body #voucherForm {
+                column-count: 1;
             }
         }
 
@@ -1586,8 +1750,23 @@
             </div>
         </section>
 
-        <!-- Hotel Confirmation Voucher Panel -->
-        <section class="content-area tab-panel" id="panel-voucher" role="tabpanel" aria-labelledby="tab-voucher" hidden>
+        <!-- Hotel Confirmation Voucher Panel — full-screen enterprise
+             workspace, same .enterprise-workspace shell the Proposal tab
+             uses (see the class's definition above for why it's fixed/
+             full-viewport and independent of the dark/light theme +
+             background video). All field IDs/names below are unchanged
+             from the previous narrow-card layout; only the outer
+             wrapper and the .section/button/input skinning changed. -->
+        <section class="tab-panel enterprise-workspace" id="panel-voucher" role="tabpanel" aria-labelledby="tab-voucher" hidden>
+            <div class="ew-topbar">
+                <div class="ew-topbar-brand">
+                    <img src="logo.png" alt="Atlantis Holidays &amp; Wellness" onerror="this.style.display='none'">
+                    <span>Hotel Confirmation Voucher</span>
+                </div>
+                <button type="button" class="ew-switch-voucher" onclick="switchTab('proposal')">← Quotation &amp; Itinerary Builder</button>
+            </div>
+
+            <div class="ew-voucher-body">
             <form id="voucherForm" novalidate>
 
                 <!-- Booking Info -->
@@ -1775,7 +1954,7 @@
                 <!-- Consultant -->
                 <div class="section">
                     <h3>Consultant Contact</h3>
-                    <div class="voucher-grid voucher-grid-3">
+                    <div class="voucher-grid">
                         <div class="form-group">
                             <label for="consultant_name">Name</label>
                             <input type="text" id="consultant_name" value="Ahmed Backer">
@@ -1784,10 +1963,10 @@
                             <label for="consultant_phone">Phone</label>
                             <input type="text" id="consultant_phone" value="+971 4 000 0000">
                         </div>
-                        <div class="form-group">
-                            <label for="consultant_email">Email</label>
-                            <input type="text" id="consultant_email" value="reservations@atlantisholidays.com">
-                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="consultant_email">Email</label>
+                        <input type="text" id="consultant_email" value="reservations@atlantisholidays.com">
                     </div>
                 </div>
 
@@ -1797,7 +1976,7 @@
                         <span class="spinner" aria-hidden="true"></span>
                         <span id="voucherPdfLabel">Download PDF</span>
                     </button>
-                    <button type="submit" class="btn" id="voucherSubmitBtn">
+                    <button type="submit" class="btn btn-outline" id="voucherSubmitBtn">
                         <span class="spinner" aria-hidden="true"></span>
                         <span id="voucherSubmitLabel">Download Word</span>
                     </button>
@@ -1805,6 +1984,7 @@
 
                 <div class="form-status" id="voucherFormStatus" role="status" aria-live="polite"></div>
             </form>
+            </div>
         </section>
 
         <!-- Voucher preview modal -->
