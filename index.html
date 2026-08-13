@@ -29,6 +29,12 @@
          time — this must be a plain, immediately-executed script. -->
     <link rel="stylesheet" href="assets/css/flatpickr.min.css">
     <script src="assets/js/flatpickr.min.js"></script>
+    <!-- Self-hosted SortableJS (not a CDN — see assets/js/SORTABLEJS-
+         LICENSE.txt), same reasoning as costList.js/flatpickr above:
+         initSortable() below calls Sortable(...) directly at load
+         time from the non-deferred inline script, so this must load
+         before that script runs, not deferred alongside it. -->
+    <script src="assets/js/Sortable.min.js"></script>
 
     <style>
         /* ============================================================
@@ -1373,6 +1379,52 @@
             margin-bottom: 12px;
         }
 
+        .ib-row-inner {
+            display: flex;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        .ib-row-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* touch-action: none is required for SortableJS to receive
+           drag gestures on touch devices instead of the browser
+           treating the gesture as a page scroll. */
+        .ib-drag-handle {
+            flex-shrink: 0;
+            width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            color: var(--ew-text-muted);
+            font-size: 16px;
+            line-height: 1;
+            padding: 0;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .ib-drag-handle:hover {
+            color: var(--ew-accent);
+        }
+
+        .ib-drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .ib-row.sortable-ghost {
+            opacity: 0.4;
+        }
+
+        .ib-row.sortable-drag {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
         .ib-row-grid {
             display: grid;
             grid-template-columns: 1.1fr 1.3fr 1.6fr 0.85fr 0.7fr 0.95fr auto;
@@ -2533,41 +2585,46 @@
             const row = document.createElement('div');
             row.className = 'ib-row';
             row.innerHTML = `
-                <div class="ib-row-grid">
-                    <div class="field">
-                        <label>Day / Date</label>
-                        <input type="text" class="ib-day" placeholder="Day 1 – 12 Oct" value="${values.day ? escapeHtml(values.day) : ''}">
+                <div class="ib-row-inner">
+                    <button type="button" class="ib-drag-handle" aria-label="Drag to reorder this service" title="Drag to reorder">⠿</button>
+                    <div class="ib-row-content">
+                        <div class="ib-row-grid">
+                            <div class="field">
+                                <label>Day / Date</label>
+                                <input type="text" class="ib-day" placeholder="Day 1 – 12 Oct" value="${values.day ? escapeHtml(values.day) : ''}">
+                            </div>
+                            <div class="field">
+                                <label>Category</label>
+                                <select class="ib-category">
+                                    <option value="Flight">Flight</option>
+                                    <option value="Accommodation">Accommodation</option>
+                                    <option value="Tours - Activities - Transfers">Tours - Activities - Transfers</option>
+                                    <option value="Extra">Extra</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Internal Description</label>
+                                <input type="text" class="ib-internal" list="activity-suggestions" placeholder="e.g. Atlantis Royal – Deluxe Room x2" value="${values.internalDesc ? escapeHtml(values.internalDesc) : ''}">
+                            </div>
+                            <div class="field">
+                                <label>Net Cost (AED)</label>
+                                <input type="number" class="ib-net" min="0" step="0.01" value="${values.netCost != null ? values.netCost : 0}">
+                            </div>
+                            <div class="field">
+                                <label>Markup %</label>
+                                <input type="number" class="ib-markup" min="0" step="0.1" value="${values.markupPct != null ? values.markupPct : 0}">
+                            </div>
+                            <div class="field">
+                                <label>Selling Price</label>
+                                <output class="ib-selling-output">AED 0.00</output>
+                            </div>
+                            <button type="button" class="ib-remove-btn" aria-label="Remove this service" onclick="removeItineraryRow(this)">✕</button>
+                        </div>
+                        <div class="field ib-client-desc-field">
+                            <label>Client-Facing Itinerary Details</label>
+                            <textarea class="ib-client-desc" rows="2" placeholder="Beautiful client-facing description of the day's events...">${values.clientDesc ? escapeHtml(values.clientDesc) : ''}</textarea>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label>Category</label>
-                        <select class="ib-category">
-                            <option value="Flight">Flight</option>
-                            <option value="Accommodation">Accommodation</option>
-                            <option value="Tours - Activities - Transfers">Tours - Activities - Transfers</option>
-                            <option value="Extra">Extra</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>Internal Description</label>
-                        <input type="text" class="ib-internal" list="activity-suggestions" placeholder="e.g. Atlantis Royal – Deluxe Room x2" value="${values.internalDesc ? escapeHtml(values.internalDesc) : ''}">
-                    </div>
-                    <div class="field">
-                        <label>Net Cost (AED)</label>
-                        <input type="number" class="ib-net" min="0" step="0.01" value="${values.netCost != null ? values.netCost : 0}">
-                    </div>
-                    <div class="field">
-                        <label>Markup %</label>
-                        <input type="number" class="ib-markup" min="0" step="0.1" value="${values.markupPct != null ? values.markupPct : 0}">
-                    </div>
-                    <div class="field">
-                        <label>Selling Price</label>
-                        <output class="ib-selling-output">AED 0.00</output>
-                    </div>
-                    <button type="button" class="ib-remove-btn" aria-label="Remove this service" onclick="removeItineraryRow(this)">✕</button>
-                </div>
-                <div class="field ib-client-desc-field">
-                    <label>Client-Facing Itinerary Details</label>
-                    <textarea class="ib-client-desc" rows="2" placeholder="Beautiful client-facing description of the day's events...">${values.clientDesc ? escapeHtml(values.clientDesc) : ''}</textarea>
                 </div>
             `;
             if (values.category) row.querySelector('.ib-category').value = values.category;
@@ -2702,6 +2759,33 @@
         document.getElementById('itineraryRows').addEventListener('input', (e) => {
             if (e.target.classList.contains('ib-internal')) applyCostListMatch(e.target);
         });
+
+        // ------------------------------------------------------------
+        // Drag-and-drop row reordering (SortableJS). One instance
+        // attached once, here, is sufficient — Sortable binds to the
+        // #itineraryRows element itself, and mountQuotation()'s
+        // innerHTML wipe-and-rebuild (on sub-tab switch) only replaces
+        // that element's children, never the element itself, so freshly
+        // rendered rows are automatically draggable with no re-init
+        // needed after every render/add/remove.
+        //
+        // No separate "reorder the array" step either: the DOM order
+        // already IS the saved order (serializeCurrentQuotation() reads
+        // rows via document.querySelectorAll in DOM order), so once
+        // Sortable has physically moved a row's element, a plain
+        // recalcTotals() call — which also re-saves via
+        // scheduleQuotationSave() — is all that's needed to persist the
+        // new order and refresh the visible totals.
+        // ------------------------------------------------------------
+        if (typeof Sortable !== 'undefined') {
+            new Sortable(document.getElementById('itineraryRows'), {
+                handle: '.ib-drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                onEnd: () => recalcTotals(),
+            });
+        }
 
         // Load whichever quotation type/data was last saved (per type,
         // keyed in localStorage) and mount it — falls back to Land
