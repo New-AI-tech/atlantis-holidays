@@ -1130,7 +1130,7 @@
                     <h3>Import from Excel</h3>
                     <input type="file" id="excelImportInput" accept=".xlsx,.xls" class="sr-only">
                     <button type="button" class="btn btn-outline" id="excelImportBtn">Import from Excel</button>
-                    <div class="form-hint">Upload an internal quotation sheet (.xlsx) to auto-fill the fields below. Existing hotel/transport/tour rows are replaced by whatever the sheet contains.</div>
+                    <div class="form-hint">Upload an internal quotation sheet (.xlsx) to auto-fill the fields below with one aggregated total per category (Flight / Accommodation / Tours / Extras) — not an itemized breakdown. Existing hotel/transport/tour rows are replaced. 🔒 Your file stays in your browser — nothing is uploaded.</div>
                     <div class="form-group excel-sheet-picker" id="excelSheetPicker" hidden>
                         <label for="excelSheetSelect">This workbook has multiple sheets — pick one to import</label>
                         <div class="excel-sheet-picker-row">
@@ -1734,26 +1734,37 @@
             return items;
         }
 
-        // Best-effort routing of a parsed day-item into Hotel/Transport/
-        // Tours by keyword — the source sheet has no such split of its
-        // own (it's flat day-by-day costs), so this is a helpful default,
-        // not a guarantee; everything imported should be reviewed before
-        // generating a document, same as any manually-typed row.
-        function excelRouteSection(description) {
-            const norm = description.toLowerCase();
-            if (/\bhotel\b|\broom\b|\bnight stay\b/.test(norm)) return 'hotel';
-            if (/\bbus\b|\btransfer\b|\bparking\b|\bcoach\b|\bguide\b|\barrival\b|\bdeparture\b|\babra\b|\bcar\b/.test(norm)) return 'transport';
-            return 'tour';
+        // Aggregation, not itemization: every parsed day-item is summed
+        // into exactly one of four categories rather than imported as its
+        // own row, so the proposal shows one clean total per category
+        // instead of a client-facing line-by-line cost breakdown. Order
+        // matters — Accommodation and Flight are checked first since
+        // their keyword lists are narrow/specific; Tours is deliberately
+        // broad (it's meant to catch most guide/meal/activity items);
+        // anything matching none of the three falls to Extras (visas,
+        // insurance, tips, and the like).
+        const EXCEL_CATEGORY_KEYWORDS = {
+            accommodation: /\b(hotel|resort|villa|guest\s*house|room|suite|inn)\b/i,
+            flight: /\b(arrival|departure|airport|parking|transfer|flight|air)\b/i,
+            tours: /\b(safari|museum|tour|guide|lunch|dinner|cruise|show|entrance|excursion|ticket|frame|aquarium)\b/i,
+        };
+
+        function excelCategorize(description) {
+            if (EXCEL_CATEGORY_KEYWORDS.accommodation.test(description)) return 'accommodation';
+            if (EXCEL_CATEGORY_KEYWORDS.flight.test(description)) return 'flight';
+            if (EXCEL_CATEGORY_KEYWORDS.tours.test(description)) return 'tours';
+            return 'extras';
         }
 
-        function populateExcelSection(containerId, rowClass, fieldLabel, rows) {
+        // One row per non-empty category, built from an aggregated total —
+        // never a per-item array. Replaces whatever rows are already in
+        // that section (matching the existing "Import from Excel" hint).
+        function populateExcelCategoryRow(containerId, rowClass, fieldLabel, name, total) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
-            if (!rows.length) {
-                container.appendChild(createRow(rowClass, fieldLabel, {}));
-                return;
-            }
-            rows.forEach(values => container.appendChild(createRow(rowClass, fieldLabel, values)));
+            container.appendChild(createRow(rowClass, fieldLabel, total > 0
+                ? { name, quantity: 1, unit: 'Total', rate: total }
+                : {}));
         }
 
         function importExcelSheet(sheetName) {
@@ -1767,11 +1778,27 @@
             const checkInCell = excelFindLabelCell(matrix, /check\s*in/i);
             const checkOutCell = excelFindLabelCell(matrix, /check\s*out/i);
             const paxCell = excelFindLabelCell(matrix, /no\.?\s*of\s*pax/i);
+            const abuDhabiCell = excelFindLabelCell(matrix, /hotel\s*abu\s*dhabi/i);
+            const dubaiCell = excelFindLabelCell(matrix, /hotel\s*dubai/i);
+            const perPersonAedCell = excelFindLabelCell(matrix, /per\s*person\s*in\s*aed/i);
+            const perPersonUsdCell = excelFindLabelCell(matrix, /per\s*person\s*in\s*usd/i);
 
             const groupName = groupNameCell ? excelValueRightOf(matrix, groupNameCell.r, groupNameCell.c) : null;
             const checkIn = checkInCell ? excelValueRightOf(matrix, checkInCell.r, checkInCell.c) : null;
             const checkOut = checkOutCell ? excelValueRightOf(matrix, checkOutCell.r, checkOutCell.c) : null;
             const pax = paxCell ? excelFirstInteger(excelValueRightOf(matrix, paxCell.r, paxCell.c)) : null;
+            const hotelAbuDhabi = abuDhabiCell ? excelValueRightOf(matrix, abuDhabiCell.r, abuDhabiCell.c) : null;
+            const hotelDubai = dubaiCell ? excelValueRightOf(matrix, dubaiCell.r, dubaiCell.c) : null;
+            const perPersonAed = perPersonAedCell ? excelValueRightOf(matrix, perPersonAedCell.r, perPersonAedCell.c) : null;
+            const perPersonUsd = perPersonUsdCell ? excelValueRightOf(matrix, perPersonUsdCell.r, perPersonUsdCell.c) : null;
+
+            // Missing-keyword error: Group Name and Check In are the two
+            // fields every sheet in the reference workbook has, so their
+            // absence is the clearest signal this isn't the expected layout.
+            if (!groupNameCell && !checkInCell) {
+                showStatus(formStatus, `Could not find "Group name" or "Check in" in "${sheetName}". Please ensure the sheet follows the standard format.`, 'error');
+                return;
+            }
 
             if (groupName) document.getElementById('event_name').value = String(groupName).trim();
 
@@ -1781,26 +1808,46 @@
             if (pax !== null) document.getElementById('pax_count').value = pax;
 
             const dayItems = excelExtractDayItems(matrix);
-            const buckets = { hotel: [], transport: [], tour: [] };
+
+            if (!dayItems.length) {
+                showStatus(formStatus, `No itinerary services detected in "${sheetName}". The sheet may be empty or have a different layout.`, 'error');
+                return;
+            }
+
+            const totals = { accommodation: 0, flight: 0, tours: 0, extras: 0 };
             dayItems.forEach(item => {
-                buckets[excelRouteSection(item.description)].push({
-                    name: `${item.day ? item.day.replace(/\s+/g, ' ').trim() + ' – ' : ''}${item.description}`,
-                    quantity: 1,
-                    unit: 'Day',
-                    rate: item.cost
-                });
+                totals[excelCategorize(item.description)] += item.cost;
             });
 
-            populateExcelSection('hotel-container', 'hotel-row', 'Hotel Name', buckets.hotel);
-            populateExcelSection('trans-container', 'trans-row', 'Service', buckets.transport);
-            populateExcelSection('tour-container', 'tour-row', 'Activity Name', buckets.tour);
+            const hotelNamePairs = [['Abu Dhabi', hotelAbuDhabi], ['Dubai', hotelDubai]]
+                .filter(([, v]) => v !== null && String(v).trim() !== '');
+            const accommodationLabel = hotelNamePairs.map(([city, v]) => `${city}: ${String(v).trim()}`).join(', ');
+
+            populateExcelCategoryRow('hotel-container', 'hotel-row', 'Hotel Name',
+                accommodationLabel ? `Accommodation (${accommodationLabel})` : 'Accommodation', totals.accommodation);
+            populateExcelCategoryRow('trans-container', 'trans-row', 'Service', 'Flight', totals.flight);
+            populateExcelCategoryRow('tour-container', 'tour-row', 'Activity Name', 'Tours & Activities', totals.tours);
+
+            // Extras has no dedicated section in this form — folded into
+            // Tours & Activities as a second row rather than adding a new
+            // section, since it's an optional/fallback bucket ("the
+            // primary three must be present").
+            if (totals.extras > 0) {
+                document.getElementById('tour-container').appendChild(
+                    createRow('tour-row', 'Activity Name', { name: 'Extras (visa, insurance, etc.)', quantity: 1, unit: 'Total', rate: totals.extras })
+                );
+            }
 
             excelSheetPicker.hidden = true;
-            const totalItems = buckets.hotel.length + buckets.transport.length + buckets.tour.length;
+
+            const allZero = totals.accommodation === 0 && totals.flight === 0 && totals.tours === 0 && totals.extras === 0;
+            const perPersonNote = (perPersonAed !== null || perPersonUsd !== null)
+                ? ` Sheet's own rate: ${perPersonAed !== null ? `AED ${perPersonAed}` : ''}${perPersonAed !== null && perPersonUsd !== null ? ' / ' : ''}${perPersonUsd !== null ? `USD ${perPersonUsd}` : ''} per person (reference only — not applied to the form).`
+                : '';
             showStatus(
                 formStatus,
-                `Imported "${sheetName}": ${totalItems} line item${totalItems === 1 ? '' : 's'}${pax !== null ? `, ${pax} pax` : ''}. Review before generating.`,
-                totalItems > 0 ? 'success' : 'error'
+                `Imported "${sheetName}": Flight AED ${totals.flight.toFixed(2)}, Accommodation AED ${totals.accommodation.toFixed(2)}, Tours AED ${totals.tours.toFixed(2)}${totals.extras > 0 ? `, Extras AED ${totals.extras.toFixed(2)}` : ''}${pax !== null ? `, ${pax} pax` : ''}.${allZero ? ' All totals are zero — check the sheet layout.' : ''}${perPersonNote} Review before generating.`,
+                allZero ? 'error' : 'success'
             );
         }
 
