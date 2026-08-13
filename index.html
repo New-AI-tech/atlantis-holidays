@@ -1908,7 +1908,7 @@
         // — real Calibri isn't freely redistributable, Carlito is an OFL
         // metric-compatible clone, so real Calibri renders wherever the
         // viewer's OS has it and layout doesn't shift either way);
-        // #FFFFFF / #1A1A1A / #4B0082 palette; a 3-tier type scale (18px/
+        // #FFFFFF / #1A1A1A / #4A1C40 palette; a 3-tier type scale (18px/
         // 700 for the one hero element per page, 10px/700 for labels and
         // headers, 9.5px/400 for body — bold is used as an emphasis
         // *variant* of the 9.5px tier, e.g. highlighted values, not a 4th
@@ -1945,26 +1945,26 @@
             .doc-page { width: 210mm; margin: 0 auto; padding: 18mm 16mm; background: #FFFFFF; }
             .doc-header { text-align: center; margin-bottom: 8mm; }
             .doc-header-logo { max-width: 200px; width: 100%; height: auto; display: inline-block; margin-bottom: 14px; }
-            .p-title { margin-top: 5mm; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #4B0082; border-top: 1.5px solid #4B0082; border-bottom: 1.5px solid #4B0082; padding: 4mm 0; }
+            .p-title { margin-top: 5mm; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #4A1C40; border-top: 1.5px solid #4A1C40; border-bottom: 1.5px solid #4A1C40; padding: 4mm 0; }
             .p-event { margin: 8mm 0; }
-            .p-event h2 { font-size: 18px; font-weight: 700; color: #4B0082; margin: 0 0 2mm; }
+            .p-event h2 { font-size: 18px; font-weight: 700; color: #4A1C40; margin: 0 0 2mm; }
             .p-event p { margin: 0; font-size: 9.5px; font-weight: 400; color: #1A1A1A; }
-            .p-section-heading { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4B0082; margin: 8mm 0 3mm; border-bottom: 1px solid #DAC9EC; padding-bottom: 2mm; }
+            .p-section-heading { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 8mm 0 3mm; border-bottom: 1px solid #DDD3DA; padding-bottom: 2mm; }
             table.p-items { width: 100%; border-collapse: collapse; margin-bottom: 3mm; }
-            table.p-items th, table.p-items td { border: 1px solid #E5DBF0; padding: 3mm 3.5mm; text-align: left; font-size: 9.5px; font-weight: 400; }
-            table.p-items th { background: #4B0082; color: #FFFFFF; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+            table.p-items th, table.p-items td { border: 1px solid #DDD3DA; padding: 3mm 3.5mm; text-align: left; font-size: 9.5px; font-weight: 400; }
+            table.p-items th { background: #4A1C40; color: #FFFFFF; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
             table.p-items td.p-num { text-align: right; }
             .p-empty-note { font-size: 9.5px; font-weight: 400; font-style: italic; color: #777; margin: 0 0 3mm; }
             .p-totals { width: 100%; max-width: 85mm; margin: 8mm 0 0 auto; border-collapse: collapse; }
             .p-totals td { padding: 2.2mm 3.5mm; font-size: 9.5px; font-weight: 400; }
-            .p-totals tr.p-subtotal td, .p-totals tr.p-vat td { border-bottom: 1px solid #E5DBF0; }
-            .p-totals tr.p-grand td { font-weight: 700; font-size: 10px; color: #4B0082; border-top: 2px solid #4B0082; padding-top: 3mm; }
+            .p-totals tr.p-subtotal td, .p-totals tr.p-vat td { border-bottom: 1px solid #DDD3DA; }
+            .p-totals tr.p-grand td { font-weight: 700; font-size: 10px; color: #4A1C40; border-top: 2px solid #4A1C40; padding-top: 3mm; }
             .p-totals td.p-num { text-align: right; }
-            .doc-footer { margin-top: 24px; padding-top: 20px; border-top: 1px solid #E5DBF0; text-align: center; }
+            .doc-footer { margin-top: 24px; padding-top: 20px; border-top: 1px solid #DDD3DA; text-align: center; }
             .doc-footer-logo { max-width: 600px; width: 100%; height: auto; }
-            .p-group-total { margin: 12mm 0 8mm; padding: 10mm; text-align: center; border: 1.5px solid #4B0082; border-radius: 2mm; background: #F5F0FA; }
-            .p-group-total-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4B0082; margin-bottom: 3mm; }
-            .p-group-total-value { font-size: 18px; font-weight: 700; color: #4B0082; }
+            .p-group-total { margin: 12mm 0 8mm; padding: 10mm; text-align: center; border: 1.5px solid #4A1C40; border-radius: 2mm; background: #F8F8F8; }
+            .p-group-total-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4A1C40; margin-bottom: 3mm; }
+            .p-group-total-value { font-size: 18px; font-weight: 700; color: #4A1C40; }
             .p-group-total-note { margin-top: 3mm; font-size: 9.5px; font-weight: 400; color: #666; }
         `;
 
@@ -2492,7 +2492,7 @@
         };
 
         // Same brand rules as PROPOSAL_STYLES (self-hosted Calibri/Carlito,
-        // #FFFFFF/#1A1A1A/#4B0082, 18px-hero / 10px-label / 9.5px-body type
+        // #FFFFFF/#1A1A1A/#4A1C40, 18px-hero / 10px-label / 9.5px-body type
         // scale) plus voucher-specific requirements: Confirmation Number,
         // Guest Name, and Check-in/Check-out get a light-purple "highlighter"
         // treatment (background tint + bold purple text) so a hotel front
@@ -2528,60 +2528,60 @@
             .voucher-page { width: 210mm; margin: 0 auto; padding: 16mm 16mm 8mm; background: #FFFFFF; }
             .doc-header { text-align: center; margin-bottom: 6mm; }
             .doc-header-logo { max-width: 200px; width: 100%; height: auto; display: inline-block; margin-bottom: 10px; }
-            .v-title { margin-top: 5mm; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #4B0082; border-top: 1.5px solid #4B0082; border-bottom: 1.5px solid #4B0082; padding: 4mm 0; }
-            .v-infobar { display: flex; margin: 7mm 0; background: #F7F4FA; border: 1px solid #E5DBF0; border-radius: 3px; overflow: hidden; }
-            .v-infobar > div { flex: 1; padding: 4mm 5mm; border-right: 1px solid #E5DBF0; }
+            .v-title { margin-top: 5mm; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #4A1C40; border-top: 1.5px solid #4A1C40; border-bottom: 1.5px solid #4A1C40; padding: 4mm 0; }
+            .v-infobar { display: flex; margin: 7mm 0; background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; overflow: hidden; }
+            .v-infobar > div { flex: 1; padding: 4mm 5mm; border-right: 1px solid #DDD3DA; }
             .v-infobar > div:last-child { border-right: none; }
-            .v-infobar .v-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4B0082; margin-bottom: 1.5mm; }
+            .v-infobar .v-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; margin-bottom: 1.5mm; }
             .v-infobar .v-value { font-size: 9.5px; font-weight: 400; }
             /* Confirmation Number — the "Voucher No" field doubles as the
                booking's confirmation identifier for front-desk lookup. */
-            .v-infobar .v-value-highlight { font-size: 9.5px; font-weight: 700; color: #4B0082; }
+            .v-infobar .v-value-highlight { font-size: 9.5px; font-weight: 700; color: #4A1C40; }
             .v-body-grid { display: flex; gap: 8mm; margin-bottom: 6mm; }
             .v-hotel-info { flex: 1.15; }
-            .v-hotel-info h2 { font-size: 18px; font-weight: 700; margin: 0 0 3mm; color: #4B0082; }
+            .v-hotel-info h2 { font-size: 18px; font-weight: 700; margin: 0 0 3mm; color: #4A1C40; }
             .v-hotel-info p { margin: 0 0 3mm; font-size: 9.5px; font-weight: 400; }
             .v-icon-line { display: flex; align-items: flex-start; gap: 2.5mm; margin-bottom: 2mm; }
-            .v-icon-line svg { width: 12px; height: 12px; color: #4B0082; flex-shrink: 0; margin-top: 1px; }
+            .v-icon-line svg { width: 12px; height: 12px; color: #4A1C40; flex-shrink: 0; margin-top: 1px; }
             .v-hotel-image-wrap { flex: 1; }
             .v-hotel-image-wrap img { width: 100%; height: 42mm; object-fit: cover; border-radius: 3px; display: block; }
-            .v-hotel-image-placeholder { width: 100%; height: 42mm; background: #F7F4FA; border: 1px dashed #E5DBF0; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #777; font-size: 9.5px; text-align: center; padding: 5mm; }
+            .v-hotel-image-placeholder { width: 100%; height: 42mm; background: #F7F4FA; border: 1px dashed #DDD3DA; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #777; font-size: 9.5px; text-align: center; padding: 5mm; }
             /* Guest Name — the primary front-desk lookup key, so it gets the
                same "hero" size as the hotel/event name plus a lavender
                highlight band rather than just bold text. */
-            .v-guest-line { margin: 6mm 0; padding: 3mm 4mm; background: #F5F0FA; border: 1px solid #4B0082; border-radius: 2mm; }
-            .v-guest-line .v-sublabel { font-weight: 700; color: #4B0082; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 1.5mm; }
-            .v-guest-line .v-guest-name { font-size: 18px; font-weight: 700; color: #4B0082; }
+            .v-guest-line { margin: 6mm 0; padding: 3mm 4mm; background: #F8F8F8; border: 1px solid #4A1C40; border-radius: 2mm; }
+            .v-guest-line .v-sublabel { font-weight: 700; color: #4A1C40; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 1.5mm; }
+            .v-guest-line .v-guest-name { font-size: 18px; font-weight: 700; color: #4A1C40; }
             table.v-stay-table { width: 100%; border-collapse: collapse; margin-bottom: 7mm; }
-            table.v-stay-table th, table.v-stay-table td { border: 1px solid #E5DBF0; padding: 3mm 3.5mm; text-align: left; font-size: 9.5px; font-weight: 400; }
-            table.v-stay-table th { background: #4B0082; color: #FFFFFF; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+            table.v-stay-table th, table.v-stay-table td { border: 1px solid #DDD3DA; padding: 3mm 3.5mm; text-align: left; font-size: 9.5px; font-weight: 400; }
+            table.v-stay-table th { background: #4A1C40; color: #FFFFFF; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
             /* Dates — Check-in/Check-out get the same highlighter treatment
                as Guest Name and Confirmation Number, per brand spec. */
-            table.v-stay-table td.v-stay-highlight { background: #F5F0FA; color: #4B0082; font-weight: 700; }
+            table.v-stay-table td.v-stay-highlight { background: #F8F8F8; color: #4A1C40; font-weight: 700; }
             .v-room-section { display: flex; gap: 8mm; margin-bottom: 6mm; }
             .v-room-left { flex: 1.3; }
-            .v-room-left h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4B0082; margin: 0 0 3mm; }
+            .v-room-left h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 0 0 3mm; }
             .v-room-left ul { margin: 0; padding-left: 4mm; font-size: 9.5px; font-weight: 400; }
             .v-room-left li { margin-bottom: 1.5mm; }
             .v-room-right { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; align-content: start; }
             .v-room-icon-item { display: flex; align-items: center; gap: 2.5mm; }
-            .v-room-icon-item svg { width: 16px; height: 16px; color: #4B0082; flex-shrink: 0; }
+            .v-room-icon-item svg { width: 16px; height: 16px; color: #4A1C40; flex-shrink: 0; }
             .v-room-icon-item .v-icon-label { font-size: 9.5px; font-weight: 400; text-transform: uppercase; color: #777; letter-spacing: 0.5px; display: block; }
             .v-room-icon-item .v-icon-value { font-size: 9.5px; font-weight: 700; }
-            .v-section-heading { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4B0082; margin: 0 0 3mm; border-bottom: 1px solid #DAC9EC; padding-bottom: 2mm; }
+            .v-section-heading { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 0 0 3mm; border-bottom: 1px solid #DDD3DA; padding-bottom: 2mm; }
             .v-reservation-table { display: grid; gap: 4mm; margin-bottom: 7mm; }
             /* Confirmation/Reservation Numbers — the document's other
                primary front-desk lookup key. */
-            .v-reservation-cell { border: 1.5px solid #4B0082; border-radius: 3px; padding: 3mm 3.5mm; text-align: center; font-size: 9.5px; font-weight: 700; color: #4B0082; background: #F5F0FA; }
+            .v-reservation-cell { border: 1.5px solid #4A1C40; border-radius: 3px; padding: 3mm 3.5mm; text-align: center; font-size: 9.5px; font-weight: 700; color: #4A1C40; background: #F8F8F8; }
             .v-lower-grid { display: flex; gap: 8mm; margin-top: 3mm; }
             .v-policies-col { flex: 1.5; font-size: 9.5px; font-weight: 400; }
             .v-policies-col p { margin: 0 0 3mm; }
-            .v-policies-col strong { color: #4B0082; font-weight: 700; }
-            .v-contact-box { flex: 1; background: #F7F4FA; border: 1px solid #E5DBF0; border-radius: 3px; padding: 5mm; align-self: flex-start; }
-            .v-contact-box h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4B0082; margin: 0 0 4mm; }
+            .v-policies-col strong { color: #4A1C40; font-weight: 700; }
+            .v-contact-box { flex: 1; background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; padding: 5mm; align-self: flex-start; }
+            .v-contact-box h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; margin: 0 0 4mm; }
             .v-contact-line { display: flex; align-items: center; gap: 2.5mm; margin-bottom: 2.5mm; font-size: 9.5px; font-weight: 400; }
-            .v-contact-line svg { width: 13px; height: 13px; color: #4B0082; flex-shrink: 0; }
-            .doc-footer { margin-top: 24px; padding-top: 18px; border-top: 1px solid #E5DBF0; text-align: center; }
+            .v-contact-line svg { width: 13px; height: 13px; color: #4A1C40; flex-shrink: 0; }
+            .doc-footer { margin-top: 24px; padding-top: 18px; border-top: 1px solid #DDD3DA; text-align: center; }
             .doc-footer-logo { max-width: 600px; width: 100%; height: auto; }
         `;
 
