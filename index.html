@@ -12,6 +12,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
     <!-- Self-hosted (not a CDN — see assets/js/HTML2PDF-LICENSE.txt), used for all PDF export buttons on both tabs -->
     <script src="assets/js/html2pdf.bundle.min.js" defer></script>
+    <!-- Static rate card for the Itinerary Builder's description
+         autocomplete — see assets/js/costList.js. Deliberately NOT
+         deferred: the main inline script at the end of <body> runs
+         synchronously (not deferred) as soon as the parser reaches it,
+         which is *before* any deferred script executes, so a deferred
+         costList.js would still be undefined when that inline script
+         reads COST_LIST. Loading it plainly here guarantees it's
+         defined first — it's tiny and has no dependencies, so blocking
+         briefly here has no real cost. -->
+    <script src="assets/js/costList.js"></script>
 
     <style>
         /* ============================================================
@@ -1396,6 +1406,87 @@
             margin-top: 12px;
         }
 
+        /* ---- Left panel: hotel image uploads ---- */
+        .ew-hotel-images label {
+            display: block;
+        }
+
+        .ib-image-section {
+            margin-bottom: 16px;
+        }
+
+        .ib-image-thumbs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .ib-image-thumb {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--ew-border);
+            flex-shrink: 0;
+        }
+
+        .ib-image-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .ib-image-thumb-remove {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            color: #FFFFFF;
+            border: none;
+            font-size: 11px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .ib-image-thumb-remove:hover {
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        .ib-image-upload-btn {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 600 !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+            color: var(--ew-accent);
+            border: 1px dashed var(--ew-accent);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .ib-image-upload-btn:hover {
+            background: rgba(74, 28, 64, 0.06);
+        }
+
+        .ib-image-upload-btn.is-disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         /* ---- Right panel: live margin & totals summary ---- */
         .ew-summary-row {
             display: flex;
@@ -1738,6 +1829,42 @@
                         <label for="pax_count">Number of Pax</label>
                         <input type="number" id="pax_count" min="0" step="1" placeholder="e.g. 35">
                     </div>
+
+                    <!-- Hotel Images — up to 3 each, resized client-side
+                         and stored as base64 per quotation type (see
+                         currentHotelImages / mountQuotation in the script
+                         below). Not yet wired into the PDF/Word exports —
+                         that's a later phase. -->
+                    <div class="ew-hotel-images">
+                        <h3 class="ew-panel-heading" style="margin-top:24px;">Hotel Images</h3>
+
+                        <div class="ib-image-section">
+                            <label>Exterior Photos (max 3)</label>
+                            <div class="ib-image-thumbs" id="imageThumbs-exterior"></div>
+                            <label class="ib-image-upload-btn" id="imageUploadBtn-exterior">
+                                + Add Photo
+                                <input type="file" accept="image/*" multiple class="ib-image-input" data-image-section="exterior" hidden>
+                            </label>
+                        </div>
+
+                        <div class="ib-image-section">
+                            <label>Room Photos (max 3)</label>
+                            <div class="ib-image-thumbs" id="imageThumbs-room"></div>
+                            <label class="ib-image-upload-btn" id="imageUploadBtn-room">
+                                + Add Photo
+                                <input type="file" accept="image/*" multiple class="ib-image-input" data-image-section="room" hidden>
+                            </label>
+                        </div>
+
+                        <div class="ib-image-section">
+                            <label>Interior Photos (max 3)</label>
+                            <div class="ib-image-thumbs" id="imageThumbs-interior"></div>
+                            <label class="ib-image-upload-btn" id="imageUploadBtn-interior">
+                                + Add Photo
+                                <input type="file" accept="image/*" multiple class="ib-image-input" data-image-section="interior" hidden>
+                            </label>
+                        </div>
+                    </div>
                 </aside>
 
                 <!-- Center Panel: Itinerary & Cost Builder -->
@@ -1747,6 +1874,8 @@
                         <button type="button" class="ew-btn ew-add-row-btn" id="addItineraryRowBtn">+ Add Service</button>
                     </div>
                     <div id="itineraryRows"></div>
+                    <!-- Populated once at load from COST_LIST (assets/js/costList.js); referenced by each row's Internal Description input via list="activity-suggestions". -->
+                    <datalist id="activity-suggestions"></datalist>
                 </div>
 
                 <!-- Right Panel: live Margin & Totals summary -->
@@ -2134,6 +2263,11 @@
         const ACTIVE_QUOTATION_TYPE_KEY = 'atlantis-active-quotation-type';
         let currentQuotationType = 'landPackage';
         let quotations = {};
+        // The active type's hotel images — kept as an in-memory object
+        // (not read from the DOM like the fields above, since there's
+        // no form input holding it) and swapped out by mountQuotation()
+        // on every sub-tab switch, same as the DOM-backed fields.
+        let currentHotelImages = { exterior: [], room: [], interior: [] };
 
         // Only Land Package ships with a filled-in example (matching the
         // old form's pattern); FIT and Groups start from a single blank
@@ -2153,9 +2287,10 @@
                         netCost: 1500,
                         markupPct: 20,
                     }],
+                    hotelImages: { exterior: [], room: [], interior: [] },
                 };
             }
-            return { eventName: '', eventDates: '', paxCount: '', rows: [{}] };
+            return { eventName: '', eventDates: '', paxCount: '', rows: [{}], hotelImages: { exterior: [], room: [], interior: [] } };
         }
 
         function loadQuotationsFromStorage() {
@@ -2172,7 +2307,12 @@
             try {
                 localStorage.setItem(QUOTATIONS_STORAGE_KEY, JSON.stringify(quotations));
             } catch (e) {
+                // Most likely QuotaExceededError from the hotel images —
+                // surfaced to the agent rather than failing silently,
+                // since a silent failure here would look like the data
+                // saved when it didn't.
                 console.warn('Could not save quotations to localStorage:', e);
+                showStatus(formStatus, 'Could not save — local storage is full. Try removing a hotel image.', 'error');
             }
         }
 
@@ -2201,6 +2341,7 @@
                     netCost: parseFloat(row.querySelector('.ib-net').value) || 0,
                     markupPct: parseFloat(row.querySelector('.ib-markup').value) || 0,
                 })),
+                hotelImages: currentHotelImages,
             };
         }
 
@@ -2214,8 +2355,101 @@
             container.innerHTML = '';
             const rows = state.rows && state.rows.length ? state.rows : [{}];
             rows.forEach(values => container.appendChild(createItineraryRow(values)));
+            currentHotelImages = {
+                exterior: (state.hotelImages && state.hotelImages.exterior) || [],
+                room: (state.hotelImages && state.hotelImages.room) || [],
+                interior: (state.hotelImages && state.hotelImages.interior) || [],
+            };
+            ['exterior', 'room', 'interior'].forEach(renderImageThumbs);
             recalcTotals();
         }
+
+        // ------------------------------------------------------------
+        // Hotel Images (Left Panel) — up to 3 each for exterior/room/
+        // interior, resized client-side before storing so 9 photos per
+        // quotation type stay well under localStorage's ~5MB/origin
+        // limit. Not yet wired into the PDF/Word exports (later phase).
+        // ------------------------------------------------------------
+        function renderImageThumbs(sectionKey) {
+            const thumbsContainer = document.getElementById(`imageThumbs-${sectionKey}`);
+            const images = currentHotelImages[sectionKey] || [];
+            thumbsContainer.innerHTML = images.map((src, i) => `
+                <div class="ib-image-thumb">
+                    <img src="${src}" alt="${escapeHtml(sectionKey)} photo ${i + 1}">
+                    <button type="button" class="ib-image-thumb-remove" data-section="${sectionKey}" data-index="${i}" aria-label="Remove this photo">✕</button>
+                </div>
+            `).join('');
+
+            const uploadBtn = document.getElementById(`imageUploadBtn-${sectionKey}`);
+            const atMax = images.length >= 3;
+            uploadBtn.classList.toggle('is-disabled', atMax);
+            uploadBtn.querySelector('input').disabled = atMax;
+        }
+
+        // Reads a File, draws it to an off-DOM canvas capped at 800px
+        // wide (maintaining aspect ratio), and resolves a compressed
+        // JPEG data URL — keeps localStorage usage manageable versus
+        // storing the original upload's base64 directly.
+        function resizeImageFile(file, maxWidth) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let { width, height } = img;
+                        if (width > maxWidth) {
+                            height = Math.round(height * (maxWidth / width));
+                            width = maxWidth;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.82));
+                    };
+                    img.onerror = () => reject(new Error('Could not read image file.'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('Could not read image file.'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleImageUpload(sectionKey, fileList) {
+            const remaining = 3 - currentHotelImages[sectionKey].length;
+            if (remaining <= 0) return;
+
+            const files = Array.from(fileList).slice(0, remaining);
+            for (const file of files) {
+                try {
+                    const dataUrl = await resizeImageFile(file, 800);
+                    currentHotelImages[sectionKey].push(dataUrl);
+                } catch (error) {
+                    console.error('Failed to process hotel image:', error);
+                    showStatus(formStatus, 'Could not process one of the selected images.', 'error');
+                }
+            }
+            renderImageThumbs(sectionKey);
+            scheduleQuotationSave();
+        }
+
+        document.querySelectorAll('.ib-image-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const sectionKey = input.dataset.imageSection;
+                if (e.target.files.length) handleImageUpload(sectionKey, e.target.files);
+                input.value = '';
+            });
+        });
+
+        document.querySelector('.ew-hotel-images').addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('.ib-image-thumb-remove');
+            if (!removeBtn) return;
+            const sectionKey = removeBtn.dataset.section;
+            const index = parseInt(removeBtn.dataset.index, 10);
+            currentHotelImages[sectionKey].splice(index, 1);
+            renderImageThumbs(sectionKey);
+            scheduleQuotationSave();
+        });
 
         function switchQuotationType(typeId) {
             if (typeId === currentQuotationType) return;
@@ -2274,7 +2508,7 @@
                     </div>
                     <div class="field">
                         <label>Internal Description</label>
-                        <input type="text" class="ib-internal" placeholder="e.g. Atlantis Royal – Deluxe Room x2" value="${values.internalDesc ? escapeHtml(values.internalDesc) : ''}">
+                        <input type="text" class="ib-internal" list="activity-suggestions" placeholder="e.g. Atlantis Royal – Deluxe Room x2" value="${values.internalDesc ? escapeHtml(values.internalDesc) : ''}">
                     </div>
                     <div class="field">
                         <label>Net Cost (AED)</label>
@@ -2395,6 +2629,38 @@
         document.getElementById('addItineraryRowBtn').addEventListener('click', () => addItineraryRow({}));
         document.getElementById('itineraryRows').addEventListener('input', recalcTotals);
         document.getElementById('itineraryRows').addEventListener('change', recalcTotals);
+
+        // ------------------------------------------------------------
+        // Cost-list autocomplete — COST_LIST (assets/js/costList.js,
+        // loaded synchronously above so it's guaranteed defined here)
+        // populates the shared <datalist> once; typing or picking an
+        // exact (case-insensitive) match into a row's Internal
+        // Description auto-fills that row's Category and Net Cost. A
+        // typed description with no match is left alone — the agent
+        // sets category/rate manually, same as before this feature.
+        // ------------------------------------------------------------
+        if (typeof COST_LIST !== 'undefined') {
+            document.getElementById('activity-suggestions').innerHTML = COST_LIST
+                .map(item => `<option value="${escapeHtml(item.description)}"></option>`)
+                .join('');
+        }
+
+        function applyCostListMatch(inputEl) {
+            if (typeof COST_LIST === 'undefined') return;
+            const typed = inputEl.value.trim().toLowerCase();
+            if (!typed) return;
+            const match = COST_LIST.find(item => item.description.toLowerCase() === typed);
+            if (!match) return;
+
+            const row = inputEl.closest('.ib-row');
+            row.querySelector('.ib-category').value = match.category;
+            row.querySelector('.ib-net').value = match.rate;
+            recalcTotals();
+        }
+
+        document.getElementById('itineraryRows').addEventListener('input', (e) => {
+            if (e.target.classList.contains('ib-internal')) applyCostListMatch(e.target);
+        });
 
         // Load whichever quotation type/data was last saved (per type,
         // keyed in localStorage) and mount it — falls back to Land
