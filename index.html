@@ -1165,6 +1165,38 @@
             border-color: var(--ew-accent);
         }
 
+        .ew-subtabs {
+            flex-shrink: 0;
+            display: flex;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--ew-border);
+        }
+
+        .ew-subtab {
+            background: none;
+            border: 1px solid #D5D8DE;
+            border-radius: 999px;
+            padding: 7px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ew-text-muted);
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .ew-subtab:hover {
+            border-color: var(--ew-accent);
+            color: var(--ew-accent);
+        }
+
+        .ew-subtab.active {
+            background: var(--ew-accent);
+            border-color: var(--ew-accent);
+            color: #FFFFFF;
+        }
+
         .ew-body {
             flex: 1;
             display: grid;
@@ -1679,6 +1711,17 @@
                 <button type="button" class="ew-switch-voucher" onclick="switchTab('voucher')">Hotel Confirmation Voucher →</button>
             </div>
 
+            <!-- Quotation type sub-tabs — Land Package / FIT / Groups each
+                 keep independent client details + itinerary rows (see the
+                 quotation-state JS below); they all share this exact same
+                 form/table UI and export logic, only the underlying data
+                 differs per type. -->
+            <div class="ew-subtabs" role="tablist" aria-label="Quotation type">
+                <button type="button" class="ew-subtab active" data-qtype="landPackage" role="tab" aria-selected="true">Land Package</button>
+                <button type="button" class="ew-subtab" data-qtype="fit" role="tab" aria-selected="false">FIT</button>
+                <button type="button" class="ew-subtab" data-qtype="groups" role="tab" aria-selected="false">Groups</button>
+            </div>
+
             <div class="ew-body">
                 <!-- Left Panel: Client Details & Settings -->
                 <aside class="ew-panel ew-left">
@@ -2073,6 +2116,136 @@
         }
 
         // ------------------------------------------------------------
+        // Quotation type sub-tabs (Land Package / FIT / Groups) — each
+        // type keeps its own independent client details + itinerary
+        // rows. All three reuse the exact same builder DOM/table below;
+        // switching types serializes the currently-mounted DOM into
+        // `quotations[currentQuotationType]` and remounts the target
+        // type's saved (or default) state, so no second UI has to be
+        // built or maintained. Persisted to localStorage so a page
+        // refresh — or switching away and back — doesn't lose work.
+        // ------------------------------------------------------------
+        const QUOTATION_TYPES = [
+            { id: 'landPackage', label: 'Land Package' },
+            { id: 'fit', label: 'FIT' },
+            { id: 'groups', label: 'Groups' },
+        ];
+        const QUOTATIONS_STORAGE_KEY = 'atlantis-quotations-v1';
+        const ACTIVE_QUOTATION_TYPE_KEY = 'atlantis-active-quotation-type';
+        let currentQuotationType = 'landPackage';
+        let quotations = {};
+
+        // Only Land Package ships with a filled-in example (matching the
+        // old form's pattern); FIT and Groups start from a single blank
+        // row — no assumptions are made about their default markup or
+        // pax structure without that being specified.
+        function defaultQuotationState(typeId) {
+            if (typeId === 'landPackage') {
+                return {
+                    eventName: 'Atlantis EADV Congress 2026',
+                    eventDates: 'October 12 – October 16, 2026',
+                    paxCount: '',
+                    rows: [{
+                        day: 'Day 1',
+                        category: 'Accommodation',
+                        internalDesc: 'Atlantis The Royal - Deluxe Room x2 nights',
+                        clientDesc: 'Check in to your luxurious Deluxe Room at Atlantis The Royal, with panoramic views of the Dubai skyline.',
+                        netCost: 1500,
+                        markupPct: 20,
+                    }],
+                };
+            }
+            return { eventName: '', eventDates: '', paxCount: '', rows: [{}] };
+        }
+
+        function loadQuotationsFromStorage() {
+            try {
+                const raw = localStorage.getItem(QUOTATIONS_STORAGE_KEY);
+                if (raw) return JSON.parse(raw);
+            } catch (e) {
+                console.warn('Could not read saved quotations from localStorage:', e);
+            }
+            return {};
+        }
+
+        function saveQuotationsToStorage() {
+            try {
+                localStorage.setItem(QUOTATIONS_STORAGE_KEY, JSON.stringify(quotations));
+            } catch (e) {
+                console.warn('Could not save quotations to localStorage:', e);
+            }
+        }
+
+        let quotationSaveTimer = null;
+        function scheduleQuotationSave() {
+            clearTimeout(quotationSaveTimer);
+            quotationSaveTimer = setTimeout(() => {
+                quotations[currentQuotationType] = serializeCurrentQuotation();
+                saveQuotationsToStorage();
+            }, 400);
+        }
+
+        // Reads the currently-mounted DOM (client fields + itinerary
+        // rows) into a plain object — the "save" half of the DOM-is-
+        // source-of-truth pattern the rest of the builder already uses.
+        function serializeCurrentQuotation() {
+            return {
+                eventName: document.getElementById('event_name').value,
+                eventDates: document.getElementById('event_dates').value,
+                paxCount: document.getElementById('pax_count').value,
+                rows: Array.from(document.querySelectorAll('#itineraryRows .ib-row')).map(row => ({
+                    day: row.querySelector('.ib-day').value,
+                    category: row.querySelector('.ib-category').value,
+                    internalDesc: row.querySelector('.ib-internal').value,
+                    clientDesc: row.querySelector('.ib-client-desc').value,
+                    netCost: parseFloat(row.querySelector('.ib-net').value) || 0,
+                    markupPct: parseFloat(row.querySelector('.ib-markup').value) || 0,
+                })),
+            };
+        }
+
+        // Rebuilds the DOM from a saved (or default) state object — the
+        // "load" half of the pattern above.
+        function mountQuotation(state) {
+            document.getElementById('event_name').value = state.eventName || '';
+            document.getElementById('event_dates').value = state.eventDates || '';
+            document.getElementById('pax_count').value = state.paxCount || '';
+            const container = document.getElementById('itineraryRows');
+            container.innerHTML = '';
+            const rows = state.rows && state.rows.length ? state.rows : [{}];
+            rows.forEach(values => container.appendChild(createItineraryRow(values)));
+            recalcTotals();
+        }
+
+        function switchQuotationType(typeId) {
+            if (typeId === currentQuotationType) return;
+            quotations[currentQuotationType] = serializeCurrentQuotation();
+            currentQuotationType = typeId;
+            saveQuotationsToStorage();
+            try {
+                localStorage.setItem(ACTIVE_QUOTATION_TYPE_KEY, typeId);
+            } catch (e) {
+                console.warn('Could not save active quotation type to localStorage:', e);
+            }
+
+            document.querySelectorAll('.ew-subtab').forEach(btn => {
+                const isActive = btn.dataset.qtype === typeId;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', String(isActive));
+            });
+
+            mountQuotation(quotations[typeId] || defaultQuotationState(typeId));
+        }
+
+        document.querySelectorAll('.ew-subtab').forEach(btn => {
+            btn.addEventListener('click', () => switchQuotationType(btn.dataset.qtype));
+        });
+
+        ['event_name', 'event_dates', 'pax_count'].forEach(id => {
+            document.getElementById(id).addEventListener('input', scheduleQuotationSave);
+        });
+
+        // ------------------------------------------------------------
         // Itinerary & Cost Builder — one dynamic table (Center Panel)
         // instead of the old three separate Hotel/Transport/Tours
         // sections. Each row carries both an internal cost breakdown
@@ -2188,11 +2361,14 @@
             // add-on applied once to the total.
             const vatAmount = totalSelling * 0.05;
             const grandTotal = totalSelling + vatAmount;
+            const typeConfig = QUOTATION_TYPES.find(t => t.id === currentQuotationType) || QUOTATION_TYPES[0];
 
             return {
                 eventName: document.getElementById('event_name').value,
                 eventDates: document.getElementById('event_dates').value,
                 paxCount: parseInt(document.getElementById('pax_count').value, 10) || 0,
+                quotationType: typeConfig.id,
+                quotationTypeLabel: typeConfig.label,
                 rows,
                 buckets: categorizeRows(rows),
                 totals: { net: totalNet, selling: totalSelling, profit: totalProfit, vat: vatAmount, grandTotal },
@@ -2213,23 +2389,34 @@
             document.getElementById('summarySelling').textContent = formatAED(data.totals.selling);
             document.getElementById('summaryVat').textContent = formatAED(data.totals.vat);
             document.getElementById('summaryGrand').textContent = formatAED(data.totals.grandTotal);
+            scheduleQuotationSave();
         }
 
         document.getElementById('addItineraryRowBtn').addEventListener('click', () => addItineraryRow({}));
         document.getElementById('itineraryRows').addEventListener('input', recalcTotals);
         document.getElementById('itineraryRows').addEventListener('change', recalcTotals);
 
-        // Seed one example row so the table isn't empty on first load —
-        // matches the old form's pattern of shipping with a filled-in
-        // example rather than a blank slate.
-        addItineraryRow({
-            day: 'Day 1',
-            category: 'Accommodation',
-            internalDesc: 'Atlantis The Royal - Deluxe Room x2 nights',
-            clientDesc: 'Check in to your luxurious Deluxe Room at Atlantis The Royal, with panoramic views of the Dubai skyline.',
-            netCost: 1500,
-            markupPct: 20,
+        // Load whichever quotation type/data was last saved (per type,
+        // keyed in localStorage) and mount it — falls back to Land
+        // Package's filled-in example on a first-ever visit, matching
+        // the old form's pattern of shipping with an example rather
+        // than a blank slate. Also restores whichever sub-tab was last
+        // active, so a page refresh lands back where the agent left off.
+        try {
+            const savedType = localStorage.getItem(ACTIVE_QUOTATION_TYPE_KEY);
+            if (savedType && QUOTATION_TYPES.some(t => t.id === savedType)) {
+                currentQuotationType = savedType;
+            }
+        } catch (e) {
+            console.warn('Could not read active quotation type from localStorage:', e);
+        }
+        document.querySelectorAll('.ew-subtab').forEach(btn => {
+            const isActive = btn.dataset.qtype === currentQuotationType;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-selected', String(isActive));
         });
+        quotations = loadQuotationsFromStorage();
+        mountQuotation(quotations[currentQuotationType] || defaultQuotationState(currentQuotationType));
 
         // ------------------------------------------------------------
         // Shared print branding for both new export types — Calibri
@@ -2319,7 +2506,7 @@
                 <div class="doc-page">
                     <div class="doc-header">
                         <img class="doc-header-logo" src="${BRAND_HEADER_IMAGE}" alt="Atlantis Holidays & Wellness">
-                        <div class="p-title">PRICING PROPOSAL</div>
+                        <div class="p-title">PRICING PROPOSAL — ${escapeHtml(data.quotationTypeLabel.toUpperCase())}</div>
                     </div>
 
                     <div class="p-event">
@@ -2382,7 +2569,7 @@
                 <div class="doc-page">
                     <div class="doc-header">
                         <img class="doc-header-logo" src="${BRAND_HEADER_IMAGE}" alt="Atlantis Holidays & Wellness">
-                        <div class="p-title">TRAVEL ITINERARY</div>
+                        <div class="p-title">TRAVEL ITINERARY — ${escapeHtml(data.quotationTypeLabel.toUpperCase())}</div>
                     </div>
 
                     <div class="p-event">
@@ -2465,11 +2652,13 @@
         }
 
         pricingPdfBtn.addEventListener('click', () => {
-            exportPdf(pricingPdfBtn, pricingPdfLabel, 'Generate Pricing Proposal', buildPricingProposalHTML, 'Pricing_Proposal', buildItineraryData());
+            const data = buildItineraryData();
+            exportPdf(pricingPdfBtn, pricingPdfLabel, 'Generate Pricing Proposal', buildPricingProposalHTML, `Pricing_Proposal_${data.quotationTypeLabel.replace(/\s+/g, '')}`, data);
         });
 
         itineraryPdfBtn.addEventListener('click', () => {
-            exportPdf(itineraryPdfBtn, itineraryPdfLabel, 'Generate Itinerary PDF', buildItineraryHTML, 'Itinerary', buildItineraryData());
+            const data = buildItineraryData();
+            exportPdf(itineraryPdfBtn, itineraryPdfLabel, 'Generate Itinerary PDF', buildItineraryHTML, `Itinerary_${data.quotationTypeLabel.replace(/\s+/g, '')}`, data);
         });
 
         // ------------------------------------------------------------
@@ -2536,7 +2725,7 @@
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 });
 
-                const filename = `Proposal_${(data.eventName || 'Event').replace(/[^a-z0-9]/gi, '_')}.docx`;
+                const filename = `Proposal_${data.quotationTypeLabel.replace(/\s+/g, '')}_${(data.eventName || 'Event').replace(/[^a-z0-9]/gi, '_')}.docx`;
                 saveAs(outputBlob, filename);
 
                 showStatus(formStatus, `Proposal generated: ${filename}`, 'success');
