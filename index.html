@@ -12,6 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
     <!-- Self-hosted (not a CDN — see assets/js/HTML2PDF-LICENSE.txt), used only for the voucher's "Download PDF" button -->
     <script src="assets/js/html2pdf.bundle.min.js" defer></script>
+    <!-- Self-hosted (not a CDN — see assets/js/XLSX-LICENSE.txt), used only for "Import from Excel" -->
+    <script src="assets/js/xlsx.full.min.js" defer></script>
 
     <!-- Ambient full-page background video (see assets/videos/README.md) -->
     <link rel="stylesheet" href="assets/css/background-video.css">
@@ -66,6 +68,38 @@
         }
 
         /* ============================================================
+           LIGHT-THEME LUXURY TYPEFACES — Playfair Display (headers) +
+           Montserrat (body), self-hosted (SIL OFL 1.1, see
+           assets/fonts/LUXURY-FONTS-LICENSE.txt) for the same reason
+           Fraunces is self-hosted above: no external font CDN. Dark
+           theme keeps Fraunces untouched — see the light-mode-scoped
+           --font-body/--font-heading overrides further down.
+           Both files are true variable fonts (wght axis), so one file
+           each covers the whole weight range instead of one file per
+           weight like the static Fraunces files above. */
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('assets/fonts/montserrat-latin-variable-normal.woff2') format('woff2');
+            font-weight: 100 900;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('assets/fonts/montserrat-latin-400-italic.woff2') format('woff2');
+            font-weight: 400;
+            font-style: italic;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Playfair Display';
+            src: url('assets/fonts/playfair-display-latin-variable-normal.woff2') format('woff2');
+            font-weight: 400 900;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* ============================================================
            DESIGN TOKENS
            ============================================================ */
         :root {
@@ -89,14 +123,18 @@
             --color-success-bg: rgba(72, 187, 120, 0.12);
             --color-danger-bg: rgba(229, 62, 62, 0.12);
             --color-focus-ring: #c084fc;
+            --color-primary-focus: rgba(124, 26, 168, 0.25);
             --input-bg: #0f111a;
             --input-text: #ffffff;
             --color-accent-teal: #4fc1cc;
             --color-accent-teal-hover: #6fd0d9;
             --color-accent-teal-contrast: #062024;
 
-            /* Typography — single typeface (Fraunces), weight carries hierarchy */
+            /* Typography — single typeface (Fraunces), weight carries hierarchy.
+               --font-heading defaults to the same face as --font-body here;
+               light mode (below) is the only theme that splits the two. */
             --font-body: 'Fraunces', Georgia, 'Times New Roman', serif;
+            --font-heading: var(--font-body);
             --weight-light: 300;
             --weight-regular: 400;
             --weight-medium: 500;
@@ -133,23 +171,36 @@
             --transition-base: 240ms ease;
         }
 
+        /* ============================================================
+           LUXURY BROCHURE PALETTE (light theme only) — pure white
+           surfaces, rich black text, deep purple reserved for
+           buttons/headers/borders. Dark theme is untouched; this
+           block only replaces light-mode's token values, not the
+           token names, so every rule elsewhere that already reads
+           var(--color-primary) etc. picks this up automatically. */
         body.light-mode {
-            --color-bg: #f4f6f9;
+            --color-bg: #ffffff;
             --color-surface: #ffffff;
-            --color-surface-raised: #f7f8fb;
-            --color-border: #e2e8f0;
-            --color-border-strong: #cbd5e0;
-            --color-text: #2d3748;
+            --color-surface-raised: #faf9fc;
+            --color-border: #e5e0eb;
+            --color-border-strong: #d4cbe0;
+            --color-text: #1a1a1a;
             --color-text-muted: #64748b;
-            --color-heading: #6a0d91;
-            --color-primary: #6a0d91;
-            --color-primary-hover: #7c1aa8;
-            --color-primary-active: #56077a;
+            --color-heading: #4b0082;
+            --color-primary: #5d3fd3;
+            --color-primary-hover: #4b0082;
+            --color-primary-active: #3a0068;
+            --color-primary-focus: rgba(93, 63, 211, 0.25);
             --input-bg: #ffffff;
-            --input-text: #1a202c;
+            --input-text: #1a1a1a;
             --color-accent-teal: #1f6f78;
             --color-accent-teal-hover: #26858f;
             --color-accent-teal-contrast: #ffffff;
+
+            /* Playfair Display for headers, Montserrat for body — the
+               only theme where these differ from --font-body. */
+            --font-body: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            --font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
         }
 
         * {
@@ -247,6 +298,7 @@
 
         .header-banner h1 {
             margin: 0;
+            font-family: var(--font-heading);
             font-weight: var(--weight-semibold);
             font-size: var(--text-display);
             line-height: var(--leading-tight);
@@ -411,13 +463,11 @@
            background video, so it's untouched. In light mode the
            previously-opaque white card sat as a flat slab on top of
            the (dark) video; this lets it read as frosted glass instead.
-           Text color is bumped to a near-black charcoal here (rather
-           than the theme's normal --color-text) since translucent
-           backgrounds need higher-contrast text than a solid one does.
+           (--color-text/--input-text are already #1a1a1a from the
+           luxury palette block above — this block only adds the
+           text-shadow that glass specifically needs.)
            ============================================================ */
         body.light-mode {
-            --color-text: #1a1a1a;
-            --input-text: #1a1a1a;
             /* A plain dark drop-shadow (0 2px 8px rgba(0,0,0,0.3)) only
                separates dark text from *bright* patches of video — over
                a dark patch, dark text plus a dark shadow is still
@@ -458,6 +508,27 @@
             color: #ffffff;
         }
 
+        /* More generous whitespace in light mode only — "premium
+           hospitality brochure" breathing room. Dark theme keeps its
+           existing (tighter) spacing untouched; these are one-off
+           values rather than overrides of the shared --space-* scale
+           so dark mode can't be affected by a change meant only here. */
+        body.light-mode .header-banner {
+            padding: var(--space-8) var(--space-7) var(--space-5);
+        }
+
+        body.light-mode .content-area {
+            padding: var(--space-8);
+        }
+
+        body.light-mode .section {
+            margin-bottom: var(--space-7);
+        }
+
+        body.light-mode .form-group {
+            margin-bottom: var(--space-5);
+        }
+
         /* Browsers without backdrop-filter support (or with it disabled)
            fall back to a near-opaque card so text stays fully legible
            even without the blur. */
@@ -472,6 +543,7 @@
 
         h3 {
             color: var(--color-heading);
+            font-family: var(--font-heading);
             font-size: var(--text-lg);
             font-weight: var(--weight-semibold);
             margin-top: 0;
@@ -749,6 +821,21 @@
             accent-color: var(--color-primary);
         }
 
+        .excel-sheet-picker-row {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .excel-sheet-picker-row select {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: var(--text-base);
+            background: var(--input-bg);
+            color: var(--input-text);
+            border: 1px solid var(--color-border-strong);
+            border-radius: var(--radius-sm);
+        }
+
         .hotel-image-preview {
             display: block;
             width: 100%;
@@ -834,6 +921,7 @@
         }
 
         .modal-title {
+            font-family: var(--font-heading);
             font-size: var(--text-lg);
             font-weight: var(--weight-semibold);
             color: var(--color-heading);
@@ -957,10 +1045,17 @@
                see-through than solid, just not as thin as desktop. */
             body.light-mode .content-area {
                 background: rgba(255, 255, 255, 0.35);
+                /* Desktop's generous var(--space-8) padding would eat
+                   too much of a ~375px viewport — dial it back down. */
+                padding: var(--space-5);
             }
 
             body.light-mode .item-row {
                 background: rgba(255, 255, 255, 0.2);
+            }
+
+            body.light-mode .header-banner {
+                padding: var(--space-7) var(--space-4) var(--space-3);
             }
 
             .item-row {
@@ -1025,6 +1120,21 @@
         <section class="content-area tab-panel active" id="panel-proposal" role="tabpanel" aria-labelledby="tab-proposal">
             <form id="proposalForm" novalidate>
 
+                <!-- Excel Import -->
+                <div class="section excel-import-section">
+                    <h3>Import from Excel</h3>
+                    <input type="file" id="excelImportInput" accept=".xlsx,.xls" class="sr-only">
+                    <button type="button" class="btn btn-outline" id="excelImportBtn">Import from Excel</button>
+                    <div class="form-hint">Upload an internal quotation sheet (.xlsx) to auto-fill the fields below. Existing hotel/transport/tour rows are replaced by whatever the sheet contains.</div>
+                    <div class="form-group excel-sheet-picker" id="excelSheetPicker" hidden>
+                        <label for="excelSheetSelect">This workbook has multiple sheets — pick one to import</label>
+                        <div class="excel-sheet-picker-row">
+                            <select id="excelSheetSelect"></select>
+                            <button type="button" class="btn" id="excelSheetImportBtn">Load Sheet</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Event Information -->
                 <div class="section">
                     <h3>Event Information</h3>
@@ -1035,6 +1145,17 @@
                     <div class="form-group">
                         <label for="event_dates">Event Dates</label>
                         <input type="text" id="event_dates" value="October 12 – October 16, 2026" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pax_count">Number of Pax</label>
+                        <input type="number" id="pax_count" min="0" step="1" placeholder="e.g. 35">
+                        <div class="form-hint">Used for Group Booking Mode's per-person price. Optional otherwise.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-field">
+                            <input type="checkbox" id="group_mode">
+                            <span>Group Booking Mode — hide individual line-item prices, show only the total price per person</span>
+                        </label>
                     </div>
                 </div>
 
@@ -1410,6 +1531,274 @@
             }
         }
 
+        // ------------------------------------------------------------
+        // Excel Import — client-side only (SheetJS/xlsx, self-hosted —
+        // see assets/js/XLSX-LICENSE.txt), no backend involved.
+        //
+        // Deliberately does NOT hardcode row/column coordinates: the
+        // internal AHW quotation workbook this was built against has the
+        // same "Group name"/"Check in"/etc. labels sitting at different
+        // rows on different sheets (e.g. row 5 on one sheet, row 4 on
+        // another), so every value is found by scanning for its label
+        // text and reading the cell(s) to the right of it instead.
+        //
+        // "Day N" cost blocks are the trickiest part of that sheet: each
+        // day spans a *variable* number of columns (one per line item —
+        // guide fee, bus, attraction ticket, etc.), ending at a "Day
+        // Total" column whose position also isn't fixed. Rather than
+        // search for that boundary, excelExtractDayItems() walks every
+        // column on a "Day N" row and keeps the ones that are text with
+        // a number directly beneath them, explicitly skipping only the
+        // "Day N" label itself, the date, and anything reading "Day
+        // Total" — so it adapts to each sheet's width automatically.
+        //
+        // Results are pushed through the exact same createRow() used by
+        // the "+ Add Hotel/Transport/Activity" buttons, so parseSection()/
+        // buildProposalData() and everything downstream of it (preview,
+        // PDF, Word export) needs no changes at all to pick this data up.
+        // ------------------------------------------------------------
+        const excelImportInput = document.getElementById('excelImportInput');
+        const excelImportBtn = document.getElementById('excelImportBtn');
+        const excelSheetPicker = document.getElementById('excelSheetPicker');
+        const excelSheetSelect = document.getElementById('excelSheetSelect');
+        const excelSheetImportBtn = document.getElementById('excelSheetImportBtn');
+
+        let excelWorkbook = null;
+
+        excelImportBtn.addEventListener('click', () => excelImportInput.click());
+
+        excelImportInput.addEventListener('change', async () => {
+            const file = excelImportInput.files[0];
+            excelImportInput.value = ''; // allow re-selecting the same file later
+            if (!file) return;
+
+            if (!window.XLSX) {
+                showStatus(formStatus, 'Excel import library failed to load. Please refresh and try again.', 'error');
+                return;
+            }
+
+            try {
+                const buffer = await file.arrayBuffer();
+                excelWorkbook = window.XLSX.read(buffer, { type: 'array', cellDates: true });
+
+                if (excelWorkbook.SheetNames.length > 1) {
+                    excelSheetSelect.innerHTML = excelWorkbook.SheetNames
+                        .map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
+                        .join('');
+                    excelSheetPicker.hidden = false;
+                    showStatus(formStatus, `This workbook has ${excelWorkbook.SheetNames.length} sheets — pick one below to import.`, 'success');
+                } else {
+                    excelSheetPicker.hidden = true;
+                    importExcelSheet(excelWorkbook.SheetNames[0]);
+                }
+            } catch (error) {
+                console.error('Error reading Excel file:', error);
+                showStatus(formStatus, 'Could not read that file: ' + error.message, 'error');
+            }
+        });
+
+        excelSheetImportBtn.addEventListener('click', () => {
+            if (!excelWorkbook) return;
+            importExcelSheet(excelSheetSelect.value);
+        });
+
+        // --- keyword-search helpers (operate on a plain 2D array, not a
+        //     fixed grid, so they don't assume any particular layout) ---
+
+        function excelSheetToMatrix(sheet) {
+            return window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
+        }
+
+        function excelNormalize(val) {
+            return (val === null || val === undefined) ? '' : String(val).trim().toLowerCase();
+        }
+
+        function excelFindLabelCell(matrix, pattern) {
+            for (let r = 0; r < matrix.length; r++) {
+                const row = matrix[r];
+                if (!row) continue;
+                for (let c = 0; c < row.length; c++) {
+                    if (pattern.test(excelNormalize(row[c]))) return { r, c };
+                }
+            }
+            return null;
+        }
+
+        // Scans a few cells to the right of a label on the same row for the
+        // first non-empty value — handles the small gaps real sheets have
+        // (e.g. "Group name  :  " with the value two cells further over).
+        // Skips anything that itself looks like a label (ends in ":") —
+        // real sheets pack multiple "Label : value" pairs on one row (e.g.
+        // "Group name :" ... "Number of coach :"), and when the first
+        // field's value is blank, a plain nearest-non-empty-cell scan
+        // would otherwise grab the NEXT field's label text as if it were
+        // this field's value.
+        function excelValueRightOf(matrix, r, c, maxScan) {
+            maxScan = maxScan || 4;
+            const row = matrix[r] || [];
+            for (let i = c + 1; i <= c + maxScan; i++) {
+                const val = row[i];
+                if (val === null || val === undefined) continue;
+                const str = String(val).trim();
+                if (str === '' || /:\s*$/.test(str)) continue;
+                return val;
+            }
+            return null;
+        }
+
+        function excelFirstInteger(val) {
+            if (val === null || val === undefined) return null;
+            const match = String(val).match(/\d+/);
+            return match ? parseInt(match[0], 10) : null;
+        }
+
+        // Handles the "35 + 1", "36+1", "50 + 1" pax formats (extra guide/
+        // driver seat tacked onto the paying headcount) by just taking the
+        // first integer, per spec — a plain "35" cell works the same way.
+        function excelFormatDateRange(checkIn, checkOut) {
+            const fmt = (v) => {
+                if (v instanceof Date && !isNaN(v)) {
+                    return v.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                }
+                if (typeof v === 'string' && v.trim()) return v.trim();
+                return null;
+            };
+            if (checkIn instanceof Date && checkOut instanceof Date && !isNaN(checkIn) && !isNaN(checkOut)
+                && checkIn.getFullYear() === checkOut.getFullYear() && checkIn.getMonth() === checkOut.getMonth()) {
+                const startDay = checkIn.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+                return `${startDay} – ${fmt(checkOut)}`;
+            }
+            const inStr = fmt(checkIn);
+            const outStr = fmt(checkOut);
+            if (inStr && outStr) return `${inStr} – ${outStr}`;
+            return inStr || outStr || '';
+        }
+
+        // Finds every "Day N" row, then — for that row only — keeps every
+        // column (up to the "Day Total" column) that holds description
+        // text with a number directly below it, skipping the "Day N"
+        // label cell and the date cell.
+        //
+        // The upper bound matters: the sample workbook has an unrelated
+        // rate-card table (Transportation/Excursion price lists) sitting
+        // a couple of columns to the right of the day-block on several of
+        // these same rows, and without a bound the scan would happily
+        // pick up that table's numbers as if they were this day's line
+        // items. "Day Total" only appears as text once per sheet (day 1's
+        // row) but every day's aggregate total reuses that same column
+        // afterwards, so finding it once and reusing the column index for
+        // every day-block is what actually keeps the two tables separate
+        // — a per-row search for "Day Total" text isn't enough, since
+        // later day-rows don't repeat the label.
+        function excelExtractDayItems(matrix) {
+            const items = [];
+            const dayRowPattern = /^day\s*\d+/i;
+            const dayTotalCell = excelFindLabelCell(matrix, /^day\s*total/i);
+            const boundCol = dayTotalCell ? dayTotalCell.c : Infinity;
+
+            for (let r = 0; r < matrix.length; r++) {
+                const row = matrix[r];
+                if (!row) continue;
+
+                let dayLabel = null;
+                let dayCol = -1;
+                for (let c = 0; c < row.length; c++) {
+                    if (dayRowPattern.test(excelNormalize(row[c]))) {
+                        dayLabel = String(row[c]).trim();
+                        dayCol = c;
+                        break;
+                    }
+                }
+                if (dayCol === -1) continue;
+
+                const costRow = matrix[r + 1] || [];
+                const lastCol = Math.min(row.length, boundCol) - 1;
+                for (let c = dayCol + 1; c <= lastCol; c++) {
+                    const cell = row[c];
+                    if (typeof cell !== 'string') continue; // skips the date cell (a Date) too
+                    const trimmed = cell.trim();
+                    if (!trimmed || /^day\s*total/i.test(trimmed)) continue;
+
+                    const cost = costRow[c];
+                    if (typeof cost !== 'number') continue;
+
+                    items.push({ day: dayLabel, description: trimmed, cost });
+                }
+            }
+
+            return items;
+        }
+
+        // Best-effort routing of a parsed day-item into Hotel/Transport/
+        // Tours by keyword — the source sheet has no such split of its
+        // own (it's flat day-by-day costs), so this is a helpful default,
+        // not a guarantee; everything imported should be reviewed before
+        // generating a document, same as any manually-typed row.
+        function excelRouteSection(description) {
+            const norm = description.toLowerCase();
+            if (/\bhotel\b|\broom\b|\bnight stay\b/.test(norm)) return 'hotel';
+            if (/\bbus\b|\btransfer\b|\bparking\b|\bcoach\b|\bguide\b|\barrival\b|\bdeparture\b|\babra\b|\bcar\b/.test(norm)) return 'transport';
+            return 'tour';
+        }
+
+        function populateExcelSection(containerId, rowClass, fieldLabel, rows) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (!rows.length) {
+                container.appendChild(createRow(rowClass, fieldLabel, {}));
+                return;
+            }
+            rows.forEach(values => container.appendChild(createRow(rowClass, fieldLabel, values)));
+        }
+
+        function importExcelSheet(sheetName) {
+            if (!excelWorkbook) return;
+            const sheet = excelWorkbook.Sheets[sheetName];
+            if (!sheet) return;
+
+            const matrix = excelSheetToMatrix(sheet);
+
+            const groupNameCell = excelFindLabelCell(matrix, /group\s*name/i);
+            const checkInCell = excelFindLabelCell(matrix, /check\s*in/i);
+            const checkOutCell = excelFindLabelCell(matrix, /check\s*out/i);
+            const paxCell = excelFindLabelCell(matrix, /no\.?\s*of\s*pax/i);
+
+            const groupName = groupNameCell ? excelValueRightOf(matrix, groupNameCell.r, groupNameCell.c) : null;
+            const checkIn = checkInCell ? excelValueRightOf(matrix, checkInCell.r, checkInCell.c) : null;
+            const checkOut = checkOutCell ? excelValueRightOf(matrix, checkOutCell.r, checkOutCell.c) : null;
+            const pax = paxCell ? excelFirstInteger(excelValueRightOf(matrix, paxCell.r, paxCell.c)) : null;
+
+            if (groupName) document.getElementById('event_name').value = String(groupName).trim();
+
+            const dateRange = excelFormatDateRange(checkIn, checkOut);
+            if (dateRange) document.getElementById('event_dates').value = dateRange;
+
+            if (pax !== null) document.getElementById('pax_count').value = pax;
+
+            const dayItems = excelExtractDayItems(matrix);
+            const buckets = { hotel: [], transport: [], tour: [] };
+            dayItems.forEach(item => {
+                buckets[excelRouteSection(item.description)].push({
+                    name: `${item.day ? item.day.replace(/\s+/g, ' ').trim() + ' – ' : ''}${item.description}`,
+                    quantity: 1,
+                    unit: 'Day',
+                    rate: item.cost
+                });
+            });
+
+            populateExcelSection('hotel-container', 'hotel-row', 'Hotel Name', buckets.hotel);
+            populateExcelSection('trans-container', 'trans-row', 'Service', buckets.transport);
+            populateExcelSection('tour-container', 'tour-row', 'Activity Name', buckets.tour);
+
+            excelSheetPicker.hidden = true;
+            const totalItems = buckets.hotel.length + buckets.transport.length + buckets.tour.length;
+            showStatus(
+                formStatus,
+                `Imported "${sheetName}": ${totalItems} line item${totalItems === 1 ? '' : 's'}${pax !== null ? `, ${pax} pax` : ''}. Review before generating.`,
+                totalItems > 0 ? 'success' : 'error'
+            );
+        }
+
         // Populate the three sections with their original default rows.
         document.getElementById('hotel-container').appendChild(createRow('hotel-row', 'Hotel Name', {
             name: 'Atlantis The Royal - Deluxe Room', quantity: 1, unit: 'Nights', rate: 1800
@@ -1480,6 +1869,9 @@
             const subtotalValue = hotelData.sectionTotal + transData.sectionTotal + tourData.sectionTotal;
             const vatValue = subtotalValue * 0.05;
             const grandTotalValue = subtotalValue + vatValue;
+            const paxCount = parseInt(document.getElementById('pax_count').value, 10) || 0;
+            const groupMode = document.getElementById('group_mode').checked;
+            const perPersonValue = paxCount > 0 ? grandTotalValue / paxCount : 0;
 
             return {
                 eventName: document.getElementById('event_name').value,
@@ -1487,6 +1879,9 @@
                 hotelServices: hotelData.items,
                 transportation: transData.items,
                 tours: tourData.items,
+                paxCount: paxCount,
+                groupMode: groupMode,
+                perPerson: perPersonValue.toFixed(2),
                 subtotal: subtotalValue.toFixed(2),
                 vatAmount: vatValue.toFixed(2),
                 grandTotal: grandTotalValue.toFixed(2),
@@ -1541,6 +1936,10 @@
             .p-totals td.p-num { text-align: right; }
             .doc-footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #DDD3DA; text-align: center; }
             .doc-footer-logo { max-width: 600px; width: 100%; height: auto; }
+            .p-group-total { margin: 10mm 0 6mm; padding: 8mm; text-align: center; border: 1px solid #4A1C40; background: #FBF7FA; }
+            .p-group-total-label { font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: #4A1C40; margin-bottom: 2mm; }
+            .p-group-total-value { font-family: Georgia, serif; font-size: 26px; font-weight: 700; color: #4A1C40; }
+            .p-group-total-note { margin-top: 2mm; font-size: 9.5px; color: #777; }
         `;
 
         function proposalItemsTableHTML(title, items) {
@@ -1565,6 +1964,38 @@
             `;
         }
 
+        // Group Booking Mode: hides every individual line-item price (hotel/
+        // transport/tour tables + the subtotal/VAT/grand-total breakdown) and
+        // shows only a single "Total Package Price Per Person" figure instead.
+        // Applies to the Preview and PDF export (the two views this app
+        // renders as a finished client-facing document); the Word (.docx)
+        // export is intentionally left as the full itemized breakdown always
+        // — that path fills a fixed template structure this code doesn't
+        // control, and was out of scope for what was asked.
+        function proposalBreakdownHTML(d) {
+            return `
+                ${proposalItemsTableHTML('Hotel Options', d.hotelServices)}
+                ${proposalItemsTableHTML('Transportation', d.transportation)}
+                ${proposalItemsTableHTML('Tours & Activities', d.tours)}
+
+                <table class="p-totals">
+                    <tr class="p-subtotal"><td>Subtotal</td><td class="p-num">AED ${escapeHtml(d.subtotal)}</td></tr>
+                    <tr class="p-vat"><td>VAT (5%)</td><td class="p-num">AED ${escapeHtml(d.vatAmount)}</td></tr>
+                    <tr class="p-grand"><td>Estimated Total</td><td class="p-num">AED ${escapeHtml(d.grandTotal)}</td></tr>
+                </table>
+            `;
+        }
+
+        function proposalGroupTotalHTML(d) {
+            return `
+                <div class="p-group-total">
+                    <div class="p-group-total-label">Total Package Price Per Person</div>
+                    <div class="p-group-total-value">AED ${escapeHtml(d.perPerson)}</div>
+                    <div class="p-group-total-note">${escapeHtml(String(d.paxCount))} pax &middot; inclusive of 5% VAT</div>
+                </div>
+            `;
+        }
+
         function buildProposalHTML(d) {
             const body = `
                 <div class="doc-page">
@@ -1578,15 +2009,7 @@
                         <p>${escapeHtml(d.eventDates)}</p>
                     </div>
 
-                    ${proposalItemsTableHTML('Hotel Options', d.hotelServices)}
-                    ${proposalItemsTableHTML('Transportation', d.transportation)}
-                    ${proposalItemsTableHTML('Tours & Activities', d.tours)}
-
-                    <table class="p-totals">
-                        <tr class="p-subtotal"><td>Subtotal</td><td class="p-num">AED ${escapeHtml(d.subtotal)}</td></tr>
-                        <tr class="p-vat"><td>VAT (5%)</td><td class="p-num">AED ${escapeHtml(d.vatAmount)}</td></tr>
-                        <tr class="p-grand"><td>Estimated Total</td><td class="p-num">AED ${escapeHtml(d.grandTotal)}</td></tr>
-                    </table>
+                    ${d.groupMode ? proposalGroupTotalHTML(d) : proposalBreakdownHTML(d)}
 
                     <div class="doc-footer">
                         <img class="doc-footer-logo" src="${BRAND_FOOTER_IMAGE}" alt="Serandipians Member Travel Designer — Atlantis Holidays contact details">
@@ -1609,6 +2032,11 @@
             proposalPreviewFrame.srcdoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${styles}</style></head><body>${body}</body></html>`;
         }
         proposalPreviewBtn.addEventListener('click', () => {
+            const previewData = buildProposalData();
+            if (previewData.groupMode && previewData.paxCount <= 0) {
+                showStatus(formStatus, 'Group Booking Mode needs a Number of Pax greater than 0 to calculate the per-person price.', 'error');
+                return;
+            }
             renderProposalPreview();
             proposalPreviewOverlay.classList.add('is-open');
         });
@@ -1635,11 +2063,16 @@
                 return;
             }
 
+            const data = buildProposalData();
+            if (data.groupMode && data.paxCount <= 0) {
+                showStatus(formStatus, 'Group Booking Mode needs a Number of Pax greater than 0 to calculate the per-person price.', 'error');
+                return;
+            }
+
             proposalPdfBtn.disabled = true;
             proposalPdfBtn.classList.add('is-loading');
             proposalPdfLabel.textContent = 'Generating…';
 
-            const data = buildProposalData();
             const { styles, body } = buildProposalHTML(data);
 
             const styleEl = document.createElement('style');
@@ -1709,7 +2142,17 @@
                     tours: data.tours,
                     subtotal: data.subtotal,
                     vat_amount: data.vatAmount,
-                    grand_total: data.grandTotal
+                    grand_total: data.grandTotal,
+                    // Extra fields for Group Booking Mode — not referenced by
+                    // template.docx today (docxtemplater ignores unused
+                    // context keys), included so a future template revision
+                    // can use them without another JS change. The Word
+                    // export itself is unaffected by Group Booking Mode: it
+                    // always renders the full itemized breakdown above, by
+                    // design — see the comment on proposalBreakdownHTML().
+                    pax_count: data.paxCount,
+                    group_mode: data.groupMode,
+                    per_person: data.perPerson
                 };
 
                 const cacheBuster = new Date().getTime();
