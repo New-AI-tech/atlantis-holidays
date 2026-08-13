@@ -28,35 +28,42 @@
 }
 
 .bg-video-layer video {
-    width: 100%;
-    height: 100%;
+    /* Oversized + recentered so a heavy blur doesn't reveal soft edges at
+       the viewport boundary (object-fit: cover alone can still leave a
+       thin unblurred rim on some aspect ratios once blur() is pushing
+       pixels inward from the edge). */
+    width: 108%;
+    height: 108%;
+    margin: -4%;
     object-fit: cover;
-    /* Washed-out/ambient feel, not a vivid movie playing behind the forms. */
-    filter: brightness(0.6) saturate(0.8);
+    /* Heavily blurred + dimmed on purpose: this app is used by data-entry
+       agents typing long itineraries, and a crisp, bright, moving video
+       behind the form was pulling focus. It now reads as a soft, mostly-
+       static wash of color rather than footage, so the eye has nothing
+       to track while typing. */
+    filter: brightness(0.4) saturate(0.8) blur(12px);
 }
 
-/* Extra dark scrim on top of the (already dimmed) video, per the
-   "must read as texture, not footage" requirement. */
+/* Dark scrim on top of the (already dimmed+blurred) video — belt and
+   suspenders for focus/contrast, not the only thing protecting it. */
 .bg-video-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.65);
+    background: rgba(0, 0, 0, 0.55);
 }
 
-/* Light theme only: the video is the hero here — full brightness, no
-   dimming/desaturation, and only a token scrim, so the near-transparent
-   glass card (see index.html's GLASS-MORPHISM block) reads as barely
-   there over vivid footage. Legibility now rides almost entirely on
-   backdrop-filter blur + the body-level text-shadow in that block,
-   not on darkening the video itself. Dark theme keeps the darker/
-   desaturated defaults above untouched — it already works well and
-   wasn't part of this request. */
+/* Light theme: the glass-morphism card (see index.html's GLASS-MORPHISM
+   block) is translucent, so this is the theme where an undimmed video
+   was most distracting — same heavy blur/dim treatment as dark mode,
+   with a slightly stronger scrim since the light-mode card leans on the
+   backdrop being calm for its own text-shadow-based legibility trick to
+   read comfortably. */
 body.light-mode .bg-video-layer video {
-    filter: none;
+    filter: brightness(0.4) saturate(0.8) blur(12px);
 }
 
 body.light-mode .bg-video-overlay {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.5);
 }
 
 /* Shown instead of the video if the source fails to load (see the
