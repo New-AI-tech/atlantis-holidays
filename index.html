@@ -22,6 +22,13 @@
          defined first — it's tiny and has no dependencies, so blocking
          briefly here has no real cost. -->
     <script src="assets/js/costList.js"></script>
+    <!-- Self-hosted flatpickr (not a CDN — see assets/js/FLATPICKR-
+         LICENSE.txt), same reasoning as costList.js above: the main
+         inline script isn't deferred, so it runs before any deferred
+         script would, and it calls flatpickr(...) directly at load
+         time — this must be a plain, immediately-executed script. -->
+    <link rel="stylesheet" href="assets/css/flatpickr.min.css">
+    <script src="assets/js/flatpickr.min.js"></script>
 
     <style>
         /* ============================================================
@@ -1249,6 +1256,13 @@
             margin-bottom: 16px;
         }
 
+        .ew-nights-hint {
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--ew-text-muted);
+            min-height: 1.2em;
+        }
+
         .enterprise-workspace label {
             display: block;
             font-size: 12px;
@@ -1823,7 +1837,8 @@
                     </div>
                     <div class="field">
                         <label for="event_dates">Travel Dates</label>
-                        <input type="text" id="event_dates" value="October 12 – October 16, 2026">
+                        <input type="text" id="event_dates" placeholder="Select date range">
+                        <div class="ew-nights-hint" id="nightsHint"></div>
                     </div>
                     <div class="field">
                         <label for="pax_count">Number of Pax</label>
@@ -2268,6 +2283,20 @@
         // no form input holding it) and swapped out by mountQuotation()
         // on every sub-tab switch, same as the DOM-backed fields.
         let currentHotelImages = { exterior: [], room: [], interior: [] };
+        // The active type's structured travel dates (ISO yyyy-mm-dd),
+        // kept alongside the DOM-derived `eventDates` display string —
+        // same in-memory + mount/serialize pattern as currentHotelImages
+        // above. Needed because flatpickr's formatted display string
+        // (e.g. "Oct 12, 2026 – Oct 16, 2026") isn't reliably re-
+        // parseable as input for `setDate()` on the next mount, but an
+        // ISO string always is.
+        let currentTravelDates = { start: '', end: '' };
+        // The flatpickr instance attached to #event_dates — set up
+        // once, below, after createItineraryRow/recalcTotals/
+        // scheduleQuotationSave exist (its onChange handler calls
+        // those). Left null if flatpickr failed to load, so callers can
+        // fall back to plain string handling.
+        let eventDatesPicker = null;
 
         // Only Land Package ships with a filled-in example (matching the
         // old form's pattern); FIT and Groups start from a single blank
@@ -2278,6 +2307,7 @@
                 return {
                     eventName: 'Atlantis EADV Congress 2026',
                     eventDates: 'October 12 – October 16, 2026',
+                    travelDates: { start: '2026-10-12', end: '2026-10-16' },
                     paxCount: '',
                     rows: [{
                         day: 'Day 1',
@@ -2290,7 +2320,7 @@
                     hotelImages: { exterior: [], room: [], interior: [] },
                 };
             }
-            return { eventName: '', eventDates: '', paxCount: '', rows: [{}], hotelImages: { exterior: [], room: [], interior: [] } };
+            return { eventName: '', eventDates: '', travelDates: { start: '', end: '' }, paxCount: '', rows: [{}], hotelImages: { exterior: [], room: [], interior: [] } };
         }
 
         function loadQuotationsFromStorage() {
@@ -2332,6 +2362,7 @@
             return {
                 eventName: document.getElementById('event_name').value,
                 eventDates: document.getElementById('event_dates').value,
+                travelDates: currentTravelDates,
                 paxCount: document.getElementById('pax_count').value,
                 rows: Array.from(document.querySelectorAll('#itineraryRows .ib-row')).map(row => ({
                     day: row.querySelector('.ib-day').value,
@@ -2349,7 +2380,6 @@
         // "load" half of the pattern above.
         function mountQuotation(state) {
             document.getElementById('event_name').value = state.eventName || '';
-            document.getElementById('event_dates').value = state.eventDates || '';
             document.getElementById('pax_count').value = state.paxCount || '';
             const container = document.getElementById('itineraryRows');
             container.innerHTML = '';
@@ -2361,6 +2391,31 @@
                 interior: (state.hotelImages && state.hotelImages.interior) || [],
             };
             ['exterior', 'room', 'interior'].forEach(renderImageThumbs);
+
+            currentTravelDates = (state.travelDates && (state.travelDates.start || state.travelDates.end))
+                ? { start: state.travelDates.start || '', end: state.travelDates.end || '' }
+                : { start: '', end: '' };
+            if (eventDatesPicker && currentTravelDates.start && currentTravelDates.end) {
+                // setDate's 2nd arg (true) triggers onChange, which
+                // updates the nights hint and re-derives eventDates from
+                // the picker's own formatter — kept in sync automatically.
+                // Explicit 3rd arg: currentTravelDates is always ISO
+                // (Y-m-d), but the picker's own dateFormat is 'M j, Y' —
+                // without telling setDate what format it's parsing,
+                // it tries to parse against dateFormat and silently
+                // fails to set anything.
+                eventDatesPicker.setDate([currentTravelDates.start, currentTravelDates.end], true, 'Y-m-d');
+            } else if (eventDatesPicker) {
+                eventDatesPicker.clear();
+                document.getElementById('event_dates').value = state.eventDates || '';
+                updateNightsHint();
+            } else {
+                // flatpickr failed to load (e.g. blocked network) —
+                // fall back to a plain display string, same as before
+                // this feature existed.
+                document.getElementById('event_dates').value = state.eventDates || '';
+            }
+
             recalcTotals();
         }
 
@@ -2451,6 +2506,44 @@
             scheduleQuotationSave();
         });
 
+        // ------------------------------------------------------------
+        // Travel Dates calendar picker — flatpickr in range mode on
+        // the existing single #event_dates field (there's no separate
+        // start/end input pair in this form), so picking a range still
+        // produces one formatted display string for that field, which
+        // the PDF/Word exports already read as-is with no changes
+        // needed there. Structured start/end dates (currentTravelDates)
+        // are kept alongside it purely so mountQuotation() can restore
+        // the picker reliably — flatpickr's own formatted output isn't
+        // guaranteed to re-parse as input to setDate().
+        // ------------------------------------------------------------
+        function updateNightsHint() {
+            const hint = document.getElementById('nightsHint');
+            if (!eventDatesPicker || eventDatesPicker.selectedDates.length < 2) {
+                hint.textContent = '';
+                return;
+            }
+            const [start, end] = eventDatesPicker.selectedDates;
+            const nights = Math.round((end - start) / 86400000);
+            hint.textContent = nights > 0 ? `${nights} night${nights === 1 ? '' : 's'}` : '';
+        }
+
+        if (typeof flatpickr !== 'undefined') {
+            eventDatesPicker = flatpickr('#event_dates', {
+                mode: 'range',
+                dateFormat: 'M j, Y',
+                locale: { rangeSeparator: ' – ' },
+                onChange: function (selectedDates) {
+                    if (selectedDates.length === 2) {
+                        const iso = (d) => d.toISOString().slice(0, 10);
+                        currentTravelDates = { start: iso(selectedDates[0]), end: iso(selectedDates[1]) };
+                    }
+                    updateNightsHint();
+                    scheduleQuotationSave();
+                },
+            });
+        }
+
         function switchQuotationType(typeId) {
             if (typeId === currentQuotationType) return;
             quotations[currentQuotationType] = serializeCurrentQuotation();
@@ -2475,7 +2568,11 @@
             btn.addEventListener('click', () => switchQuotationType(btn.dataset.qtype));
         });
 
-        ['event_name', 'event_dates', 'pax_count'].forEach(id => {
+        // event_dates is intentionally excluded here — flatpickr's own
+        // onChange handler above already calls scheduleQuotationSave(),
+        // and (with allowInput not enabled) the field doesn't emit
+        // native `input` events from user interaction anyway.
+        ['event_name', 'pax_count'].forEach(id => {
             document.getElementById(id).addEventListener('input', scheduleQuotationSave);
         });
 
