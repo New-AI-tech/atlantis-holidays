@@ -1275,6 +1275,7 @@
 
         .enterprise-workspace input[type="text"],
         .enterprise-workspace input[type="number"],
+        .enterprise-workspace input[type="url"],
         .enterprise-workspace select,
         .enterprise-workspace textarea {
             width: 100%;
@@ -1476,29 +1477,63 @@
             background: rgba(0, 0, 0, 0.85);
         }
 
-        .ib-image-upload-btn {
-            display: inline-flex !important;
-            align-items: center;
-            justify-content: center;
-            padding: 7px 12px;
-            font-size: 12px;
-            font-weight: 600 !important;
-            text-transform: none !important;
-            letter-spacing: normal !important;
-            color: var(--ew-accent);
-            border: 1px dashed var(--ew-accent);
+        .ib-photo-url-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .ib-photo-url-row input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ib-btn-add-photo {
+            flex-shrink: 0;
+            padding: 0 14px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: inherit;
+            color: #FFFFFF;
+            background: var(--ew-accent);
+            border: none;
             border-radius: 6px;
             cursor: pointer;
         }
 
-        .ib-image-upload-btn:hover {
-            background: rgba(74, 28, 64, 0.06);
+        .ib-btn-add-photo:hover {
+            opacity: 0.88;
         }
 
-        .ib-image-upload-btn.is-disabled {
-            opacity: 0.4;
+        .ib-btn-add-photo:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
-            pointer-events: none;
+        }
+
+        .ib-image-thumb.is-broken {
+            background: #F7F4FA;
+            border-color: #DDD3DA;
+        }
+
+        .ib-image-thumb.is-broken img {
+            display: none;
+        }
+
+        .ib-image-thumb-broken-label {
+            display: none;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 9px;
+            line-height: 1.3;
+            color: #777;
+            padding: 4px;
+        }
+
+        .ib-image-thumb.is-broken .ib-image-thumb-broken-label {
+            display: flex;
         }
 
         /* ---- Right panel: live margin & totals summary ---- */
@@ -1969,10 +2004,13 @@
                 </div>
 
                 <!-- Hotel Photo Gallery — up to 3 photos each for
-                     Exterior/Room/Interior, resized client-side and
-                     shown as a gallery on the generated voucher PDF
-                     (see voucherGalleryHTML() below). Independent of
-                     the "Exterior Photo URL" field above (that single
+                     Exterior/Room/Interior, added by pasting an image
+                     URL (not uploaded/base64 — agents already have
+                     these URLs from the hotel's website or booking
+                     portal, and it keeps localStorage tiny). Shown as
+                     a gallery on the generated voucher PDF (see
+                     voucherGalleryHTML() below). Independent of the
+                     "Exterior Photo URL" field above (that single
                      URL-based image is unchanged, used in the top
                      info block) and of any Quotation sub-tab — a
                      voucher can be issued for any hotel regardless of
@@ -1982,29 +2020,29 @@
                     <div class="ew-hotel-images">
                         <div class="ib-image-section">
                             <label>Exterior Photos (max 3)</label>
+                            <div class="ib-photo-url-row">
+                                <input type="url" class="ib-photo-url-input" data-image-section="exterior" placeholder="Paste image URL…">
+                                <button type="button" class="ib-btn-add-photo" data-image-section="exterior">Add</button>
+                            </div>
                             <div class="ib-image-thumbs" id="imageThumbs-exterior"></div>
-                            <label class="ib-image-upload-btn" id="imageUploadBtn-exterior">
-                                + Add Photo
-                                <input type="file" accept="image/*" multiple class="ib-image-input" data-image-section="exterior" hidden>
-                            </label>
                         </div>
 
                         <div class="ib-image-section">
                             <label>Room Photos (max 3)</label>
+                            <div class="ib-photo-url-row">
+                                <input type="url" class="ib-photo-url-input" data-image-section="room" placeholder="Paste image URL…">
+                                <button type="button" class="ib-btn-add-photo" data-image-section="room">Add</button>
+                            </div>
                             <div class="ib-image-thumbs" id="imageThumbs-room"></div>
-                            <label class="ib-image-upload-btn" id="imageUploadBtn-room">
-                                + Add Photo
-                                <input type="file" accept="image/*" multiple class="ib-image-input" data-image-section="room" hidden>
-                            </label>
                         </div>
 
                         <div class="ib-image-section">
                             <label>Interior Photos (max 3)</label>
+                            <div class="ib-photo-url-row">
+                                <input type="url" class="ib-photo-url-input" data-image-section="interior" placeholder="Paste image URL…">
+                                <button type="button" class="ib-btn-add-photo" data-image-section="interior">Add</button>
+                            </div>
                             <div class="ib-image-thumbs" id="imageThumbs-interior"></div>
-                            <label class="ib-image-upload-btn" id="imageUploadBtn-interior">
-                                + Add Photo
-                                <input type="file" accept="image/*" multiple class="ib-image-input" data-image-section="interior" hidden>
-                            </label>
                         </div>
                     </div>
                 </div>
@@ -2410,40 +2448,6 @@
             }
 
             recalcTotals();
-        }
-
-        // Reads a File, draws it to an off-DOM canvas capped at 800px
-        // wide (maintaining aspect ratio), and resolves a compressed
-        // JPEG data URL — keeps localStorage usage manageable versus
-        // storing the original upload's base64 directly. Shared by the
-        // Voucher tab's Hotel Photo Gallery below (this used to also
-        // back a hotel-images feature on this Quotation tab, which was
-        // moved to the Voucher tab — a voucher can be generated for any
-        // hotel regardless of which quotation type was used, so the
-        // images belong there, not per quotation type).
-        function resizeImageFile(file, maxWidth) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        let { width, height } = img;
-                        if (width > maxWidth) {
-                            height = Math.round(height * (maxWidth / width));
-                            width = maxWidth;
-                        }
-                        const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
-                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.82));
-                    };
-                    img.onerror = () => reject(new Error('Could not read image file.'));
-                    img.src = e.target.result;
-                };
-                reader.onerror = () => reject(new Error('Could not read image file.'));
-                reader.readAsDataURL(file);
-            });
         }
 
         // ------------------------------------------------------------
@@ -3211,15 +3215,29 @@
         hotelImageUrlInput.addEventListener('input', updateHotelImagePreview);
 
         // ------------------------------------------------------------
-        // Hotel Photo Gallery — up to 3 photos each for exterior/room/
-        // interior. The Voucher form otherwise has no state object of
-        // its own (buildVoucherData() reads every other field straight
-        // from the DOM each time it's needed); images are the one
-        // exception, since there's no form input to read them back
-        // from, so they get their own small localStorage-backed store
-        // — same resizeImageFile()/thumbnail/remove pattern used
-        // elsewhere in this file, just persisted under their own key
-        // instead of per-quotation-type.
+        // Hotel Photo Gallery — up to 3 photo URLs each for exterior/
+        // room/interior (pasted, not uploaded: agents already have
+        // these links from the hotel's website or booking portal, and
+        // a URL string is a few bytes versus a resized image's ~50-
+        // 150KB base64, so localStorage headroom is a non-issue now).
+        // The Voucher form otherwise has no state object of its own
+        // (buildVoucherData() reads every other field straight from
+        // the DOM each time it's needed); images are the one
+        // exception, since there's no form input to read an array
+        // back from, so they get their own small localStorage-backed
+        // store, same as the previous upload-based version did.
+        //
+        // Known limitation (shared with the pre-existing single
+        // "Exterior Photo URL" hero image above, not new to this
+        // feature): html2canvas needs either a same-origin image or
+        // one served with CORS headers to rasterize it into the PDF
+        // (html2canvas: { useCORS: true } is already set below and in
+        // exportPdf()) — a URL without CORS enabled will display fine
+        // on-screen here but can fail to render into the exported PDF.
+        // There's no client-side fix for that; each thumbnail's
+        // onerror handler at least catches outright broken/unreachable
+        // URLs and shows a clear placeholder instead of a broken-image
+        // icon, both on-screen and in the PDF.
         // ------------------------------------------------------------
         const VOUCHER_IMAGES_STORAGE_KEY = 'atlantis-voucher-images';
         let voucherImages = { exterior: [], room: [], interior: [] };
@@ -3239,49 +3257,61 @@
                 localStorage.setItem(VOUCHER_IMAGES_STORAGE_KEY, JSON.stringify(voucherImages));
             } catch (e) {
                 console.warn('Could not save voucher images to localStorage:', e);
-                showStatus(voucherFormStatus, 'Could not save — local storage is full. Try removing a hotel image.', 'error');
+                showStatus(voucherFormStatus, 'Could not save hotel photos.', 'error');
             }
         }
 
         function renderVoucherImageThumbs(sectionKey) {
             const thumbsContainer = document.getElementById(`imageThumbs-${sectionKey}`);
             const images = voucherImages[sectionKey] || [];
-            thumbsContainer.innerHTML = images.map((src, i) => `
+            thumbsContainer.innerHTML = images.map((url, i) => `
                 <div class="ib-image-thumb">
-                    <img src="${src}" alt="${escapeHtml(sectionKey)} photo ${i + 1}">
+                    <img src="${escapeHtml(url)}" alt="${escapeHtml(sectionKey)} photo ${i + 1}" loading="lazy" onerror="this.closest('.ib-image-thumb').classList.add('is-broken')">
+                    <span class="ib-image-thumb-broken-label">Couldn't load</span>
                     <button type="button" class="ib-image-thumb-remove" data-section="${sectionKey}" data-index="${i}" aria-label="Remove this photo">✕</button>
                 </div>
             `).join('');
 
-            const uploadBtn = document.getElementById(`imageUploadBtn-${sectionKey}`);
+            const addBtn = document.querySelector(`.ib-btn-add-photo[data-image-section="${sectionKey}"]`);
+            const urlInput = document.querySelector(`.ib-photo-url-input[data-image-section="${sectionKey}"]`);
             const atMax = images.length >= 3;
-            uploadBtn.classList.toggle('is-disabled', atMax);
-            uploadBtn.querySelector('input').disabled = atMax;
+            addBtn.disabled = atMax;
+            urlInput.disabled = atMax;
         }
 
-        async function handleVoucherImageUpload(sectionKey, fileList) {
-            const remaining = 3 - voucherImages[sectionKey].length;
-            if (remaining <= 0) return;
+        function addVoucherPhotoUrl(sectionKey) {
+            const urlInput = document.querySelector(`.ib-photo-url-input[data-image-section="${sectionKey}"]`);
+            const url = urlInput.value.trim();
+            if (!url) return;
 
-            const files = Array.from(fileList).slice(0, remaining);
-            for (const file of files) {
-                try {
-                    const dataUrl = await resizeImageFile(file, 800);
-                    voucherImages[sectionKey].push(dataUrl);
-                } catch (error) {
-                    console.error('Failed to process hotel image:', error);
-                    showStatus(voucherFormStatus, 'Could not process one of the selected images.', 'error');
-                }
+            if (voucherImages[sectionKey].length >= 3) {
+                showStatus(voucherFormStatus, 'Maximum 3 photos per category.', 'error');
+                return;
             }
+            // Soft check only — a private/signed URL from a booking
+            // portal can be perfectly valid and still fail the
+            // browser's strict <input type="url"> pattern, so this
+            // warns without blocking the add.
+            if (!urlInput.checkValidity()) {
+                showStatus(voucherFormStatus, "That doesn't look like a valid URL — added anyway.", 'error');
+            }
+
+            voucherImages[sectionKey].push(url);
+            urlInput.value = '';
             renderVoucherImageThumbs(sectionKey);
             saveVoucherImagesToStorage();
         }
 
-        document.querySelectorAll('.ib-image-input').forEach(input => {
-            input.addEventListener('change', (e) => {
-                const sectionKey = input.dataset.imageSection;
-                if (e.target.files.length) handleVoucherImageUpload(sectionKey, e.target.files);
-                input.value = '';
+        document.querySelectorAll('.ib-btn-add-photo').forEach(btn => {
+            btn.addEventListener('click', () => addVoucherPhotoUrl(btn.dataset.imageSection));
+        });
+
+        document.querySelectorAll('.ib-photo-url-input').forEach(input => {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addVoucherPhotoUrl(input.dataset.imageSection);
+                }
             });
         });
 
@@ -3503,6 +3533,7 @@
             .v-gallery-row:last-child { margin-bottom: 0; }
             .v-gallery-tag { width: 14mm; flex-shrink: 0; font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #777; }
             .v-gallery-row img { width: 14mm; height: 10mm; object-fit: cover; border-radius: 2px; border: 1px solid #DDD3DA; display: block; flex-shrink: 0; }
+            .v-gallery-broken { width: 14mm; height: 10mm; flex-shrink: 0; background: #F7F4FA; border: 1px dashed #DDD3DA; border-radius: 2px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 6px; line-height: 1.2; color: #777; }
             .doc-footer { margin-top: 8px; padding-top: 8px; border-top: 1px solid #DDD3DA; text-align: center; }
             .doc-footer-logo { max-width: 600px; width: 100%; height: auto; }
         `;
@@ -3530,7 +3561,12 @@
         // this feature existed.
         function voucherImageGroupHTML(label, images) {
             if (!images || !images.length) return '';
-            const thumbs = images.map((src, i) => `<img src="${src}" alt="${escapeHtml(label)} photo ${i + 1}">`).join('');
+            // Same onerror-swap pattern as the hero image in
+            // buildVoucherHTML() below — a broken/unreachable URL (or
+            // one html2canvas can't rasterize due to missing CORS
+            // headers) becomes a small placeholder box instead of a
+            // broken-image icon in the exported PDF.
+            const thumbs = images.map((src, i) => `<img src="${escapeHtml(src)}" alt="${escapeHtml(label)} photo ${i + 1}" onerror="this.outerHTML='<div class=&quot;v-gallery-broken&quot;>Photo unavailable</div>'">`).join('');
             return `<div class="v-gallery-row"><span class="v-gallery-tag">${escapeHtml(label)}</span>${thumbs}</div>`;
         }
 
