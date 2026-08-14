@@ -3575,6 +3575,12 @@
                 (urls || []).forEach((url, i) => items.push(hotelProposalGalleryItemHTML(label, url, i)));
             });
             if (!items.length) return '';
+            // Deliberately NOT wrapped with break-inside: avoid the way
+            // the Voucher's (much smaller, max-9-photo) gallery is — a
+            // maxed-out proposal gallery (up to 13 photos) can genuinely
+            // run taller than a single page, so forcing the whole grid
+            // to stay unbroken would just reintroduce the cut-off bug
+            // this file's pagebreak config exists to prevent.
             return `<div class="hp-section-heading">Photo Gallery</div><div class="hp-gallery-grid">${items.join('')}</div>`;
         }
 
@@ -3746,12 +3752,21 @@
         hotelProposalPdfBtn.addEventListener('click', () => {
             const data = serializeHotelProposal();
             exportPdf(hotelProposalPdfBtn, hotelProposalPdfLabel, 'Generate Hotel Proposal', buildHotelProposalHTML, 'Hotel_Proposal', data, hotelProposalFormStatus, {
-                // mode:'css' makes html2pdf respect the break-inside:
-                // avoid / page-break-inside: avoid rules on
-                // .hp-hero-wrap/.hp-gallery-item/table rows/
-                // .hp-contact-box (DOCUMENT_STYLES), so a page break
-                // never lands in the middle of an image or a table row.
-                pagebreak: { mode: ['css'] },
+                // mode:'css' alone was measurably not enough — a real
+                // generated PDF with a full 2-col gallery showed a
+                // gallery photo sliced right across the page 1/2
+                // boundary despite its break-inside: avoid rule.
+                // 'avoid-all' makes html2pdf avoid breaking inside any
+                // block-level element as a blanket rule (catching cases
+                // its CSS-rule scan misses); 'legacy' keeps the classic
+                // .html2pdf__page-break fallback available. Together
+                // with the CSS rules on .hp-hero-wrap/.hp-gallery-item/
+                // table rows/.hp-contact-box (DOCUMENT_STYLES), this
+                // reliably keeps a page break from landing in the
+                // middle of an image or a table row (verified via an
+                // actual generated PDF with a maxed-out 13-photo
+                // gallery + long description).
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
                 // .doc-page's own CSS padding (shared with the other
                 // two document types) only wraps the very top/bottom of
                 // the whole rendered content once, not every resulting
@@ -4272,7 +4287,7 @@
             .doc-header { text-align: center; margin-bottom: 4mm; }
             .doc-header-logo { max-width: 200px; width: 100%; height: auto; display: inline-block; margin-bottom: 6px; }
             .v-title { margin-top: 2mm; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #4A1C40; border-top: 1.5px solid #4A1C40; border-bottom: 1.5px solid #4A1C40; padding: 2mm 0; }
-            .v-infobar { display: flex; margin: 4mm 0; background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; overflow: hidden; }
+            .v-infobar { display: flex; margin: 4mm 0; background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
             .v-infobar > div { flex: 1; padding: 2.2mm 5mm; border-right: 1px solid #DDD3DA; }
             .v-infobar > div:last-child { border-right: none; }
             .v-infobar .v-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; margin-bottom: 1.5mm; }
@@ -4280,7 +4295,7 @@
             /* Confirmation Number — the "Voucher No" field doubles as the
                booking's confirmation identifier for front-desk lookup. */
             .v-infobar .v-value-highlight { font-size: 9.5px; font-weight: 700; color: #4A1C40; }
-            .v-body-grid { display: flex; gap: 8mm; margin-bottom: 4mm; }
+            .v-body-grid { display: flex; gap: 8mm; margin-bottom: 4mm; break-inside: avoid; page-break-inside: avoid; }
             .v-hotel-info { flex: 1.15; }
             .v-hotel-info h2 { font-size: 18px; font-weight: 700; margin: 0 0 3mm; color: #4A1C40; }
             .v-hotel-info p { margin: 0 0 3mm; font-size: 9.5px; font-weight: 400; }
@@ -4292,16 +4307,17 @@
             /* Guest Name — the primary front-desk lookup key, so it gets the
                same "hero" size as the hotel/event name plus a lavender
                highlight band rather than just bold text. */
-            .v-guest-line { margin: 4mm 0; padding: 2.5mm 4mm; background: #F8F8F8; border: 1px solid #4A1C40; border-radius: 2mm; }
+            .v-guest-line { margin: 4mm 0; padding: 2.5mm 4mm; background: #F8F8F8; border: 1px solid #4A1C40; border-radius: 2mm; break-inside: avoid; page-break-inside: avoid; }
             .v-guest-line .v-sublabel { font-weight: 700; color: #4A1C40; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 1.5mm; }
             .v-guest-line .v-guest-name { font-size: 18px; font-weight: 700; color: #4A1C40; }
             table.v-stay-table { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
+            table.v-stay-table tr { break-inside: avoid; page-break-inside: avoid; }
             table.v-stay-table th, table.v-stay-table td { border: 1px solid #DDD3DA; padding: 1.5mm 3.5mm; text-align: left; font-size: 9.5px; font-weight: 400; }
             table.v-stay-table th { background: #4A1C40; color: #FFFFFF; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
             /* Dates — Check-in/Check-out get the same highlighter treatment
                as Guest Name and Confirmation Number, per brand spec. */
             table.v-stay-table td.v-stay-highlight { background: #F8F8F8; color: #4A1C40; font-weight: 700; }
-            .v-room-section { display: flex; gap: 8mm; margin-bottom: 3mm; }
+            .v-room-section { display: flex; gap: 8mm; margin-bottom: 3mm; break-inside: avoid; page-break-inside: avoid; }
             .v-room-left { flex: 1.3; }
             .v-room-left h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 0 0 3mm; }
             .v-room-left ul { margin: 0; padding-left: 4mm; font-size: 9.5px; font-weight: 400; }
@@ -4312,7 +4328,7 @@
             .v-room-icon-item .v-icon-label { font-size: 9.5px; font-weight: 400; text-transform: uppercase; color: #777; letter-spacing: 0.5px; display: block; }
             .v-room-icon-item .v-icon-value { font-size: 9.5px; font-weight: 700; }
             .v-section-heading { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 0 0 1mm; border-bottom: 1px solid #DDD3DA; padding-bottom: 0.75mm; }
-            .v-reservation-table { display: grid; gap: 4mm; margin-bottom: 4mm; }
+            .v-reservation-table { display: grid; gap: 4mm; margin-bottom: 4mm; break-inside: avoid; page-break-inside: avoid; }
             /* Confirmation/Reservation Numbers — the document's other
                primary front-desk lookup key. */
             .v-reservation-cell { border: 1.5px solid #4A1C40; border-radius: 3px; padding: 2mm 3.5mm; text-align: center; font-size: 9.5px; font-weight: 700; color: #4A1C40; background: #F8F8F8; }
@@ -4320,23 +4336,25 @@
             .v-policies-col { flex: 1.5; font-size: 9.5px; font-weight: 400; }
             .v-policies-col p { margin: 0 0 2mm; }
             .v-policies-col strong { color: #4A1C40; font-weight: 700; }
-            .v-contact-box { flex: 1; background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; padding: 3.5mm; align-self: flex-start; }
+            .v-contact-box { flex: 1; background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; padding: 3.5mm; align-self: flex-start; break-inside: avoid; page-break-inside: avoid; }
             .v-contact-box h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; margin: 0 0 4mm; }
             .v-contact-line { display: flex; align-items: center; gap: 2.5mm; margin-bottom: 2.5mm; font-size: 9.5px; font-weight: 400; }
             .v-contact-line svg { width: 13px; height: 13px; color: #4A1C40; flex-shrink: 0; }
-            /* Hotel Photo Gallery — the category label sits inline
-               beside its row of photos (not stacked above it) so each
-               category costs one thumbnail-height row, not a caption
-               line plus a row. First cut used stacked captions at 28mm
-               x 20mm and measurably overflowed to a 2nd page with 9
-               images (tested via an actual generated PDF); this inline/
-               smaller-thumbnail version keeps ~3 rows x 17mm ≈ 51mm
-               total versus the ~81mm the first version needed. */
-            .v-gallery-row { display: flex; align-items: center; gap: 2mm; margin-bottom: 1.5mm; }
-            .v-gallery-row:last-child { margin-bottom: 0; }
-            .v-gallery-tag { width: 14mm; flex-shrink: 0; font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #777; }
-            .v-gallery-row img { width: 14mm; height: 10mm; object-fit: cover; border-radius: 2px; border: 1px solid #DDD3DA; display: block; flex-shrink: 0; }
-            .v-gallery-broken { width: 14mm; height: 10mm; flex-shrink: 0; background: #F7F4FA; border: 1px dashed #DDD3DA; border-radius: 2px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 6px; line-height: 1.2; color: #777; }
+            /* Hotel Photo Gallery — a 3-col grid of properly visible
+               photos (matching the Hotel Proposal's premium-brochure
+               treatment) rather than the old 14x10mm thumbnail-row
+               layout. The voucher is no longer forced onto a single
+               page (see the voucherPdfBtn pagebreak/margin config), so
+               there's no need to squeeze the gallery to fit — a
+               category tag overlays each photo instead of a left-side
+               caption column. break-inside: avoid keeps a page break
+               from landing in the middle of a photo. */
+            .v-gallery-section { break-inside: avoid; page-break-inside: avoid; }
+            .v-gallery-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; margin-bottom: 4mm; }
+            .v-gallery-item { position: relative; break-inside: avoid; page-break-inside: avoid; }
+            .v-gallery-item img { width: 100%; height: 30mm; object-fit: cover; object-position: center; border-radius: 3px; border: 1px solid #DDD3DA; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); display: block; }
+            .v-gallery-tag { position: absolute; bottom: 2mm; left: 2mm; background: rgba(74, 28, 64, 0.85); color: #FFFFFF; font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 1mm 2mm; border-radius: 2px; }
+            .v-gallery-broken { width: 100%; height: 30mm; background: #F7F4FA; border: 1px dashed #DDD3DA; border-radius: 3px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8px; color: #777; }
             .doc-footer { margin-top: 8px; padding-top: 8px; border-top: 1px solid #DDD3DA; text-align: center; }
             .doc-footer-logo { max-width: 600px; width: 100%; height: auto; }
         `;
@@ -4355,33 +4373,40 @@
             return `<div class="v-reservation-table" style="grid-template-columns: repeat(${numbers.length}, 1fr);">${cells}</div>`;
         }
 
-        // One row per category (Exterior/Room/Interior), each capped at
-        // 3 photos so it never wraps to a second row on its own. A
-        // category with no photos is omitted entirely rather than
-        // showing an empty caption, and the whole gallery — including
-        // its heading — disappears if nothing was uploaded at all, so
-        // a voucher with zero photos looks exactly like it did before
-        // this feature existed.
-        function voucherImageGroupHTML(label, images) {
-            if (!images || !images.length) return '';
-            // Same onerror-swap pattern as the hero image in
-            // buildVoucherHTML() below — a broken/unreachable URL (or
-            // one html2canvas can't rasterize due to missing CORS
-            // headers) becomes a small placeholder box instead of a
-            // broken-image icon in the exported PDF.
-            const thumbs = images.map((src, i) => `<img src="${escapeHtml(src)}" alt="${escapeHtml(label)} photo ${i + 1}" onerror="this.outerHTML='<div class=&quot;v-gallery-broken&quot;>Photo unavailable</div>'">`).join('');
-            return `<div class="v-gallery-row"><span class="v-gallery-tag">${escapeHtml(label)}</span>${thumbs}</div>`;
+        // One grid item per photo, tagged with its category (Exterior/
+        // Room/Interior) via a small overlay badge — same pattern as
+        // the Hotel Proposal's .hp-gallery-item/.hp-gallery-tag. A
+        // broken/unreachable URL (or one html2canvas can't rasterize
+        // due to missing CORS headers) becomes a placeholder box
+        // instead of a broken-image icon in the exported PDF.
+        function voucherGalleryItemHTML(label, url, index) {
+            return `
+                <div class="v-gallery-item">
+                    <img src="${escapeHtml(url)}" alt="${escapeHtml(label)} photo ${index + 1}" onerror="this.parentElement.innerHTML='&lt;div class=&quot;v-gallery-broken&quot;&gt;Photo unavailable&lt;/div&gt;'">
+                    <span class="v-gallery-tag">${escapeHtml(label)}</span>
+                </div>
+            `;
         }
 
+        // The whole gallery — including its heading — disappears if
+        // nothing was uploaded at all, so a voucher with zero photos
+        // looks exactly like it did before this feature existed.
         function voucherGalleryHTML(images) {
             if (!images) return '';
             const groups = [
-                voucherImageGroupHTML('Exterior', images.exterior),
-                voucherImageGroupHTML('Room', images.room),
-                voucherImageGroupHTML('Interior', images.interior),
-            ].filter(Boolean).join('');
-            if (!groups) return '';
-            return `<div class="v-section-heading">Hotel Photo Gallery</div>${groups}`;
+                ['Exterior', images.exterior],
+                ['Room', images.room],
+                ['Interior', images.interior],
+            ];
+            const items = [];
+            groups.forEach(([label, urls]) => {
+                (urls || []).forEach((url, i) => items.push(voucherGalleryItemHTML(label, url, i)));
+            });
+            if (!items.length) return '';
+            // Wrapped together (not just adjacent) so a page break can't
+            // strand the heading alone at the bottom of a page with the
+            // grid it introduces pushed to the next one.
+            return `<div class="v-gallery-section"><div class="v-section-heading">Hotel Photo Gallery</div><div class="v-gallery-grid">${items.join('')}</div></div>`;
         }
 
         function buildVoucherHTML(d) {
@@ -4546,7 +4571,28 @@
                 await window.html2pdf()
                     .from(container.querySelector('.voucher-page'))
                     .set({
-                        margin: 0,
+                        // Larger galleries (see .v-gallery-grid above)
+                        // mean a voucher with several photos can now
+                        // genuinely run to 2 pages instead of being
+                        // squeezed to fit one. mode:'css' respects the
+                        // break-inside: avoid / page-break-inside: avoid
+                        // rules on .v-infobar/.v-body-grid/.v-guest-line/
+                        // table rows/.v-room-section/.v-reservation-table/
+                        // .v-contact-box/.v-gallery-item, but that alone
+                        // measurably wasn't enough for the matching Hotel
+                        // Proposal gallery grid (a real generated PDF
+                        // showed a photo sliced across the page
+                        // boundary) — 'avoid-all' is added as a blanket
+                        // no-mid-element-break rule to catch what the
+                        // CSS-rule scan misses, with 'legacy' kept as a
+                        // fallback. The explicit top/bottom margin is
+                        // what actually repeats on page 2+ —
+                        // .voucher-page's own CSS padding only wraps the
+                        // very top/bottom of the whole rendered content
+                        // once (see the matching comment on
+                        // hotelProposalPdfBtn's pdfOptions).
+                        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+                        margin: [8, 0, 8, 0],
                         filename,
                         image: { type: 'jpeg', quality: 0.98 },
                         html2canvas: { scale: 2, useCORS: true },
