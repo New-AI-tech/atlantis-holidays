@@ -2357,6 +2357,7 @@
 
                         <div class="ib-image-section">
                             <label>Room Photos (max 3)</label>
+                            <div class="form-hint">Shown next to Room Details in the PDF (not repeated in the gallery below).</div>
                             <div class="ib-photo-url-row">
                                 <input type="url" class="ib-photo-url-input" data-image-section="room" placeholder="Paste image URL…">
                                 <button type="button" class="ib-btn-add-photo" data-image-section="room">Add</button>
@@ -4296,10 +4297,6 @@
         const VOUCHER_ICONS = {
             pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
             globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
-            bed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9v9M2 13h20M22 9v9M6 13V9a2 2 0 0 1 2-2h3M13 13V9a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v4"/></svg>',
-            eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-            floor: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01"/></svg>',
-            link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1-1"/></svg>',
             phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
             mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
         };
@@ -4338,10 +4335,22 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            .voucher-page { width: 210mm; margin: 0 auto; padding: 10mm 16mm 5mm; background: #FFFFFF; }
-            .doc-header { text-align: center; margin-bottom: 4mm; }
-            .doc-header-logo { max-width: 200px; width: 100%; height: auto; display: inline-block; margin-bottom: 6px; }
-            .v-title { margin-top: 2mm; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #4A1C40; border-top: 1.5px solid #4A1C40; border-bottom: 1.5px solid #4A1C40; padding: 2mm 0; }
+            /* Layout pass: narrower side margins (16mm -> 15mm) and a
+               shorter header so content starts higher; .voucher-page is
+               a flex column with a min-height close to one A4 page's
+               usable content height (297mm - the voucherPdfBtn html2pdf
+               call's own 8mm top/bottom page margins, minus a few mm of
+               safety buffer against the rounding that previously caused
+               a real cut-off bug — see the comment on hotelProposalPdfBtn's
+               pdfOptions) so .doc-footer's margin-top: auto can pin it to
+               the bottom of a page whose content doesn't fill it, without
+               that min-height ever being what pushes content to a real
+               2nd page — it's a floor, not a cap, so heavier content
+               still overflows past it exactly as before. */
+            .voucher-page { width: 210mm; min-height: 278mm; margin: 0 auto; padding: 7mm 15mm 5mm; background: #FFFFFF; display: flex; flex-direction: column; }
+            .doc-header { text-align: center; margin-bottom: 2.5mm; }
+            .doc-header-logo { max-width: 200px; width: 100%; height: auto; display: inline-block; margin-bottom: 4px; }
+            .v-title { margin-top: 1.5mm; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #4A1C40; border-top: 1.5px solid #4A1C40; border-bottom: 1.5px solid #4A1C40; padding: 1.5mm 0; }
             .v-infobar { display: flex; margin: 4mm 0; background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
             .v-infobar > div { flex: 1; padding: 2.2mm 5mm; border-right: 1px solid #DDD3DA; }
             .v-infobar > div:last-child { border-right: none; }
@@ -4362,26 +4371,36 @@
             /* Guest Name — the primary front-desk lookup key, so it gets the
                same "hero" size as the hotel/event name plus a lavender
                highlight band rather than just bold text. */
-            .v-guest-line { margin: 4mm 0; padding: 2.5mm 4mm; background: #F8F8F8; border: 1px solid #4A1C40; border-radius: 2mm; break-inside: avoid; page-break-inside: avoid; }
-            .v-guest-line .v-sublabel { font-weight: 700; color: #4A1C40; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 1.5mm; }
+            /* Single line ("GUEST NAME: <name>") instead of a stacked
+               label-then-value block — same highlight band, far less
+               vertical space. */
+            .v-guest-line { margin: 2.5mm 0; padding: 1.5mm 4mm; background: #F8F8F8; border: 1px solid #4A1C40; border-radius: 2mm; display: flex; align-items: baseline; gap: 2mm; break-inside: avoid; page-break-inside: avoid; }
+            .v-guest-line .v-sublabel { font-weight: 700; color: #4A1C40; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
             .v-guest-line .v-guest-name { font-size: 18px; font-weight: 700; color: #4A1C40; }
-            table.v-stay-table { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
+            table.v-stay-table { width: 100%; border-collapse: collapse; margin-bottom: 3mm; }
             table.v-stay-table tr { break-inside: avoid; page-break-inside: avoid; }
-            table.v-stay-table th, table.v-stay-table td { border: 1px solid #DDD3DA; padding: 1.5mm 3.5mm; text-align: left; font-size: 9.5px; font-weight: 400; }
+            table.v-stay-table th, table.v-stay-table td { border: 1px solid #DDD3DA; padding: 1mm 3mm; text-align: left; font-size: 9.5px; font-weight: 400; }
             table.v-stay-table th { background: #4A1C40; color: #FFFFFF; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
             /* Dates — Check-in/Check-out get the same highlighter treatment
                as Guest Name and Confirmation Number, per brand spec. */
             table.v-stay-table td.v-stay-highlight { background: #F8F8F8; color: #4A1C40; font-weight: 700; }
+            /* Room Details — 2 columns: description/bullets on the left,
+               up to 3 stacked room photos on the right in the space the
+               bed-type/view/floor/connecting-rooms icon grid used to
+               take (that data is still collected and saved by the form,
+               just no longer given its own block here — see
+               buildVoucherData()). .v-room-right is only emitted when
+               there's at least one room photo (voucherRoomImagesHTML
+               below), so a voucher with none just gets a full-width
+               left column instead of an empty gap. */
             .v-room-section { display: flex; gap: 8mm; margin-bottom: 3mm; break-inside: avoid; page-break-inside: avoid; }
             .v-room-left { flex: 1.3; }
             .v-room-left h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 0 0 3mm; }
             .v-room-left ul { margin: 0; padding-left: 4mm; font-size: 9.5px; font-weight: 400; }
             .v-room-left li { margin-bottom: 1.5mm; }
-            .v-room-right { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; align-content: start; }
-            .v-room-icon-item { display: flex; align-items: center; gap: 2.5mm; }
-            .v-room-icon-item svg { width: 16px; height: 16px; color: #4A1C40; flex-shrink: 0; }
-            .v-room-icon-item .v-icon-label { font-size: 9.5px; font-weight: 400; text-transform: uppercase; color: #777; letter-spacing: 0.5px; display: block; }
-            .v-room-icon-item .v-icon-value { font-size: 9.5px; font-weight: 700; }
+            .v-room-right { flex: 1; display: flex; flex-direction: column; gap: 2mm; }
+            .v-room-image { width: 100%; height: 24mm; object-fit: cover; object-position: center; border-radius: 3px; border: 1px solid #DDD3DA; display: block; }
+            .v-room-image-broken { width: 100%; height: 24mm; background: #F7F4FA; border: 1px dashed #DDD3DA; border-radius: 3px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 7px; color: #777; }
             .v-section-heading { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 0 0 1mm; border-bottom: 1px solid #DDD3DA; padding-bottom: 0.75mm; }
             .v-reservation-table { display: grid; gap: 4mm; margin-bottom: 4mm; break-inside: avoid; page-break-inside: avoid; }
             /* Confirmation/Reservation Numbers — the document's other
@@ -4391,10 +4410,14 @@
             .v-policies-col { flex: 1.5; font-size: 9.5px; font-weight: 400; }
             .v-policies-col p { margin: 0 0 2mm; }
             .v-policies-col strong { color: #4A1C40; font-weight: 700; }
-            .v-contact-box { flex: 1; background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; padding: 3.5mm; align-self: flex-start; break-inside: avoid; page-break-inside: avoid; }
-            .v-contact-box h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; margin: 0 0 4mm; }
-            .v-contact-line { display: flex; align-items: center; gap: 2.5mm; margin-bottom: 2.5mm; font-size: 9.5px; font-weight: 400; }
-            .v-contact-line svg { width: 13px; height: 13px; color: #4A1C40; flex-shrink: 0; }
+            .v-contact-box { flex: 1; background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; padding: 2.5mm 3mm; align-self: flex-start; break-inside: avoid; page-break-inside: avoid; }
+            .v-contact-box h4 { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; margin: 0 0 2mm; }
+            .v-contact-name { font-weight: 600; font-size: 9.5px; margin-bottom: 1.5mm; }
+            /* Phone + email on one shared row instead of stacked lines —
+               name + this row is 2 lines under the heading, not 3. */
+            .v-contact-row { display: flex; flex-wrap: wrap; gap: 4mm; }
+            .v-contact-line { display: flex; align-items: center; gap: 2mm; font-size: 9.5px; font-weight: 400; }
+            .v-contact-line svg { width: 12px; height: 12px; color: #4A1C40; flex-shrink: 0; }
             /* Hotel Photo Gallery — a 2-col card grid of properly
                visible photos (matching the Hotel Proposal's premium-
                brochure treatment) rather than the old 14x10mm
@@ -4415,7 +4438,14 @@
             .v-gallery-item img { width: 100%; height: 30mm; object-fit: cover; object-position: center; border-radius: 3px; border: 1px solid #DDD3DA; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); display: block; }
             .v-gallery-tag { position: absolute; bottom: 2mm; left: 2mm; background: rgba(74, 28, 64, 0.85); color: #FFFFFF; font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 1mm 2mm; border-radius: 2px; }
             .v-gallery-broken { width: 100%; height: 30mm; background: #F7F4FA; border: 1px dashed #DDD3DA; border-radius: 3px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8px; color: #777; }
-            .doc-footer { margin-top: 8px; padding-top: 8px; border-top: 1px solid #DDD3DA; text-align: center; }
+            /* margin-top: auto (rather than a fixed value) is what pins
+               this to the bottom of .voucher-page's flex column — see
+               the comment on .voucher-page above. When content is short
+               it consumes all the remaining space above the footer; when
+               content already fills or overflows the page there's no
+               space left to consume, so it just falls in after the last
+               section like a normal block, same as before this change. */
+            .doc-footer { margin-top: auto; padding-top: 8px; border-top: 1px solid #DDD3DA; text-align: center; }
             .doc-footer-logo { max-width: 600px; width: 100%; height: auto; }
         `;
 
@@ -4453,9 +4483,14 @@
         // looks exactly like it did before this feature existed.
         function voucherGalleryHTML(images) {
             if (!images) return '';
+            // 'Room' is deliberately excluded here — those photos
+            // already get a dedicated spot next to Room Details (see
+            // voucherRoomImagesHTML), and repeating them again in this
+            // bottom gallery would both look redundant and cost real
+            // vertical space that's exactly what this layout pass was
+            // trying to claw back.
             const groups = [
                 ['Exterior', images.exterior],
-                ['Room', images.room],
                 ['Interior', images.interior],
             ];
             const items = [];
@@ -4467,6 +4502,21 @@
             // strand the heading alone at the bottom of a page with the
             // grid it introduces pushed to the next one.
             return `<div class="v-gallery-section"><div class="v-section-heading">Hotel Photo Gallery</div><div class="v-gallery-grid">${items.join('')}</div></div>`;
+        }
+
+        // Up to 3 photos, stacked in the Room Details section's right
+        // column — reuses the same "Room" category images already
+        // collected by the Hotel Photo Gallery section further down
+        // (see the ib-image-section with data-image-section="room" in
+        // the form) rather than asking the agent to paste the same
+        // photos into a second, separate upload field. Returns '' when
+        // there are none, so buildVoucherHTML can fall back to a
+        // full-width left column instead of an empty gap.
+        function voucherRoomImagesHTML(images) {
+            const urls = (images && images.room || []).slice(0, 3);
+            if (!urls.length) return '';
+            const imgs = urls.map((url, i) => `<img class="v-room-image" src="${escapeHtml(url)}" alt="Room photo ${i + 1}" onerror="this.outerHTML='<div class=&quot;v-room-image-broken&quot;>Photo unavailable</div>'">`).join('');
+            return `<div class="v-room-right">${imgs}</div>`;
         }
 
         function buildVoucherHTML(d) {
@@ -4497,7 +4547,7 @@
                         <div class="v-hotel-image-wrap">${imageHTML}</div>
                     </div>
 
-                    <div class="v-guest-line"><span class="v-sublabel">Guest Name</span><span class="v-guest-name">${escapeHtml(d.guestName)}</span></div>
+                    <div class="v-guest-line"><span class="v-sublabel">Guest Name:</span><span class="v-guest-name">${escapeHtml(d.guestName)}</span></div>
 
                     <table class="v-stay-table">
                         <tr><th>Check-in</th><th>Check-out</th><th>Duration</th><th>Meal Plan</th><th>Guests</th><th>Rooms</th><th>Room Type</th></tr>
@@ -4518,12 +4568,7 @@
                             <p style="font-size:10px;margin:0 0 2mm;">${escapeHtml(d.roomDescription)}</p>
                             <ul>${voucherRoomDetailsHTML(d)}</ul>
                         </div>
-                        <div class="v-room-right">
-                            <div class="v-room-icon-item">${VOUCHER_ICONS.bed}<span><span class="v-icon-label">Bed Type</span><span class="v-icon-value">${escapeHtml(d.bedType)}</span></span></div>
-                            <div class="v-room-icon-item">${VOUCHER_ICONS.eye}<span><span class="v-icon-label">View</span><span class="v-icon-value">${escapeHtml(d.roomView)}</span></span></div>
-                            <div class="v-room-icon-item">${VOUCHER_ICONS.floor}<span><span class="v-icon-label">Floor</span><span class="v-icon-value">${escapeHtml(d.floor)}</span></span></div>
-                            <div class="v-room-icon-item">${VOUCHER_ICONS.link}<span><span class="v-icon-label">Connecting Rooms</span><span class="v-icon-value">${d.connectingRooms ? 'Available' : 'Not Available'}</span></span></div>
-                        </div>
+                        ${voucherRoomImagesHTML(d.images)}
                     </div>
 
                     <div class="v-section-heading">Reservation / Confirmation Numbers</div>
@@ -4540,9 +4585,11 @@
                         </div>
                         <div class="v-contact-box">
                             <h4>For Assistance, Please Contact</h4>
-                            <div style="font-weight:600;margin-bottom:2mm;">${escapeHtml(d.consultantName)}</div>
-                            <div class="v-contact-line">${VOUCHER_ICONS.phone}<span>${escapeHtml(d.consultantPhone)}</span></div>
-                            <div class="v-contact-line">${VOUCHER_ICONS.mail}<span>${escapeHtml(d.consultantEmail)}</span></div>
+                            <div class="v-contact-name">${escapeHtml(d.consultantName)}</div>
+                            <div class="v-contact-row">
+                                <span class="v-contact-line">${VOUCHER_ICONS.phone}<span>${escapeHtml(d.consultantPhone)}</span></span>
+                                <span class="v-contact-line">${VOUCHER_ICONS.mail}<span>${escapeHtml(d.consultantEmail)}</span></span>
+                            </div>
                         </div>
                     </div>
 
