@@ -1029,6 +1029,41 @@
             display: block;
         }
 
+        .quotation-preview-switcher {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .quotation-preview-switcher .btn {
+            min-height: 32px;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .quotation-preview-switcher .btn.is-active {
+            background: var(--color-accent-teal);
+            border-color: var(--color-accent-teal);
+            color: #FFFFFF;
+        }
+
+        @media (max-width: 640px) {
+            .modal-header {
+                flex-wrap: wrap;
+            }
+
+            .quotation-preview-switcher {
+                order: 3;
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .quotation-preview-switcher .btn {
+                flex: 1;
+            }
+        }
+
         @media (max-width: 640px) {
             .voucher-grid-3 { grid-template-columns: 1fr; }
             .doc-actions .btn { flex: 1 1 100%; }
@@ -2112,6 +2147,9 @@
                             <span class="spinner" aria-hidden="true"></span>
                             <span id="itineraryPdfLabel">Generate Itinerary PDF</span>
                         </button>
+                        <button type="button" class="ew-btn ew-btn-outline ew-btn-block" id="proposalPreviewBtn">
+                            <span id="proposalPreviewLabel">Preview Itinerary</span>
+                        </button>
                         <button type="button" class="ew-btn ew-btn-outline ew-btn-block" id="submitBtn">
                             <span class="spinner" aria-hidden="true"></span>
                             <span id="submitLabel">Download Word</span>
@@ -2319,6 +2357,9 @@
                     </div>
 
                     <div class="doc-actions">
+                        <button type="button" class="ew-btn ew-btn-outline" id="hotelProposalPreviewBtn">
+                            <span id="hotelProposalPreviewLabel">Preview Hotel Proposal</span>
+                        </button>
                         <button type="button" class="ew-btn ew-btn-block" id="hotelProposalPdfBtn" style="max-width: 360px;">
                             <span class="spinner" aria-hidden="true"></span>
                             <span id="hotelProposalPdfLabel">Generate Accommodation Proposal</span>
@@ -2610,6 +2651,36 @@
             </form>
             </div>
         </section>
+
+        <!-- Quotation document preview modal -->
+        <div class="modal-overlay" id="proposalPreviewOverlay">
+            <div class="modal doc-preview-modal" role="dialog" aria-modal="true" aria-labelledby="proposalPreviewTitle">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="proposalPreviewTitle">Quotation Preview</h4>
+                    <div class="quotation-preview-switcher" role="group" aria-label="Quotation preview type">
+                        <button type="button" class="btn btn-outline is-active" id="quotationPreviewItineraryBtn">Itinerary</button>
+                        <button type="button" class="btn btn-outline" id="quotationPreviewPricingBtn">Pricing</button>
+                    </div>
+                    <button type="button" class="modal-close" id="proposalPreviewCloseBtn" aria-label="Close preview">✕</button>
+                </div>
+                <div class="modal-body doc-preview-body">
+                    <iframe id="proposalPreviewFrame" title="Quotation document preview"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hotel Proposal preview modal -->
+        <div class="modal-overlay" id="hotelProposalPreviewOverlay">
+            <div class="modal doc-preview-modal" role="dialog" aria-modal="true" aria-labelledby="hotelProposalPreviewTitle">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="hotelProposalPreviewTitle">Hotel Proposal Preview</h4>
+                    <button type="button" class="modal-close" id="hotelProposalPreviewCloseBtn" aria-label="Close preview">✕</button>
+                </div>
+                <div class="modal-body doc-preview-body">
+                    <iframe id="hotelProposalPreviewFrame" title="Hotel proposal preview"></iframe>
+                </div>
+            </div>
+        </div>
 
         <!-- Voucher preview modal -->
         <div class="modal-overlay" id="voucherPreviewOverlay">
@@ -4437,6 +4508,71 @@
                 // inclusions box (ACCOMMODATION_PROPOSAL_STYLES).
                 pagebreak: { mode: ['css'] },
             });
+        });
+
+        // ------------------------------------------------------------
+        // Quotation and Hotel Proposal previews
+        // ------------------------------------------------------------
+        const quotationPreviewBtn = document.getElementById('proposalPreviewBtn');
+        const quotationPreviewLabel = document.getElementById('proposalPreviewLabel');
+        const quotationPreviewOverlay = document.getElementById('proposalPreviewOverlay');
+        const quotationPreviewFrame = document.getElementById('proposalPreviewFrame');
+        const quotationPreviewCloseBtn = document.getElementById('proposalPreviewCloseBtn');
+        const quotationPreviewItineraryBtn = document.getElementById('quotationPreviewItineraryBtn');
+        const quotationPreviewPricingBtn = document.getElementById('quotationPreviewPricingBtn');
+        const hotelProposalPreviewBtn = document.getElementById('hotelProposalPreviewBtn');
+        const hotelProposalPreviewOverlay = document.getElementById('hotelProposalPreviewOverlay');
+        const hotelProposalPreviewFrame = document.getElementById('hotelProposalPreviewFrame');
+        const hotelProposalPreviewCloseBtn = document.getElementById('hotelProposalPreviewCloseBtn');
+
+        let quotationPreviewMode = 'itinerary';
+
+        function getPreviewSrcdoc(builder, data) {
+            const { styles, body } = builder(data);
+            const baseHref = escapeHtml(new URL('.', window.location.href).href);
+            return `<!DOCTYPE html><html><head><meta charset="UTF-8"><base href="${baseHref}"><style>${styles}</style></head><body>${body}</body></html>`;
+        }
+
+        function renderQuotationPreview(mode) {
+            quotationPreviewMode = mode;
+            const data = buildItineraryData();
+            const builder = mode === 'pricing' ? buildPricingProposalHTML : buildItineraryHTML;
+            quotationPreviewFrame.srcdoc = getPreviewSrcdoc(builder, data);
+            quotationPreviewItineraryBtn.classList.toggle('is-active', mode === 'itinerary');
+            quotationPreviewPricingBtn.classList.toggle('is-active', mode === 'pricing');
+            quotationPreviewLabel.textContent = mode === 'pricing' ? 'Preview Pricing' : 'Preview Itinerary';
+            quotationPreviewOverlay.classList.add('is-open');
+        }
+
+        function renderHotelProposalPreview() {
+            const data = serializeHotelProposal();
+            hotelProposalPreviewFrame.srcdoc = getPreviewSrcdoc(buildAccommodationProposalHTML, data);
+            hotelProposalPreviewOverlay.classList.add('is-open');
+        }
+
+        function closePreviewOverlay(overlay, frame) {
+            overlay.classList.remove('is-open');
+            frame.srcdoc = '';
+        }
+
+        quotationPreviewBtn.addEventListener('click', () => renderQuotationPreview(quotationPreviewMode));
+        quotationPreviewItineraryBtn.addEventListener('click', () => renderQuotationPreview('itinerary'));
+        quotationPreviewPricingBtn.addEventListener('click', () => renderQuotationPreview('pricing'));
+        quotationPreviewCloseBtn.addEventListener('click', () => closePreviewOverlay(quotationPreviewOverlay, quotationPreviewFrame));
+        quotationPreviewOverlay.addEventListener('click', (e) => {
+            if (e.target === quotationPreviewOverlay) closePreviewOverlay(quotationPreviewOverlay, quotationPreviewFrame);
+        });
+
+        hotelProposalPreviewBtn.addEventListener('click', renderHotelProposalPreview);
+        hotelProposalPreviewCloseBtn.addEventListener('click', () => closePreviewOverlay(hotelProposalPreviewOverlay, hotelProposalPreviewFrame));
+        hotelProposalPreviewOverlay.addEventListener('click', (e) => {
+            if (e.target === hotelProposalPreviewOverlay) closePreviewOverlay(hotelProposalPreviewOverlay, hotelProposalPreviewFrame);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (quotationPreviewOverlay.classList.contains('is-open')) closePreviewOverlay(quotationPreviewOverlay, quotationPreviewFrame);
+            if (hotelProposalPreviewOverlay.classList.contains('is-open')) closePreviewOverlay(hotelProposalPreviewOverlay, hotelProposalPreviewFrame);
         });
 
         // ------------------------------------------------------------
