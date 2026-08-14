@@ -1668,6 +1668,51 @@
             }
         }
 
+        /* ---- Voucher: photo gallery editor — same "bigger than the
+           shared 64x64 confirmation square" upgrade as Hotel Proposal's
+           .hp-secondary-thumb above, kept as its own rule (rather than
+           reused) so it can be scoped to #panel-voucher/.ew-hotel-images
+           instead of #hotelProposalForm. Un-scoped, this would also hit
+           the shared .ib-image-thumb rule other tabs may still rely on
+           at 64x64. */
+        #panel-voucher .ew-hotel-images .ib-image-thumbs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        #panel-voucher .voucher-gallery-thumb {
+            width: 100%;
+            height: 130px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        #panel-voucher .voucher-gallery-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #panel-voucher .voucher-gallery-thumb .ib-image-thumb-remove {
+            width: 24px;
+            height: 24px;
+            font-size: 13px;
+        }
+
+        /* Base rule above already gives tablet widths (down to the
+           .ew-masonry-form's own 1100px single-column collapse, see
+           that media query further up) 2 comfortably-sized columns —
+           only true mobile widths need to drop to 1. */
+        @media (max-width: 640px) {
+            #panel-voucher .ew-hotel-images .ib-image-thumbs {
+                grid-template-columns: 1fr;
+            }
+            #panel-voucher .voucher-gallery-thumb {
+                height: 150px;
+            }
+        }
+
         /* ---- Hotel Proposal: Room Types repeater ---- */
         .ib-room-type-card {
             background: #FFFFFF;
@@ -3719,7 +3764,17 @@
                         margin: 0,
                         filename,
                         image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
+                        // scale: 2 for print-sharp images; useCORS: true
+                        // lets html2canvas read a cross-origin image
+                        // into the canvas IF the host actually sends
+                        // Access-Control-Allow-Origin — it can't make a
+                        // host without CORS enabled rasterizable (see
+                        // the comment above voucherImages further down
+                        // for what happens when it isn't). imageTimeout
+                        // caps how long a slow/unreachable remote image
+                        // is allowed to block the export; logging: false
+                        // just quiets html2canvas's own console spam.
+                        html2canvas: { scale: 2, useCORS: true, imageTimeout: 15000, logging: false },
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                         ...(pdfOptions || {}),
                     })
@@ -4077,7 +4132,7 @@
             const thumbsContainer = document.getElementById(`imageThumbs-${sectionKey}`);
             const images = voucherImages[sectionKey] || [];
             thumbsContainer.innerHTML = images.map((url, i) => `
-                <div class="ib-image-thumb">
+                <div class="ib-image-thumb voucher-gallery-thumb">
                     <img src="${escapeHtml(url)}" alt="${escapeHtml(sectionKey)} photo ${i + 1}" loading="lazy" onerror="this.closest('.ib-image-thumb').classList.add('is-broken')">
                     <span class="ib-image-thumb-broken-label">Couldn't load</span>
                     <button type="button" class="ib-image-thumb-remove" data-section="${sectionKey}" data-index="${i}" aria-label="Remove this photo">✕</button>
@@ -4340,17 +4395,22 @@
             .v-contact-box h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; margin: 0 0 4mm; }
             .v-contact-line { display: flex; align-items: center; gap: 2.5mm; margin-bottom: 2.5mm; font-size: 9.5px; font-weight: 400; }
             .v-contact-line svg { width: 13px; height: 13px; color: #4A1C40; flex-shrink: 0; }
-            /* Hotel Photo Gallery — a 3-col grid of properly visible
-               photos (matching the Hotel Proposal's premium-brochure
-               treatment) rather than the old 14x10mm thumbnail-row
-               layout. The voucher is no longer forced onto a single
-               page (see the voucherPdfBtn pagebreak/margin config), so
-               there's no need to squeeze the gallery to fit — a
-               category tag overlays each photo instead of a left-side
-               caption column. break-inside: avoid keeps a page break
-               from landing in the middle of a photo. */
+            /* Hotel Photo Gallery — a 2-col card grid of properly
+               visible photos (matching the Hotel Proposal's premium-
+               brochure treatment) rather than the old 14x10mm
+               thumbnail-row layout. The voucher is no longer forced
+               onto a single page (see the voucherPdfBtn pagebreak/
+               margin config), so there's no need to squeeze the
+               gallery to fit — a category tag overlays each photo
+               instead of a left-side caption column. break-inside:
+               avoid keeps a page break from landing in the middle of
+               a photo. At most 9 photos (3 categories x 3), so even
+               grouped with its heading as one unbreakable block this
+               never risks being taller than a full page (unlike Hotel
+               Proposal's up-to-13-photo gallery, deliberately left
+               breakable — see the comment on hotelProposalGalleryHTML). */
             .v-gallery-section { break-inside: avoid; page-break-inside: avoid; }
-            .v-gallery-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; margin-bottom: 4mm; }
+            .v-gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-bottom: 4mm; }
             .v-gallery-item { position: relative; break-inside: avoid; page-break-inside: avoid; }
             .v-gallery-item img { width: 100%; height: 30mm; object-fit: cover; object-position: center; border-radius: 3px; border: 1px solid #DDD3DA; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); display: block; }
             .v-gallery-tag { position: absolute; bottom: 2mm; left: 2mm; background: rgba(74, 28, 64, 0.85); color: #FFFFFF; font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 1mm 2mm; border-radius: 2px; }
@@ -4595,7 +4655,13 @@
                         margin: [8, 0, 8, 0],
                         filename,
                         image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
+                        // Same html2canvas config (and same caveat: see
+                        // the comment above the voucherImages store
+                        // further down for what useCORS: true can and
+                        // can't do about a cross-origin photo URL) as
+                        // exportPdf()'s default, since this handler
+                        // doesn't go through that shared function.
+                        html2canvas: { scale: 2, useCORS: true, imageTimeout: 15000, logging: false },
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                     })
                     .save();
