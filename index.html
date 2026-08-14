@@ -1789,6 +1789,19 @@
             color: var(--ew-accent);
         }
 
+        /* Per Person's reference line in the *other* currency — e.g.
+           shows "AED 636.97" in small muted text under a USD-selected
+           "Per Person: USD 173.50", so the figure the client sees is
+           unambiguous without hiding the AED equivalent entirely. */
+        .ew-summary-subvalue {
+            font-size: 11.5px;
+            color: var(--ew-text-muted);
+            text-align: right;
+            margin-top: -8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--ew-border);
+        }
+
         .ew-summary-note {
             font-size: 11.5px;
             color: var(--ew-text-muted);
@@ -2089,6 +2102,14 @@
                 <aside class="ew-panel ew-left">
                     <h3 class="ew-panel-heading">Client Details &amp; Settings</h3>
                     <div class="field">
+                        <label for="currency_select">Currency</label>
+                        <select id="currency_select">
+                            <option value="AED">AED</option>
+                            <option value="USD">USD</option>
+                        </select>
+                        <div class="form-hint">Net costs are always entered in AED (see the cost list); totals, per-person, and PDF exports convert automatically.</div>
+                    </div>
+                    <div class="field">
                         <label for="event_name">Client / Group Name</label>
                         <input type="text" id="event_name" value="Atlantis EADV Congress 2026">
                     </div>
@@ -2137,6 +2158,11 @@
                         <span class="ew-summary-label">Grand Total</span>
                         <span class="ew-summary-value" id="summaryGrand">AED 0.00</span>
                     </div>
+                    <div class="ew-summary-row">
+                        <span class="ew-summary-label">Per Person</span>
+                        <span class="ew-summary-value" id="summaryPerPerson">—</span>
+                    </div>
+                    <div class="ew-summary-subvalue" id="summaryPerPersonAlt">Enter Number of Pax to calculate</div>
 
                     <div class="ew-export-actions">
                         <button type="button" class="ew-btn ew-btn-block" id="pricingPdfBtn">
@@ -2764,8 +2790,31 @@
         // down the file — untouched by this rewrite.
         // ------------------------------------------------------------
 
-        function formatAED(n) {
-            return `AED ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // ------------------------------------------------------------
+        // Multi-currency support (Land Package/FIT/Groups quotations
+        // only — the Accommodation Proposal sub-tab has its own,
+        // separate currency select with no AED source-of-truth to
+        // convert from, since agents type its rates directly in
+        // whichever currency they pick there).
+        //
+        // AED is the data model's source of truth throughout — every
+        // netCost the agent types (via the cost list or by hand) is a
+        // real-world AED rate, and every stored total in
+        // buildItineraryData()/quotations[type] stays in AED. USD is
+        // purely a display/export conversion applied on the fly via
+        // convertFromAED(), so switching currency back and forth never
+        // accumulates rounding error in the saved data.
+        // ------------------------------------------------------------
+        const EXCHANGE_RATE = 3.67; // 1 USD = 3.67 AED
+
+        function convertFromAED(amountAED, currency) {
+            return currency === 'USD' ? amountAED / EXCHANGE_RATE : amountAED;
+        }
+
+        function formatCurrency(amount, currency) {
+            const n = Number(amount) || 0;
+            const code = currency === 'USD' ? 'USD' : 'AED';
+            return `${code} ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
 
         // ------------------------------------------------------------
@@ -2815,6 +2864,7 @@
                     eventDates: 'October 12 – October 16, 2026',
                     travelDates: { start: '2026-10-12', end: '2026-10-16' },
                     paxCount: '',
+                    currency: 'AED',
                     rows: [{
                         day: 'Day 1',
                         category: 'Accommodation',
@@ -2825,7 +2875,7 @@
                     }],
                 };
             }
-            return { eventName: '', eventDates: '', travelDates: { start: '', end: '' }, paxCount: '', rows: [{}] };
+            return { eventName: '', eventDates: '', travelDates: { start: '', end: '' }, paxCount: '', currency: 'AED', rows: [{}] };
         }
 
         function loadQuotationsFromStorage() {
@@ -2874,6 +2924,7 @@
                 eventDates: document.getElementById('event_dates').value,
                 travelDates: currentTravelDates,
                 paxCount: document.getElementById('pax_count').value,
+                currency: document.getElementById('currency_select').value || 'AED',
                 rows: Array.from(document.querySelectorAll('#itineraryRows .ib-row')).map(row => ({
                     day: row.querySelector('.ib-day').value,
                     category: row.querySelector('.ib-category').value,
@@ -2890,6 +2941,10 @@
         function mountQuotation(state) {
             document.getElementById('event_name').value = state.eventName || '';
             document.getElementById('pax_count').value = state.paxCount || '';
+            // Older saved quotations have no currency field at all —
+            // default to AED rather than leaving the select on
+            // whatever the previously-active type happened to use.
+            document.getElementById('currency_select').value = state.currency || 'AED';
             const container = document.getElementById('itineraryRows');
             container.innerHTML = '';
             const rows = state.rows && state.rows.length ? state.rows : [{}];
@@ -3009,8 +3064,17 @@
         // onChange handler above already calls scheduleQuotationSave(),
         // and (with allowInput not enabled) the field doesn't emit
         // native `input` events from user interaction anyway.
-        ['event_name', 'pax_count'].forEach(id => {
-            document.getElementById(id).addEventListener('input', scheduleQuotationSave);
+        document.getElementById('event_name').addEventListener('input', scheduleQuotationSave);
+        // pax_count and currency both feed the Per Person summary row
+        // and (for currency) every other displayed total, so both need
+        // a live recalcTotals() on change, not just an eventual save.
+        document.getElementById('pax_count').addEventListener('input', () => {
+            recalcTotals();
+            scheduleQuotationSave();
+        });
+        document.getElementById('currency_select').addEventListener('change', () => {
+            recalcTotals();
+            scheduleQuotationSave();
         });
 
         // ------------------------------------------------------------
@@ -3135,33 +3199,56 @@
             const vatAmount = totalSelling * 0.05;
             const grandTotal = totalSelling + vatAmount;
             const typeConfig = QUOTATION_TYPES.find(t => t.id === currentQuotationType) || QUOTATION_TYPES[0];
+            const paxCount = parseInt(document.getElementById('pax_count').value, 10) || 0;
+            // Per person = Selling Price / pax (net cost + markup, before
+            // VAT) — everything here stays in AED, same as the rest of
+            // `totals`; recalcTotals()/the PDF builders are what convert
+            // to USD for display via convertFromAED().
+            const perPerson = paxCount > 0 ? totalSelling / paxCount : 0;
 
             return {
                 eventName: document.getElementById('event_name').value,
                 eventDates: document.getElementById('event_dates').value,
-                paxCount: parseInt(document.getElementById('pax_count').value, 10) || 0,
+                paxCount,
+                currency: document.getElementById('currency_select').value || 'AED',
                 quotationType: typeConfig.id,
                 quotationTypeLabel: typeConfig.label,
                 rows,
                 buckets: categorizeRows(rows),
-                totals: { net: totalNet, selling: totalSelling, profit: totalProfit, vat: vatAmount, grandTotal },
+                totals: { net: totalNet, selling: totalSelling, profit: totalProfit, vat: vatAmount, grandTotal, perPerson },
             };
         }
 
         // Right Panel's live summary — recomputed on every keystroke via
         // the input-delegation listener below, so agents see Net/Profit/
-        // Selling/VAT/Grand Total update as they type, with no separate
-        // "recalculate" step.
+        // Selling/VAT/Grand Total/Per Person update as they type, with no
+        // separate "recalculate" step. All figures are converted from the
+        // AED-denominated data via convertFromAED() at display time only
+        // — see the comment on EXCHANGE_RATE above.
         function recalcTotals() {
             const data = buildItineraryData();
+            const currency = data.currency;
+            const c = (aed) => convertFromAED(aed, currency);
             document.querySelectorAll('#itineraryRows .ib-row').forEach((row, i) => {
-                row.querySelector('.ib-selling-output').textContent = formatAED(data.rows[i].sellingPrice);
+                row.querySelector('.ib-selling-output').textContent = formatCurrency(c(data.rows[i].sellingPrice), currency);
             });
-            document.getElementById('summaryNet').textContent = formatAED(data.totals.net);
-            document.getElementById('summaryProfit').textContent = formatAED(data.totals.profit);
-            document.getElementById('summarySelling').textContent = formatAED(data.totals.selling);
-            document.getElementById('summaryVat').textContent = formatAED(data.totals.vat);
-            document.getElementById('summaryGrand').textContent = formatAED(data.totals.grandTotal);
+            document.getElementById('summaryNet').textContent = formatCurrency(c(data.totals.net), currency);
+            document.getElementById('summaryProfit').textContent = formatCurrency(c(data.totals.profit), currency);
+            document.getElementById('summarySelling').textContent = formatCurrency(c(data.totals.selling), currency);
+            document.getElementById('summaryVat').textContent = formatCurrency(c(data.totals.vat), currency);
+            document.getElementById('summaryGrand').textContent = formatCurrency(c(data.totals.grandTotal), currency);
+
+            const perPersonEl = document.getElementById('summaryPerPerson');
+            const perPersonAltEl = document.getElementById('summaryPerPersonAlt');
+            if (data.paxCount > 0) {
+                perPersonEl.textContent = formatCurrency(c(data.totals.perPerson), currency);
+                const altCurrency = currency === 'USD' ? 'AED' : 'USD';
+                perPersonAltEl.textContent = formatCurrency(convertFromAED(data.totals.perPerson, altCurrency), altCurrency);
+            } else {
+                perPersonEl.textContent = '—';
+                perPersonAltEl.textContent = 'Enter Number of Pax to calculate';
+            }
+
             scheduleQuotationSave();
         }
 
@@ -3946,7 +4033,14 @@
         // than silently missing from a client-facing total — the same
         // tradeoff already made for the (now-removed) Excel importer's
         // Extras bucket.
+        // All figures on this document convert from data.totals'/
+        // data.buckets' AED source-of-truth via convertFromAED() at
+        // render time — same as recalcTotals() in the live UI — so
+        // there's no separately-maintained USD copy of the underlying
+        // numbers to drift out of sync.
         function buildPricingProposalHTML(data) {
+            const currency = data.currency || 'AED';
+            const c = (aed) => convertFromAED(aed, currency);
             const b = data.buckets;
             const bucketList = [
                 ['Flight', b.flight],
@@ -3958,9 +4052,13 @@
             const bucketRows = bucketList.map(([label, total]) => `
                 <tr>
                     <td>${escapeHtml(label)}</td>
-                    <td class="p-num">AED ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td class="p-num">${escapeHtml(formatCurrency(c(total), currency))}</td>
                 </tr>
             `).join('');
+
+            const perPersonRow = data.paxCount > 0
+                ? `<tr class="p-subtotal"><td>Per Person</td><td class="p-num">${escapeHtml(formatCurrency(c(data.totals.perPerson), currency))}</td></tr>`
+                : '';
 
             const body = `
                 <div class="doc-page">
@@ -3975,14 +4073,15 @@
                     </div>
 
                     <table class="p-items">
-                        <tr><th>Category</th><th>Selling Price (AED)</th></tr>
+                        <tr><th>Category</th><th>Selling Price (${escapeHtml(currency)})</th></tr>
                         ${bucketRows}
                     </table>
 
                     <table class="p-totals">
-                        <tr class="p-subtotal"><td>Subtotal</td><td class="p-num">AED ${data.totals.selling.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-                        <tr class="p-vat"><td>VAT (5%)</td><td class="p-num">AED ${data.totals.vat.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-                        <tr class="p-grand"><td>Estimated Total</td><td class="p-num">AED ${data.totals.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+                        <tr class="p-subtotal"><td>Subtotal</td><td class="p-num">${escapeHtml(formatCurrency(c(data.totals.selling), currency))}</td></tr>
+                        <tr class="p-vat"><td>VAT (5%)</td><td class="p-num">${escapeHtml(formatCurrency(c(data.totals.vat), currency))}</td></tr>
+                        <tr class="p-grand"><td>Estimated Total</td><td class="p-num">${escapeHtml(formatCurrency(c(data.totals.grandTotal), currency))}</td></tr>
+                        ${perPersonRow}
                     </table>
 
                     <div class="doc-footer">
