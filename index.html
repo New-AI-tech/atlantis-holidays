@@ -595,6 +595,56 @@
             color: var(--color-danger);
         }
 
+        .form-hint-inline {
+            font-weight: 400;
+            color: var(--color-text-muted);
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        /* ---- Accommodation Proposal editor: small subheadings inside
+           a .section (e.g. "Property Experience" / "Guest Room
+           Experience" within the combined Experience Imagery section)
+           — one step down from the section's own <h3>. ---- */
+        .ap-subheading {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--color-text-muted);
+            margin: var(--space-4) 0 var(--space-2);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .ap-subheading:first-of-type {
+            padding-top: 0;
+            border-top: none;
+            margin-top: 0;
+        }
+
+        .ap-rate-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+            margin-top: var(--space-2);
+        }
+
+        .ap-popular-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: var(--text-sm);
+            font-weight: 400;
+            color: var(--color-text);
+            cursor: pointer;
+        }
+
+        .ap-popular-toggle input {
+            width: auto;
+        }
+
         label {
             display: block;
             font-weight: var(--weight-medium);
@@ -1601,80 +1651,13 @@
             display: flex;
         }
 
-        /* ---- Hotel Proposal: premium hero + secondary photo grid ----
-           Both scoped to #hotelProposalForm so the Voucher tab's own
-           gallery (same underlying .ib-image-thumb/.ib-image-thumbs
-           markup, reused there for compact confirmation thumbnails)
-           is completely unaffected — this is a Hotel-Proposal-only
-           visual upgrade, not a change to the shared component. */
-        .hp-hero-thumb {
-            position: relative;
-            width: 100%;
-            height: 320px;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--ew-border);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            background: #F4F5F7;
-        }
-
-        .hp-hero-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            display: block;
-        }
-
-        .hp-hero-thumb .ib-image-thumb-remove {
-            width: 28px;
-            height: 28px;
-            font-size: 15px;
-        }
-
-        .hp-hero-thumb.is-broken {
-            background: #F7F4FA;
-        }
-
-        .hp-hero-thumb.is-broken img {
-            display: none;
-        }
-
-        .hp-hero-thumb.is-broken .ib-image-thumb-broken-label {
-            display: flex;
-        }
-
-        /* Exterior/Room/Interior/Amenities — 2-column luxury grid
-           instead of the shared component's small 64x64 confirmation
-           squares. :not(#imageThumbs-hp-hero) excludes the hero
-           section's own thumbs container, which uses the full-width
-           .hp-hero-thumb treatment above instead. */
-        #hotelProposalForm .ib-image-thumbs:not(#imageThumbs-hp-hero) {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        #hotelProposalForm .hp-secondary-thumb {
-            width: 100%;
-            height: 200px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        @media (max-width: 1100px) {
-            #hotelProposalForm .ib-image-thumbs:not(#imageThumbs-hp-hero) {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ---- Voucher: photo gallery editor — same "bigger than the
-           shared 64x64 confirmation square" upgrade as Hotel Proposal's
-           .hp-secondary-thumb above, kept as its own rule (rather than
-           reused) so it can be scoped to #panel-voucher/.ew-hotel-images
-           instead of #hotelProposalForm. Un-scoped, this would also hit
-           the shared .ib-image-thumb rule other tabs may still rely on
-           at 64x64. */
+        /* ---- Voucher: photo gallery editor — a "bigger than the
+           shared 64x64 confirmation square" upgrade, scoped to
+           #panel-voucher/.ew-hotel-images so it doesn't affect the
+           shared .ib-image-thumb rule other tabs may still rely on
+           at 64x64 (the Accommodation Proposal sub-tab now uses single
+           experience-image previews via .hotel-image-preview instead
+           of this multi-photo thumbnail grid). */
         #panel-voucher .ew-hotel-images .ib-image-thumbs {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2148,90 +2131,172 @@
             <div class="ew-masonry-body" id="hotelProposalBody" hidden>
                 <form id="hotelProposalForm" class="ew-masonry-form">
                     <div class="section">
-                        <h3>Hotel Details</h3>
+                        <h3>Property &amp; Proposal Settings</h3>
                         <div class="form-group">
-                            <label for="hp_hotel_name">Hotel Name</label>
-                            <input type="text" id="hp_hotel_name" placeholder="e.g. Atlantis The Royal, Dubai">
+                            <label for="ap_property_name">Property Name</label>
+                            <input type="text" id="ap_property_name" placeholder="e.g. Hilton Dubai Palm Jumeirah">
+                        </div>
+                        <div class="voucher-grid">
+                            <div class="form-group">
+                                <label for="ap_currency">Currency</label>
+                                <select id="ap_currency">
+                                    <option value="USD">USD</option>
+                                    <option value="AED">AED</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ap_expiration_date">Option Expiration Date</label>
+                                <input type="date" id="ap_expiration_date">
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="hp_hotel_address">Address</label>
-                            <input type="text" id="hp_hotel_address" placeholder="Full address">
+                            <label for="ap_property_address">Property Address <span class="form-hint-inline">(optional)</span></label>
+                            <input type="text" id="ap_property_address" placeholder="Full address">
                         </div>
                         <div class="form-group">
-                            <label for="hp_hotel_website">Website</label>
-                            <input type="url" id="hp_hotel_website" placeholder="https://…">
+                            <label for="ap_property_website">Property Website <span class="form-hint-inline">(optional)</span></label>
+                            <input type="url" id="ap_property_website" placeholder="https://…">
                         </div>
                         <div class="form-group">
-                            <label for="hp_hotel_description">Description</label>
-                            <textarea id="hp_hotel_description" rows="4" placeholder="Brief description of the property (max ~200 words)"></textarea>
+                            <label for="ap_tagline">Tagline <span class="form-hint-inline">(optional)</span></label>
+                            <input type="text" id="ap_tagline" placeholder="Shown as a small line under the proposal title">
                         </div>
                     </div>
 
                     <div class="section">
-                        <h3>Hero Image</h3>
-                        <div class="ib-image-section">
-                            <label>Main Image (shown large at the top of the PDF)</label>
-                            <div class="ib-photo-url-row">
-                                <input type="url" class="ib-photo-url-input" data-image-section="hp-hero" placeholder="Paste image URL…">
-                                <button type="button" class="ib-btn-add-photo" data-image-section="hp-hero">Add</button>
+                        <h3>Stay Details</h3>
+                        <div class="voucher-grid">
+                            <div class="form-group">
+                                <label for="ap_checkin_date">Check-in Date</label>
+                                <input type="date" id="ap_checkin_date">
                             </div>
-                            <div class="ib-image-thumbs" id="imageThumbs-hp-hero"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <h3>Photo Gallery</h3>
-                        <div class="ib-image-section">
-                            <label>Exterior Photos (max 3)</label>
-                            <div class="ib-photo-url-row">
-                                <input type="url" class="ib-photo-url-input" data-image-section="hp-exterior" placeholder="Paste image URL…">
-                                <button type="button" class="ib-btn-add-photo" data-image-section="hp-exterior">Add</button>
+                            <div class="form-group">
+                                <label for="ap_checkout_date">Check-out Date</label>
+                                <input type="date" id="ap_checkout_date">
                             </div>
-                            <div class="ib-image-thumbs" id="imageThumbs-hp-exterior"></div>
                         </div>
-                        <div class="ib-image-section">
-                            <label>Room Photos (max 3)</label>
-                            <div class="ib-photo-url-row">
-                                <input type="url" class="ib-photo-url-input" data-image-section="hp-room" placeholder="Paste image URL…">
-                                <button type="button" class="ib-btn-add-photo" data-image-section="hp-room">Add</button>
+                        <div class="voucher-grid">
+                            <div class="form-group">
+                                <label for="ap_occupancy_adults">Adults</label>
+                                <input type="number" id="ap_occupancy_adults" min="0" step="1" value="2">
                             </div>
-                            <div class="ib-image-thumbs" id="imageThumbs-hp-room"></div>
-                        </div>
-                        <div class="ib-image-section">
-                            <label>Interior Photos (max 3)</label>
-                            <div class="ib-photo-url-row">
-                                <input type="url" class="ib-photo-url-input" data-image-section="hp-interior" placeholder="Paste image URL…">
-                                <button type="button" class="ib-btn-add-photo" data-image-section="hp-interior">Add</button>
+                            <div class="form-group">
+                                <label for="ap_room_allocation">Room Allocation</label>
+                                <input type="number" id="ap_room_allocation" min="0" step="1" value="1">
                             </div>
-                            <div class="ib-image-thumbs" id="imageThumbs-hp-interior"></div>
                         </div>
-                        <div class="ib-image-section">
-                            <label>Amenities Photos (max 3)</label>
-                            <div class="ib-photo-url-row">
-                                <input type="url" class="ib-photo-url-input" data-image-section="hp-amenities" placeholder="Paste image URL…">
-                                <button type="button" class="ib-btn-add-photo" data-image-section="hp-amenities">Add</button>
-                            </div>
-                            <div class="ib-image-thumbs" id="imageThumbs-hp-amenities"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <h3>Room Types</h3>
-                        <div id="roomTypesContainer"></div>
-                        <button type="button" class="ew-btn ew-add-row-btn" id="addRoomTypeBtn">+ Add Room Type</button>
-                    </div>
-
-                    <div class="section">
-                        <h3>Amenities</h3>
-                        <div id="amenitiesContainer"></div>
-                        <button type="button" class="ew-btn ew-add-row-btn" id="addAmenityBtn">+ Add Amenity</button>
-                    </div>
-
-                    <div class="section">
-                        <h3>Location Map</h3>
                         <div class="form-group">
-                            <label for="hp_location_map">Google Maps Embed URL (optional)</label>
-                            <input type="url" id="hp_location_map" placeholder="https://www.google.com/maps/embed?...">
+                            <label for="ap_duration_nights">Duration</label>
+                            <input type="text" id="ap_duration_nights" readonly placeholder="Select both dates to calculate">
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Room Accommodation</h3>
+                        <div class="form-group">
+                            <label for="ap_room_category">Category</label>
+                            <input type="text" id="ap_room_category" placeholder="e.g. Guest Room / Double Room">
+                        </div>
+                        <div class="form-group">
+                            <label for="ap_room_feature">Feature</label>
+                            <input type="text" id="ap_room_feature" placeholder="e.g. Private Balcony">
+                        </div>
+                        <div class="form-group">
+                            <label for="ap_room_size">Room Size</label>
+                            <input type="text" id="ap_room_size" placeholder="e.g. Approx. 40 sq. m (430 sq. ft)">
+                        </div>
+                        <div class="form-group">
+                            <label for="ap_room_bedding">Bedding Options</label>
+                            <input type="text" id="ap_room_bedding" placeholder="e.g. 1 King Bed or 2 Double Beds per room">
+                        </div>
+                        <div class="form-group">
+                            <label for="ap_room_view">View / Vibe</label>
+                            <input type="text" id="ap_room_view" placeholder="e.g. Modern coastal design with floor-to-ceiling windows">
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Property &amp; Guest Room Experience</h3>
+                        <p class="form-hint">Each card shows an overlay title on the photo plus a caption below it. Leave the image URL blank to show a branded placeholder instead.</p>
+                        <h4 class="ap-subheading">Property Experience</h4>
+                        <div class="form-group">
+                            <label for="ap_exp_property_image">Image URL</label>
+                            <input type="url" id="ap_exp_property_image" placeholder="https://…/property.jpg">
+                        </div>
+                        <img id="apPropertyImagePreview" class="hotel-image-preview" alt="Property experience preview" hidden>
+                        <div class="voucher-grid">
+                            <div class="form-group">
+                                <label for="ap_exp_property_title">Overlay Title</label>
+                                <input type="text" id="ap_exp_property_title" placeholder="e.g. Palm Jumeirah Resort">
+                            </div>
+                            <div class="form-group">
+                                <label for="ap_exp_property_icon">Icon <span class="form-hint-inline">(optional emoji)</span></label>
+                                <input type="text" id="ap_exp_property_icon" placeholder="🏖️" maxlength="4">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ap_exp_property_caption_title">Caption Title</label>
+                            <input type="text" id="ap_exp_property_caption_title" placeholder="e.g. Hilton Dubai Palm Jumeirah">
+                        </div>
+                        <div class="form-group">
+                            <label for="ap_exp_property_caption">Caption</label>
+                            <textarea id="ap_exp_property_caption" rows="2" placeholder="Short description of the property"></textarea>
+                        </div>
+
+                        <h4 class="ap-subheading">Guest Room Experience</h4>
+                        <div class="form-group">
+                            <label for="ap_exp_room_image">Image URL</label>
+                            <input type="url" id="ap_exp_room_image" placeholder="https://…/room.jpg">
+                        </div>
+                        <img id="apRoomImagePreview" class="hotel-image-preview" alt="Guest room experience preview" hidden>
+                        <div class="voucher-grid">
+                            <div class="form-group">
+                                <label for="ap_exp_room_title">Overlay Title</label>
+                                <input type="text" id="ap_exp_room_title" placeholder="e.g. Guest Room With Balcony">
+                            </div>
+                            <div class="form-group">
+                                <label for="ap_exp_room_icon">Icon <span class="form-hint-inline">(optional emoji)</span></label>
+                                <input type="text" id="ap_exp_room_icon" placeholder="🛏️" maxlength="4">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ap_exp_room_caption_title">Caption Title</label>
+                            <input type="text" id="ap_exp_room_caption_title" placeholder="e.g. Balcony Room Overview">
+                        </div>
+                        <div class="form-group">
+                            <label for="ap_exp_room_caption">Caption</label>
+                            <textarea id="ap_exp_room_caption" rows="2" placeholder="Short description of the room"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Room Features &amp; Amenities</h3>
+                        <div id="apFeaturesContainer"></div>
+                        <button type="button" class="ew-btn ew-add-row-btn" id="addFeatureBtn">+ Add Feature</button>
+                    </div>
+
+                    <div class="section">
+                        <h3>Rate Comparison</h3>
+                        <p class="form-hint">At least 2 options are required. Each option's total is calculated automatically from the stay details above.</p>
+                        <div id="apRateOptionsContainer"></div>
+                        <button type="button" class="ew-btn ew-add-row-btn" id="addRateOptionBtn">+ Add Rate Option</button>
+                    </div>
+
+                    <div class="section">
+                        <h3>Inclusions</h3>
+                        <div id="apInclusionsContainer"></div>
+                        <button type="button" class="ew-btn ew-add-row-btn" id="addInclusionBtn">+ Add Inclusion</button>
+                    </div>
+
+                    <div class="section">
+                        <h3>Exclusions</h3>
+                        <div id="apExclusionsContainer"></div>
+                        <button type="button" class="ew-btn ew-add-row-btn" id="addExclusionBtn">+ Add Exclusion</button>
+                        <div class="form-group" style="margin-top: 12px;">
+                            <label for="ap_availability_note">Availability Note</label>
+                            <input type="text" id="ap_availability_note" placeholder="Subject to availability upon confirmation">
                         </div>
                     </div>
 
@@ -2239,24 +2304,24 @@
                         <h3>Consultant Contact</h3>
                         <div class="voucher-grid">
                             <div class="form-group">
-                                <label for="hp_consultant_name">Name</label>
-                                <input type="text" id="hp_consultant_name" value="Ahmed Backer">
+                                <label for="ap_consultant_name">Name</label>
+                                <input type="text" id="ap_consultant_name" value="Ahmed Backer">
                             </div>
                             <div class="form-group">
-                                <label for="hp_consultant_phone">Phone</label>
-                                <input type="text" id="hp_consultant_phone" value="+971 4 000 0000">
+                                <label for="ap_consultant_phone">Phone</label>
+                                <input type="text" id="ap_consultant_phone" value="+971 4 000 0000">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="hp_consultant_email">Email</label>
-                            <input type="text" id="hp_consultant_email" value="reservations@atlantisholidays.com">
+                            <label for="ap_consultant_email">Email</label>
+                            <input type="text" id="ap_consultant_email" value="reservations@atlantisholidays.com">
                         </div>
                     </div>
 
                     <div class="doc-actions">
                         <button type="button" class="ew-btn ew-btn-block" id="hotelProposalPdfBtn" style="max-width: 360px;">
                             <span class="spinner" aria-hidden="true"></span>
-                            <span id="hotelProposalPdfLabel">Generate Hotel Proposal</span>
+                            <span id="hotelProposalPdfLabel">Generate Accommodation Proposal</span>
                         </button>
                     </div>
                     <div class="form-status" id="hotelProposalFormStatus" role="status" aria-live="polite"></div>
@@ -2839,7 +2904,7 @@
             document.getElementById('itineraryBody').hidden = isHotelProposal;
             document.getElementById('hotelProposalBody').hidden = !isHotelProposal;
             if (isHotelProposal) {
-                mountHotelProposal(quotations.hotelProposal || defaultHotelProposalState());
+                mountHotelProposal(quotations.hotelProposal);
             } else {
                 mountQuotation(quotations[currentQuotationType] || defaultQuotationState(currentQuotationType));
             }
@@ -3093,176 +3158,453 @@
         }
 
         // ------------------------------------------------------------
-        // Hotel Proposal sub-tab — a standalone branded "hotel fact
-        // sheet" (no itinerary, no pricing). Structurally unlike
-        // Land Package/FIT/Groups, so it gets its own default/
+        // Hotel Proposal sub-tab — now an "Accommodation Proposal &
+        // Rate Comparison" document (navy/gold branded, stay/room
+        // detail cards, a dynamic rate-comparison table) replacing the
+        // older single-hero "hotel fact sheet" design. Structurally
+        // unlike Land Package/FIT/Groups, so it gets its own default/
         // serialize/mount trio instead of reusing the itinerary ones,
         // dispatched to by serializeActiveQuotationPanel()/
         // mountActiveQuotationPanel() above. Its data still lives in
         // the same `quotations` object/localStorage key, just under
-        // the 'hotelProposal' key instead of one of the other three.
+        // the 'hotelProposal' key instead of one of the other three —
+        // schemaVersion below is what lets normalizeAccommodationProposalState()
+        // tell current-shape data apart from a still-saved older
+        // hotelName/images/roomTypes/... record and migrate it instead
+        // of discarding it (see that function further down).
         // ------------------------------------------------------------
-        function defaultHotelProposalState() {
+        function defaultAccommodationProposalState() {
             return {
-                hotelName: '',
-                hotelAddress: '',
-                hotelWebsite: '',
-                hotelDescription: '',
-                images: { hero: [], exterior: [], room: [], interior: [], amenities: [] },
-                roomTypes: [],
-                amenities: [],
-                locationMap: '',
+                documentType: 'accommodationProposal',
+                schemaVersion: 2,
+                propertyName: '',
+                propertyAddress: '',
+                propertyWebsite: '',
+                currency: 'USD',
+                expirationDate: '',
+                checkInDate: '',
+                checkOutDate: '',
+                durationNights: 0,
+                occupancyAdults: 2,
+                roomAllocation: 1,
+                roomLabel: 'Rooms',
+
+                accommodation: {
+                    category: '',
+                    feature: '',
+                    roomSize: '',
+                    beddingOptions: '',
+                    viewVibe: '',
+                },
+
+                experience: {
+                    propertyImageUrl: '',
+                    propertyImageTitle: '',
+                    propertyCaptionTitle: '',
+                    propertyCaption: '',
+                    propertyIcon: '',
+                    roomImageUrl: '',
+                    roomImageTitle: '',
+                    roomCaptionTitle: '',
+                    roomCaption: '',
+                    roomIcon: '',
+                    tagline: '',
+                },
+
+                features: [
+                    { label: '', description: '' },
+                ],
+
+                rateOptions: [
+                    {
+                        name: 'Bed & Breakfast',
+                        shortCode: 'BB',
+                        description: '',
+                        pricingBasis: 'perRoomPerNight',
+                        nightlyRate: 0,
+                        fixedAmount: 0,
+                        popular: false,
+                        totalCost: 0,
+                    },
+                    {
+                        name: 'Half Board',
+                        shortCode: 'HB',
+                        description: '',
+                        pricingBasis: 'perRoomPerNight',
+                        nightlyRate: 0,
+                        fixedAmount: 0,
+                        popular: true,
+                        totalCost: 0,
+                    },
+                ],
+
+                inclusions: [],
+                exclusions: [],
+                availabilityNote: 'Subject to availability upon confirmation',
+
                 consultantName: 'Ahmed Backer',
                 consultantPhone: '+971 4 000 0000',
                 consultantEmail: 'reservations@atlantisholidays.com',
+
+                // Nothing renders these directly in the new PDF, but a
+                // proposal saved under the old builder may still have
+                // them — normalizeAccommodationProposalState() copies
+                // them straight through so switching to this new
+                // design can never silently drop old data.
+                legacyImages: { hero: [], exterior: [], room: [], interior: [], amenities: [] },
+                legacyHotelDescription: '',
+                legacyRoomTypes: [],
+                legacyAmenities: [],
+                legacyLocationMap: '',
             };
         }
 
-        // In-memory image state for this sub-tab, same pattern as
-        // voucherImages — there's no single form input an array of
-        // URLs could be read back from, so it's tracked separately and
-        // folded into serializeHotelProposal()'s output.
-        let hotelProposalImages = { hero: [], exterior: [], room: [], interior: [], amenities: [] };
-
-        // Both the Voucher's photo gallery and this one share
-        // renderVoucherImageThumbs()'s original design; this is a
-        // parallel implementation (not a shared helper) because the
-        // two keep their images in different state objects
-        // (voucherImages vs hotelProposalImages) with different max
-        // caps per section (hero is capped at 1, everything else at 3)
-        // — duplicating ~30 lines here was judged lower-risk than
-        // generalizing the already-shipped, tested Voucher version.
-        function renderHotelProposalImageThumbs(sectionKey, max) {
-            const thumbsContainer = document.getElementById(`imageThumbs-${sectionKey}`);
-            const images = hotelProposalImages[sectionKey.replace('hp-', '')] || [];
-            // Hero gets a large single-image "brochure banner" preview
-            // (not the small square thumbnail every other photo section
-            // uses) — it's the one image meant to read as a hero shot,
-            // both here and in the PDF, so it needs to actually look
-            // like one instead of a cropped 64x64 square.
-            const isHero = sectionKey === 'hp-hero';
-            const thumbClass = isHero ? 'hp-hero-thumb' : 'ib-image-thumb hp-secondary-thumb';
-            thumbsContainer.innerHTML = images.map((url, i) => `
-                <div class="${thumbClass}">
-                    <img src="${escapeHtml(url)}" alt="${escapeHtml(sectionKey)} photo ${i + 1}" loading="lazy" onerror="this.closest('.${isHero ? 'hp-hero-thumb' : 'ib-image-thumb'}').classList.add('is-broken')">
-                    <span class="ib-image-thumb-broken-label">Couldn't load</span>
-                    <button type="button" class="ib-image-thumb-remove" data-section="${sectionKey}" data-index="${i}" aria-label="Remove this photo">✕</button>
-                </div>
-            `).join('');
-
-            const addBtn = document.querySelector(`.ib-btn-add-photo[data-image-section="${sectionKey}"]`);
-            const urlInput = document.querySelector(`.ib-photo-url-input[data-image-section="${sectionKey}"]`);
-            const atMax = images.length >= max;
-            addBtn.disabled = atMax;
-            urlInput.disabled = atMax;
+        // Date-only parsing (no time-of-day component) so a check-in/
+        // check-out date typed in the form never shifts by a day due
+        // to the browser's local timezone offset being applied to a
+        // bare "YYYY-MM-DD" string — everything here is computed in
+        // UTC and only ever compared to other UTC dates built the same
+        // way.
+        function parseDateOnly(value) {
+            const [year, month, day] = String(value || '').split('-').map(Number);
+            if (!year || !month || !day) return null;
+            return new Date(Date.UTC(year, month - 1, day));
         }
 
-        const HOTEL_PROPOSAL_IMAGE_MAX = { 'hp-hero': 1, 'hp-exterior': 3, 'hp-room': 3, 'hp-interior': 3, 'hp-amenities': 3 };
-
-        function addHotelProposalPhotoUrl(sectionKey) {
-            const max = HOTEL_PROPOSAL_IMAGE_MAX[sectionKey] || 3;
-            const key = sectionKey.replace('hp-', '');
-            const urlInput = document.querySelector(`.ib-photo-url-input[data-image-section="${sectionKey}"]`);
-            const url = urlInput.value.trim();
-            if (!url) return;
-
-            if (hotelProposalImages[key].length >= max) {
-                showStatus(hotelProposalFormStatus, `Maximum ${max} photo${max === 1 ? '' : 's'} for this section.`, 'error');
-                return;
-            }
-            if (!urlInput.checkValidity()) {
-                showStatus(hotelProposalFormStatus, "That doesn't look like a valid URL — added anyway.", 'error');
-            }
-
-            hotelProposalImages[key].push(url);
-            urlInput.value = '';
-            renderHotelProposalImageThumbs(sectionKey, max);
-            scheduleQuotationSave();
+        function calculateNights(checkIn, checkOut) {
+            const start = parseDateOnly(checkIn);
+            const end = parseDateOnly(checkOut);
+            if (!start || !end || end <= start) return 0;
+            return Math.round((end - start) / 86400000);
         }
 
-        document.querySelectorAll('#hotelProposalForm .ib-btn-add-photo').forEach(btn => {
-            btn.addEventListener('click', () => addHotelProposalPhotoUrl(btn.dataset.imageSection));
-        });
+        function ordinalSuffix(n) {
+            const v = n % 100;
+            if (v >= 11 && v <= 13) return 'th';
+            switch (n % 10) {
+                case 1: return 'st';
+                case 2: return 'nd';
+                case 3: return 'rd';
+                default: return 'th';
+            }
+        }
 
-        document.querySelectorAll('#hotelProposalForm .ib-photo-url-input').forEach(input => {
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addHotelProposalPhotoUrl(input.dataset.imageSection);
-                }
-            });
-        });
+        // "September 30, 2026" — Stay Details check-in/check-out.
+        function formatAccommodationDate(isoDate) {
+            const d = parseDateOnly(isoDate);
+            if (!d) return '';
+            const month = d.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+            return `${month} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+        }
 
-        document.getElementById('hotelProposalForm').addEventListener('click', (e) => {
-            const removeBtn = e.target.closest('.ib-image-thumb-remove');
-            if (!removeBtn) return;
-            const sectionKey = removeBtn.dataset.section;
-            const key = sectionKey.replace('hp-', '');
-            const index = parseInt(removeBtn.dataset.index, 10);
-            hotelProposalImages[key].splice(index, 1);
-            renderHotelProposalImageThumbs(sectionKey, HOTEL_PROPOSAL_IMAGE_MAX[sectionKey] || 3);
-            scheduleQuotationSave();
-        });
+        // "Monday, 17th August 2026" — the Option Expiration Notice.
+        function formatExpirationDate(isoDate) {
+            const d = parseDateOnly(isoDate);
+            if (!d) return '';
+            const weekday = d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+            const month = d.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+            const day = d.getUTCDate();
+            return `${weekday}, ${day}${ordinalSuffix(day)} ${month} ${d.getUTCFullYear()}`;
+        }
 
-        // ---- Room Types repeater ----
-        function createRoomTypeCard(values) {
+        // Whole-number-friendly ("USD 2,080") but still shows cents
+        // when a rate genuinely has them ("USD 2,080.50") — matches the
+        // reference document's formatting without silently rounding
+        // real fractional amounts away. Currency is whatever the
+        // consultant typed in the Property & Proposal Settings section
+        // (no hard-coded USD in the builder itself).
+        function formatAccommodationCurrency(amount, currency) {
+            const n = Number(amount) || 0;
+            const code = (currency || 'USD').toUpperCase();
+            return `${code} ${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+        }
+
+        // Explicit pricing bases only — anything else (missing/typo'd
+        // pricingBasis) falls through to 0 rather than guessing, so a
+        // corrupt rate option shows as a visibly-wrong "0" total
+        // instead of silently charging the wrong basis.
+        function calculateRateTotal(option, state) {
+            const nights = Number(state.durationNights) || 0;
+            const rooms = Number(state.roomAllocation) || 0;
+            const adults = Number(state.occupancyAdults) || 0;
+            const nightlyRate = Number(option.nightlyRate) || 0;
+            const fixedAmount = Number(option.fixedAmount) || 0;
+
+            switch (option.pricingBasis) {
+                case 'perRoomPerNight':
+                    return nightlyRate * rooms * nights + fixedAmount;
+                case 'perPersonPerNight':
+                    return nightlyRate * adults * nights + fixedAmount;
+                case 'perStay':
+                    return fixedAmount || nightlyRate;
+                default:
+                    return 0;
+            }
+        }
+
+        // Accepts whatever was last saved under the 'hotelProposal'
+        // quotations key — current-shape (schemaVersion 2) data, an
+        // older hotelName/images/roomTypes/... record from before this
+        // rewrite, or nothing at all (first-ever visit) — and always
+        // returns a complete, current-shape state object. Old data is
+        // never dropped: fields with a direct new-model equivalent are
+        // copied across, everything else rides along untouched under
+        // legacyImages/legacyHotelDescription/legacyRoomTypes/
+        // legacyAmenities/legacyLocationMap (see defaultAccommodationProposalState()).
+        function normalizeAccommodationProposalState(raw) {
+            const base = defaultAccommodationProposalState();
+            if (!raw || typeof raw !== 'object') return base;
+
+            if (raw.schemaVersion === 2 && raw.documentType === 'accommodationProposal') {
+                return {
+                    ...base,
+                    ...raw,
+                    accommodation: { ...base.accommodation, ...(raw.accommodation || {}) },
+                    experience: { ...base.experience, ...(raw.experience || {}) },
+                    legacyImages: { ...base.legacyImages, ...(raw.legacyImages || {}) },
+                    features: (raw.features && raw.features.length) ? raw.features : base.features,
+                    rateOptions: (raw.rateOptions && raw.rateOptions.length >= 2) ? raw.rateOptions : base.rateOptions,
+                };
+            }
+
+            // Legacy Hotel Proposal shape (or a genuinely empty {}) —
+            // map whatever carries over directly; the rest is preserved
+            // as-is under legacy* keys rather than erased. Deliberately
+            // NOT copying the old hero photo into both new experience
+            // cards — only the Property card is seeded from it, the
+            // Room card is left for the agent to fill in explicitly.
+            const legacyImages = raw.images || {};
+            return {
+                ...base,
+                propertyName: raw.hotelName || base.propertyName,
+                propertyAddress: raw.hotelAddress || base.propertyAddress,
+                propertyWebsite: raw.hotelWebsite || base.propertyWebsite,
+                consultantName: raw.consultantName || base.consultantName,
+                consultantPhone: raw.consultantPhone || base.consultantPhone,
+                consultantEmail: raw.consultantEmail || base.consultantEmail,
+                experience: {
+                    ...base.experience,
+                    propertyImageUrl: (legacyImages.hero && legacyImages.hero[0]) || (legacyImages.exterior && legacyImages.exterior[0]) || '',
+                },
+                legacyImages: {
+                    hero: legacyImages.hero || [],
+                    exterior: legacyImages.exterior || [],
+                    room: legacyImages.room || [],
+                    interior: legacyImages.interior || [],
+                    amenities: legacyImages.amenities || [],
+                },
+                legacyHotelDescription: raw.hotelDescription || '',
+                legacyRoomTypes: raw.roomTypes || [],
+                legacyAmenities: raw.amenities || [],
+                legacyLocationMap: raw.locationMap || '',
+            };
+        }
+
+        // Legacy data preserved from whatever was loaded (see
+        // normalizeAccommodationProposalState()) but not editable from
+        // this form — carried through on every save so it's never
+        // silently dropped, same in-memory-plus-serialize pattern as
+        // voucherImages elsewhere in this file.
+        let apLegacyData = {
+            legacyImages: { hero: [], exterior: [], room: [], interior: [], amenities: [] },
+            legacyHotelDescription: '',
+            legacyRoomTypes: [],
+            legacyAmenities: [],
+            legacyLocationMap: '',
+        };
+
+        // ---- Property/Guest Room experience image previews — same
+        // single-URL-input-plus-preview pattern as the Voucher's
+        // #hotel_image_url/#hotelImagePreview. ----
+        function updateApExperiencePreview(which) {
+            const input = document.getElementById(which === 'property' ? 'ap_exp_property_image' : 'ap_exp_room_image');
+            const preview = document.getElementById(which === 'property' ? 'apPropertyImagePreview' : 'apRoomImagePreview');
+            const url = input.value.trim();
+            if (url) {
+                preview.src = url;
+                preview.hidden = false;
+            } else {
+                preview.hidden = true;
+                preview.removeAttribute('src');
+            }
+        }
+        document.getElementById('apPropertyImagePreview').addEventListener('error', () => { document.getElementById('apPropertyImagePreview').hidden = true; });
+        document.getElementById('apRoomImagePreview').addEventListener('error', () => { document.getElementById('apRoomImagePreview').hidden = true; });
+        document.getElementById('ap_exp_property_image').addEventListener('input', () => updateApExperiencePreview('property'));
+        document.getElementById('ap_exp_room_image').addEventListener('input', () => updateApExperiencePreview('room'));
+
+        // ---- Stay Details duration + live rate-total recalculation ----
+        function currentApStayState() {
+            return {
+                durationNights: calculateNights(document.getElementById('ap_checkin_date').value, document.getElementById('ap_checkout_date').value),
+                roomAllocation: parseFloat(document.getElementById('ap_room_allocation').value) || 0,
+                occupancyAdults: parseFloat(document.getElementById('ap_occupancy_adults').value) || 0,
+            };
+        }
+
+        function recalcRateRowTotal(row) {
+            const state = currentApStayState();
+            const option = {
+                pricingBasis: row.querySelector('.ap-rate-basis').value,
+                nightlyRate: parseFloat(row.querySelector('.ap-rate-nightly').value) || 0,
+                fixedAmount: parseFloat(row.querySelector('.ap-rate-fixed').value) || 0,
+            };
+            const total = calculateRateTotal(option, state);
+            const currency = document.getElementById('ap_currency').value;
+            row.querySelector('.ap-rate-total-display').value = formatAccommodationCurrency(total, currency);
+        }
+
+        function recalcAllRateTotals() {
+            document.querySelectorAll('#apRateOptionsContainer .ap-rate-card').forEach(recalcRateRowTotal);
+        }
+
+        // Duration is always derived from the two dates — never a
+        // separately-editable field — so it can't drift out of sync
+        // with what the rate totals below are actually calculated from.
+        function updateApDuration() {
+            const nights = calculateNights(document.getElementById('ap_checkin_date').value, document.getElementById('ap_checkout_date').value);
+            document.getElementById('ap_duration_nights').value = nights > 0 ? `${nights} Night${nights === 1 ? '' : 's'}` : '';
+            recalcAllRateTotals();
+        }
+        document.getElementById('ap_checkin_date').addEventListener('input', updateApDuration);
+        document.getElementById('ap_checkout_date').addEventListener('input', updateApDuration);
+
+        // ---- Room Features & Amenities repeater ----
+        function createFeatureCard(values) {
             values = values || {};
             const card = document.createElement('div');
-            card.className = 'ib-room-type-card';
+            card.className = 'ib-room-type-card ap-feature-card';
             card.innerHTML = `
-                <div class="voucher-grid">
-                    <div class="form-group">
-                        <label>Room Name</label>
-                        <input type="text" class="rt-name" placeholder="e.g. Deluxe Ocean View" value="${values.name ? escapeHtml(values.name) : ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>Size</label>
-                        <input type="text" class="rt-size" placeholder="e.g. 40 sqm" value="${values.size ? escapeHtml(values.size) : ''}">
-                    </div>
-                </div>
-                <div class="voucher-grid">
-                    <div class="form-group">
-                        <label>Occupancy</label>
-                        <input type="text" class="rt-occupancy" placeholder="e.g. 2 Adults" value="${values.occupancy ? escapeHtml(values.occupancy) : ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>Amenities</label>
-                        <input type="text" class="rt-amenities" placeholder="Comma separated" value="${values.amenities ? escapeHtml(values.amenities) : ''}">
-                    </div>
+                <div class="form-group">
+                    <label>Feature Label</label>
+                    <input type="text" class="ap-feature-label" placeholder="e.g. Private Balcony" value="${values.label ? escapeHtml(values.label) : ''}">
                 </div>
                 <div class="form-group">
                     <label>Description</label>
-                    <textarea class="rt-description" rows="2" placeholder="Short description of this room type">${values.description ? escapeHtml(values.description) : ''}</textarea>
+                    <textarea class="ap-feature-description" rows="2" placeholder="e.g. Outdoor seating with spectacular views.">${values.description ? escapeHtml(values.description) : ''}</textarea>
                 </div>
-                <button type="button" class="btn btn-remove ib-room-type-remove">Remove Room Type</button>
+                <button type="button" class="btn btn-remove ap-feature-remove">Remove Feature</button>
             `;
-            card.querySelector('.ib-room-type-remove').addEventListener('click', () => {
-                card.remove();
+            card.querySelector('.ap-feature-remove').addEventListener('click', () => {
+                const container = card.parentElement;
+                if (container.querySelectorAll('.ap-feature-card').length > 1) {
+                    card.remove();
+                } else {
+                    card.querySelector('.ap-feature-label').value = '';
+                    card.querySelector('.ap-feature-description').value = '';
+                }
                 scheduleQuotationSave();
             });
             return card;
         }
 
-        function addRoomTypeCard(values) {
-            document.getElementById('roomTypesContainer').appendChild(createRoomTypeCard(values));
-        }
-
-        document.getElementById('addRoomTypeBtn').addEventListener('click', () => {
-            addRoomTypeCard({});
+        document.getElementById('addFeatureBtn').addEventListener('click', () => {
+            document.getElementById('apFeaturesContainer').appendChild(createFeatureCard({}));
             scheduleQuotationSave();
         });
 
-        // ---- Amenities repeater (plain text list, same shape as the
-        // Voucher's Reservation Numbers repeater) ----
-        function createAmenityRow(value) {
+        // ---- Rate Comparison repeater — minimum 2 rows enforced (the
+        // reference document always compares at least BB vs HB), so
+        // the remove button on each card is disabled once only 2 are
+        // left rather than letting the table collapse to a single
+        // (non-)comparison. ----
+        function updateRateRemoveButtons() {
+            const rows = document.querySelectorAll('#apRateOptionsContainer .ap-rate-card');
+            const disable = rows.length <= 2;
+            rows.forEach(row => { row.querySelector('.ap-rate-remove').disabled = disable; });
+        }
+
+        function createRateOptionCard(values) {
+            values = values || {};
+            const card = document.createElement('div');
+            card.className = 'ib-room-type-card ap-rate-card';
+            const basis = values.pricingBasis || 'perRoomPerNight';
+            card.innerHTML = `
+                <div class="voucher-grid">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" class="ap-rate-name" placeholder="e.g. Bed &amp; Breakfast" value="${values.name ? escapeHtml(values.name) : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label>Short Code</label>
+                        <input type="text" class="ap-rate-code" placeholder="e.g. BB" value="${values.shortCode ? escapeHtml(values.shortCode) : ''}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Included Services</label>
+                    <textarea class="ap-rate-description" rows="2" placeholder="e.g. Daily breakfast buffet + spa access">${values.description ? escapeHtml(values.description) : ''}</textarea>
+                </div>
+                <div class="voucher-grid">
+                    <div class="form-group">
+                        <label>Pricing Basis</label>
+                        <select class="ap-rate-basis">
+                            <option value="perRoomPerNight"${basis === 'perRoomPerNight' ? ' selected' : ''}>Per Room / Night</option>
+                            <option value="perPersonPerNight"${basis === 'perPersonPerNight' ? ' selected' : ''}>Per Person / Night</option>
+                            <option value="perStay"${basis === 'perStay' ? ' selected' : ''}>Per Stay (Fixed)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nightly / Per-Unit Rate</label>
+                        <input type="number" class="ap-rate-nightly" min="0" step="0.01" value="${Number(values.nightlyRate) || 0}">
+                    </div>
+                </div>
+                <div class="voucher-grid">
+                    <div class="form-group">
+                        <label>Fixed Amount</label>
+                        <input type="number" class="ap-rate-fixed" min="0" step="0.01" value="${Number(values.fixedAmount) || 0}">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Stay Cost</label>
+                        <input type="text" class="ap-rate-total-display" readonly>
+                    </div>
+                </div>
+                <div class="ap-rate-card-footer">
+                    <label class="ap-popular-toggle"><input type="checkbox" class="ap-rate-popular"${values.popular ? ' checked' : ''}> Mark as Popular</label>
+                    <button type="button" class="btn btn-remove ap-rate-remove">Remove Option</button>
+                </div>
+            `;
+            card.querySelector('.ap-rate-remove').addEventListener('click', () => {
+                if (document.querySelectorAll('#apRateOptionsContainer .ap-rate-card').length <= 2) {
+                    showStatus(hotelProposalFormStatus, 'At least 2 rate options are required.', 'error');
+                    return;
+                }
+                card.remove();
+                updateRateRemoveButtons();
+                scheduleQuotationSave();
+            });
+            return card;
+        }
+
+        document.getElementById('addRateOptionBtn').addEventListener('click', () => {
+            document.getElementById('apRateOptionsContainer').appendChild(createRateOptionCard({}));
+            updateRateRemoveButtons();
+            recalcAllRateTotals();
+            scheduleQuotationSave();
+        });
+
+        // Only one option reads as "Popular" at a time in the rendered
+        // table (matching the reference's single badge) — checking one
+        // box here unchecks any other, rather than allowing several
+        // simultaneous badges.
+        document.getElementById('apRateOptionsContainer').addEventListener('change', (e) => {
+            if (e.target.classList.contains('ap-rate-popular') && e.target.checked) {
+                document.querySelectorAll('#apRateOptionsContainer .ap-rate-popular').forEach(cb => {
+                    if (cb !== e.target) cb.checked = false;
+                });
+            }
+        });
+
+        // ---- Inclusions / Exclusions repeaters (plain text lists,
+        // same shape as the Voucher's Reservation Numbers repeater) ----
+        function createSimpleTextRow(containerSelector, inputClass, placeholder, ariaLabel, value) {
             const row = document.createElement('div');
             row.className = 'reservation-row';
             row.innerHTML = `
                 <div class="field">
-                    <label class="sr-only">Amenity</label>
-                    <input type="text" class="hp-amenity-input" placeholder="e.g. Free Wi-Fi" value="${value ? escapeHtml(value) : ''}">
+                    <label class="sr-only">${escapeHtml(ariaLabel)}</label>
+                    <input type="text" class="${inputClass}" placeholder="${escapeHtml(placeholder)}" value="${value ? escapeHtml(value) : ''}">
                 </div>
-                <button type="button" class="btn btn-remove" aria-label="Remove this amenity">✕</button>
+                <button type="button" class="btn btn-remove" aria-label="Remove this ${escapeHtml(ariaLabel.toLowerCase())}">✕</button>
             `;
             row.querySelector('.btn-remove').addEventListener('click', () => {
                 const container = row.parentElement;
@@ -3276,75 +3618,171 @@
             return row;
         }
 
-        function addAmenityRow(value) {
-            document.getElementById('amenitiesContainer').appendChild(createAmenityRow(value || ''));
-        }
-
-        document.getElementById('addAmenityBtn').addEventListener('click', () => {
-            addAmenityRow('');
+        document.getElementById('addInclusionBtn').addEventListener('click', () => {
+            document.getElementById('apInclusionsContainer').appendChild(createSimpleTextRow(null, 'ap-inclusion-input', 'e.g. Daily breakfast buffet included', 'Inclusion', ''));
+            scheduleQuotationSave();
+        });
+        document.getElementById('addExclusionBtn').addEventListener('click', () => {
+            document.getElementById('apExclusionsContainer').appendChild(createSimpleTextRow(null, 'ap-exclusion-input', 'e.g. Tourism Dirham fee payable at the hotel', 'Exclusion', ''));
             scheduleQuotationSave();
         });
 
+        document.getElementById('hotelProposalForm').addEventListener('input', (e) => {
+            if (e.target.matches('.ap-rate-nightly, .ap-rate-fixed, #ap_occupancy_adults, #ap_room_allocation, #ap_currency')) recalcAllRateTotals();
+        });
+        document.getElementById('hotelProposalForm').addEventListener('change', (e) => {
+            if (e.target.matches('.ap-rate-basis, #ap_currency')) recalcAllRateTotals();
+        });
         document.getElementById('hotelProposalForm').addEventListener('input', scheduleQuotationSave);
 
-        // Reads the currently-mounted Hotel Proposal DOM into a plain
-        // object — same DOM-is-source-of-truth pattern the itinerary
-        // builder uses, extended to the room-type/amenity repeaters.
+        // Reads the currently-mounted Accommodation Proposal DOM into a
+        // plain object — same DOM-is-source-of-truth pattern the
+        // itinerary builder uses, extended to the feature/rate-option/
+        // inclusion/exclusion repeaters. totalCost is deliberately NOT
+        // persisted here (see the comment on defaultAccommodationProposalState()
+        // — rate totals are always derived fresh from nightlyRate/
+        // fixedAmount/pricingBasis + the current stay details, both in
+        // this form and in buildRateComparisonSection(), so there's no
+        // stale cached number that could ever drift out of sync).
         function serializeHotelProposal() {
+            const stay = currentApStayState();
             return {
-                hotelName: document.getElementById('hp_hotel_name').value,
-                hotelAddress: document.getElementById('hp_hotel_address').value,
-                hotelWebsite: document.getElementById('hp_hotel_website').value,
-                hotelDescription: document.getElementById('hp_hotel_description').value,
-                images: hotelProposalImages,
-                roomTypes: Array.from(document.querySelectorAll('#roomTypesContainer .ib-room-type-card')).map(card => ({
-                    name: card.querySelector('.rt-name').value,
-                    description: card.querySelector('.rt-description').value,
-                    size: card.querySelector('.rt-size').value,
-                    occupancy: card.querySelector('.rt-occupancy').value,
-                    amenities: card.querySelector('.rt-amenities').value,
+                documentType: 'accommodationProposal',
+                schemaVersion: 2,
+                propertyName: document.getElementById('ap_property_name').value,
+                propertyAddress: document.getElementById('ap_property_address').value,
+                propertyWebsite: document.getElementById('ap_property_website').value,
+                currency: document.getElementById('ap_currency').value,
+                expirationDate: document.getElementById('ap_expiration_date').value,
+                checkInDate: document.getElementById('ap_checkin_date').value,
+                checkOutDate: document.getElementById('ap_checkout_date').value,
+                durationNights: stay.durationNights,
+                occupancyAdults: stay.occupancyAdults,
+                roomAllocation: stay.roomAllocation,
+                roomLabel: 'Rooms',
+                accommodation: {
+                    category: document.getElementById('ap_room_category').value,
+                    feature: document.getElementById('ap_room_feature').value,
+                    roomSize: document.getElementById('ap_room_size').value,
+                    beddingOptions: document.getElementById('ap_room_bedding').value,
+                    viewVibe: document.getElementById('ap_room_view').value,
+                },
+                experience: {
+                    propertyImageUrl: document.getElementById('ap_exp_property_image').value.trim(),
+                    propertyImageTitle: document.getElementById('ap_exp_property_title').value,
+                    propertyCaptionTitle: document.getElementById('ap_exp_property_caption_title').value,
+                    propertyCaption: document.getElementById('ap_exp_property_caption').value,
+                    propertyIcon: document.getElementById('ap_exp_property_icon').value,
+                    roomImageUrl: document.getElementById('ap_exp_room_image').value.trim(),
+                    roomImageTitle: document.getElementById('ap_exp_room_title').value,
+                    roomCaptionTitle: document.getElementById('ap_exp_room_caption_title').value,
+                    roomCaption: document.getElementById('ap_exp_room_caption').value,
+                    roomIcon: document.getElementById('ap_exp_room_icon').value,
+                    tagline: document.getElementById('ap_tagline').value,
+                },
+                features: Array.from(document.querySelectorAll('#apFeaturesContainer .ap-feature-card')).map(card => ({
+                    label: card.querySelector('.ap-feature-label').value,
+                    description: card.querySelector('.ap-feature-description').value,
+                })).filter(f => f.label || f.description),
+                rateOptions: Array.from(document.querySelectorAll('#apRateOptionsContainer .ap-rate-card')).map(card => ({
+                    name: card.querySelector('.ap-rate-name').value,
+                    shortCode: card.querySelector('.ap-rate-code').value,
+                    description: card.querySelector('.ap-rate-description').value,
+                    pricingBasis: card.querySelector('.ap-rate-basis').value,
+                    nightlyRate: parseFloat(card.querySelector('.ap-rate-nightly').value) || 0,
+                    fixedAmount: parseFloat(card.querySelector('.ap-rate-fixed').value) || 0,
+                    popular: card.querySelector('.ap-rate-popular').checked,
                 })),
-                amenities: Array.from(document.querySelectorAll('#amenitiesContainer .hp-amenity-input'))
-                    .map(el => el.value.trim())
-                    .filter(Boolean),
-                locationMap: document.getElementById('hp_location_map').value,
-                consultantName: document.getElementById('hp_consultant_name').value,
-                consultantPhone: document.getElementById('hp_consultant_phone').value,
-                consultantEmail: document.getElementById('hp_consultant_email').value,
+                inclusions: Array.from(document.querySelectorAll('#apInclusionsContainer .ap-inclusion-input')).map(el => el.value.trim()).filter(Boolean),
+                exclusions: Array.from(document.querySelectorAll('#apExclusionsContainer .ap-exclusion-input')).map(el => el.value.trim()).filter(Boolean),
+                availabilityNote: document.getElementById('ap_availability_note').value,
+                consultantName: document.getElementById('ap_consultant_name').value,
+                consultantPhone: document.getElementById('ap_consultant_phone').value,
+                consultantEmail: document.getElementById('ap_consultant_email').value,
+                legacyImages: apLegacyData.legacyImages,
+                legacyHotelDescription: apLegacyData.legacyHotelDescription,
+                legacyRoomTypes: apLegacyData.legacyRoomTypes,
+                legacyAmenities: apLegacyData.legacyAmenities,
+                legacyLocationMap: apLegacyData.legacyLocationMap,
             };
         }
 
-        // Rebuilds the Hotel Proposal DOM from a saved (or default)
-        // state object — the "load" half of the pattern above.
-        function mountHotelProposal(state) {
-            document.getElementById('hp_hotel_name').value = state.hotelName || '';
-            document.getElementById('hp_hotel_address').value = state.hotelAddress || '';
-            document.getElementById('hp_hotel_website').value = state.hotelWebsite || '';
-            document.getElementById('hp_hotel_description').value = state.hotelDescription || '';
-            document.getElementById('hp_location_map').value = state.locationMap || '';
-            document.getElementById('hp_consultant_name').value = state.consultantName || '';
-            document.getElementById('hp_consultant_phone').value = state.consultantPhone || '';
-            document.getElementById('hp_consultant_email').value = state.consultantEmail || '';
+        // Rebuilds the Accommodation Proposal DOM from a saved (or
+        // default, or legacy Hotel Proposal) state object — the "load"
+        // half of the pattern above. Always routes through
+        // normalizeAccommodationProposalState() so every caller (a
+        // fresh v2 record, an old hotelName/images/... record, or
+        // undefined on a first-ever visit) is handled the same way.
+        function mountHotelProposal(rawState) {
+            const state = normalizeAccommodationProposalState(rawState);
 
-            hotelProposalImages = {
-                hero: (state.images && state.images.hero) || [],
-                exterior: (state.images && state.images.exterior) || [],
-                room: (state.images && state.images.room) || [],
-                interior: (state.images && state.images.interior) || [],
-                amenities: (state.images && state.images.amenities) || [],
+            document.getElementById('ap_property_name').value = state.propertyName || '';
+            document.getElementById('ap_currency').value = state.currency || 'USD';
+            document.getElementById('ap_expiration_date').value = state.expirationDate || '';
+            document.getElementById('ap_property_address').value = state.propertyAddress || '';
+            document.getElementById('ap_property_website').value = state.propertyWebsite || '';
+
+            document.getElementById('ap_checkin_date').value = state.checkInDate || '';
+            document.getElementById('ap_checkout_date').value = state.checkOutDate || '';
+            document.getElementById('ap_occupancy_adults').value = (state.occupancyAdults === 0 || state.occupancyAdults) ? state.occupancyAdults : 2;
+            document.getElementById('ap_room_allocation').value = (state.roomAllocation === 0 || state.roomAllocation) ? state.roomAllocation : 1;
+
+            const acc = state.accommodation || {};
+            document.getElementById('ap_room_category').value = acc.category || '';
+            document.getElementById('ap_room_feature').value = acc.feature || '';
+            document.getElementById('ap_room_size').value = acc.roomSize || '';
+            document.getElementById('ap_room_bedding').value = acc.beddingOptions || '';
+            document.getElementById('ap_room_view').value = acc.viewVibe || '';
+
+            const exp = state.experience || {};
+            document.getElementById('ap_tagline').value = exp.tagline || '';
+            document.getElementById('ap_exp_property_image').value = exp.propertyImageUrl || '';
+            document.getElementById('ap_exp_property_title').value = exp.propertyImageTitle || '';
+            document.getElementById('ap_exp_property_icon').value = exp.propertyIcon || '';
+            document.getElementById('ap_exp_property_caption_title').value = exp.propertyCaptionTitle || '';
+            document.getElementById('ap_exp_property_caption').value = exp.propertyCaption || '';
+            document.getElementById('ap_exp_room_image').value = exp.roomImageUrl || '';
+            document.getElementById('ap_exp_room_title').value = exp.roomImageTitle || '';
+            document.getElementById('ap_exp_room_icon').value = exp.roomIcon || '';
+            document.getElementById('ap_exp_room_caption_title').value = exp.roomCaptionTitle || '';
+            document.getElementById('ap_exp_room_caption').value = exp.roomCaption || '';
+            updateApExperiencePreview('property');
+            updateApExperiencePreview('room');
+
+            document.getElementById('ap_availability_note').value = state.availabilityNote || '';
+            document.getElementById('ap_consultant_name').value = state.consultantName || '';
+            document.getElementById('ap_consultant_phone').value = state.consultantPhone || '';
+            document.getElementById('ap_consultant_email').value = state.consultantEmail || '';
+
+            const featuresContainer = document.getElementById('apFeaturesContainer');
+            featuresContainer.innerHTML = '';
+            const featureList = (state.features && state.features.length) ? state.features : [{ label: '', description: '' }];
+            featureList.forEach(values => featuresContainer.appendChild(createFeatureCard(values)));
+
+            const rateContainer = document.getElementById('apRateOptionsContainer');
+            rateContainer.innerHTML = '';
+            (state.rateOptions || []).forEach(values => rateContainer.appendChild(createRateOptionCard(values)));
+            updateRateRemoveButtons();
+
+            const inclusionsContainer = document.getElementById('apInclusionsContainer');
+            inclusionsContainer.innerHTML = '';
+            const inclusionList = (state.inclusions && state.inclusions.length) ? state.inclusions : [''];
+            inclusionList.forEach(value => inclusionsContainer.appendChild(createSimpleTextRow(null, 'ap-inclusion-input', 'e.g. Daily breakfast buffet included', 'Inclusion', value)));
+
+            const exclusionsContainer = document.getElementById('apExclusionsContainer');
+            exclusionsContainer.innerHTML = '';
+            const exclusionList = (state.exclusions && state.exclusions.length) ? state.exclusions : [''];
+            exclusionList.forEach(value => exclusionsContainer.appendChild(createSimpleTextRow(null, 'ap-exclusion-input', 'e.g. Tourism Dirham fee payable at the hotel', 'Exclusion', value)));
+
+            updateApDuration();
+
+            apLegacyData = {
+                legacyImages: state.legacyImages,
+                legacyHotelDescription: state.legacyHotelDescription,
+                legacyRoomTypes: state.legacyRoomTypes,
+                legacyAmenities: state.legacyAmenities,
+                legacyLocationMap: state.legacyLocationMap,
             };
-            Object.keys(HOTEL_PROPOSAL_IMAGE_MAX).forEach(sectionKey => {
-                renderHotelProposalImageThumbs(sectionKey, HOTEL_PROPOSAL_IMAGE_MAX[sectionKey]);
-            });
-
-            const roomTypesContainer = document.getElementById('roomTypesContainer');
-            roomTypesContainer.innerHTML = '';
-            (state.roomTypes || []).forEach(values => roomTypesContainer.appendChild(createRoomTypeCard(values)));
-
-            const amenitiesContainer = document.getElementById('amenitiesContainer');
-            amenitiesContainer.innerHTML = '';
-            const amenityList = (state.amenities && state.amenities.length) ? state.amenities : [''];
-            amenityList.forEach(value => amenitiesContainer.appendChild(createAmenityRow(value)));
         }
 
         // Load whichever quotation type/data was last saved (per type,
@@ -3428,44 +3866,6 @@
             .it-day-heading { font-size: 18px; font-weight: 700; color: #4A1C40; margin: 0 0 3mm; }
             .it-day-text { font-size: 9.5px; font-weight: 400; margin: 0 0 3mm; }
             .it-divider { border: none; border-top: 1px solid #DDD3DA; margin: 6mm 0; }
-            /* Hotel Proposal — this is meant to read as a premium
-               brochure, so the hero image and gallery are deliberately
-               large now rather than squeezed to fit one page (a full
-               proposal with several photos genuinely will run to 2
-               pages, and that's the accepted trade — see the
-               pagebreak/break-inside rules below, which keep the
-               pagination from slicing an image or a table row in
-               half wherever it does need to break). Room type
-               descriptions are still left out of the table — that's
-               about the table format, unrelated to image sizing. */
-            .hp-section-heading { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 2mm 0 1mm; border-bottom: 1px solid #DDD3DA; padding-bottom: 1mm; }
-            .hp-hero-wrap { margin-bottom: 4mm; border-radius: 4px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
-            .hp-hero-wrap img { width: 100%; height: 70mm; object-fit: cover; object-position: center; display: block; }
-            .hp-hero-placeholder { width: 100%; height: 70mm; background: #F7F4FA; border: 1px dashed #DDD3DA; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #777; font-size: 9.5px; }
-            .hp-hotel-info h2 { font-size: 16px; font-weight: 700; color: #4A1C40; margin: 0 0 1.5mm; }
-            .hp-hotel-meta { font-size: 9px; margin: 0 0 0.75mm; }
-            .hp-description { font-size: 9px; margin: 2mm 0 0; }
-            /* One unified 2-col grid across all four categories (rather
-               than a row per category) — a small purple tag overlaid
-               on each photo names its category instead, closer to how
-               a real hotel brochure captions its gallery. */
-            .hp-gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-bottom: 4mm; }
-            .hp-gallery-item { position: relative; break-inside: avoid; page-break-inside: avoid; }
-            .hp-gallery-item img { width: 100%; height: 45mm; object-fit: cover; object-position: center; border-radius: 3px; border: 1px solid #DDD3DA; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); display: block; }
-            .hp-gallery-tag { position: absolute; bottom: 2mm; left: 2mm; background: rgba(74, 28, 64, 0.85); color: #FFFFFF; font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 1mm 2mm; border-radius: 2px; }
-            .hp-gallery-broken { width: 100%; height: 45mm; background: #F7F4FA; border: 1px dashed #DDD3DA; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #777; }
-            table.hp-room-table { width: 100%; border-collapse: collapse; }
-            table.hp-room-table tr { break-inside: avoid; page-break-inside: avoid; }
-            table.hp-room-table th, table.hp-room-table td { border: 1px solid #DDD3DA; padding: 1mm 2.5mm; text-align: left; font-size: 8.5px; }
-            table.hp-room-table th { background: #4A1C40; color: #FFFFFF; font-weight: 700; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.3px; }
-            .hp-amenities-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1mm 4mm; font-size: 9px; }
-            .hp-amenity-item { display: flex; align-items: flex-start; gap: 1.5mm; }
-            .hp-amenity-item::before { content: '✓'; color: #4A1C40; font-weight: 700; flex-shrink: 0; }
-            .hp-map-line { font-size: 9px; margin: 3mm 0; }
-            .hp-contact-box { background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; padding: 3mm; max-width: 90mm; margin-top: 3mm; break-inside: avoid; page-break-inside: avoid; }
-            .hp-contact-box h4 { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4A1C40; margin: 0 0 2mm; }
-            .hp-contact-line { display: flex; align-items: center; gap: 2mm; margin-bottom: 1.5mm; font-size: 9px; }
-            .hp-contact-line svg { width: 12px; height: 12px; color: #4A1C40; flex-shrink: 0; }
         `;
 
         // Button 1: "Generate Pricing Proposal" — never shows itemized
@@ -3577,132 +3977,344 @@
         }
 
         // ------------------------------------------------------------
-        // Hotel Proposal PDF — a standalone branded "hotel fact sheet"
-        // (no itinerary, no pricing). Built the same way as the two
-        // builders above (plain HTML string + DOCUMENT_STYLES,
-        // rendered via the shared exportPdf() further down).
+        // Accommodation Proposal & Rate Comparison PDF — navy/gold
+        // branded, explicit 2-page layout (see ACCOMMODATION_PROPOSAL_STYLES
+        // below): .acc-page-sheet is sized to one A4 page's usable
+        // height (293mm, just under the true 297mm — the same kind of
+        // safety buffer that fixed a real cut-off bug in the Voucher/
+        // Hotel Proposal builders) with its own footer pinned to the
+        // bottom via margin-top: auto, and the second sheet forces a
+        // page break before it (break-before: page) rather than
+        // relying on natural content flow — deliberate, since a
+        // reliable 2-page count is what lets the footer print an exact
+        // "Page 1 of 2" / "Page 2 of 2" instead of guessing. This is a
+        // dedicated style block/builder, not a branch inside
+        // DOCUMENT_STYLES/buildPricingProposalHTML's family — the older
+        // single-hero "hotel fact sheet" version this replaces relied
+        // on a large hero image + natural multi-page flow, which is a
+        // different enough shape that forcing it through this one
+        // would have meant a maze of conditionals in every helper below.
         // ------------------------------------------------------------
-        function hotelProposalHeroHTML(images) {
-            const url = images && images.hero && images.hero[0];
-            if (!url) {
-                return `<div class="hp-hero-wrap"><div class="hp-hero-placeholder">Hero image not provided</div></div>`;
+        const ACCOMMODATION_PROPOSAL_STYLES = `
+            @font-face {
+                font-family: 'Carlito';
+                src: url('assets/fonts/carlito-latin-400-normal.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
             }
-            return `<div class="hp-hero-wrap"><img src="${escapeHtml(url)}" alt="Hotel exterior" onerror="this.parentElement.innerHTML='&lt;div class=&quot;hp-hero-placeholder&quot;&gt;Photo could not be loaded&lt;/div&gt;'"></div>`;
+            @font-face {
+                font-family: 'Carlito';
+                src: url('assets/fonts/carlito-latin-700-normal.woff2') format('woff2');
+                font-weight: 700;
+                font-style: normal;
+                font-display: swap;
+            }
+            * { box-sizing: border-box; }
+            body {
+                margin: 0;
+                font-family: Calibri, Carlito, 'Segoe UI', Arial, sans-serif;
+                color: #374151;
+                background: #FFFDF6;
+                font-size: 9.5px;
+                font-weight: 400;
+                line-height: 1.55;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            /* Palette (Accommodation Proposal only — the Atlantis purple
+               used by every other document type is untouched):
+               navy #1D3B63 / navy-dark #18375D / gold #C69A2B /
+               gold-soft #E5D39A / yellow-bg #FFF9E8 / info-bg #EEF4F8 /
+               border #D7DDE4 / text #374151 / muted #6B7280 */
+            .doc-page.acc-page { width: 210mm; }
+            .acc-page-sheet { width: 210mm; min-height: 293mm; display: flex; flex-direction: column; background: #FFFDF6; }
+            .acc-page-sheet.acc-page-break { break-before: page; page-break-before: always; }
+
+            .acc-header { background: #1D3B63; padding: 8mm 15mm 6mm; border-bottom: 3px solid #C69A2B; text-align: center; }
+            .acc-header-title { color: #FFFFFF; font-size: 19px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 2mm; }
+            .acc-header-subtitle { color: #FFFFFF; font-size: 10px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; opacity: 0.92; }
+            .acc-header-tagline { color: #E5D39A; font-size: 8.5px; font-style: italic; margin-top: 1.5mm; }
+
+            .acc-body { padding: 6mm 15mm 4mm; flex: 1; }
+
+            .acc-expiration-notice { background: #FFF9E8; border-left: 3px solid #C69A2B; padding: 3mm 4mm; margin-bottom: 5mm; font-size: 9px; color: #374151; break-inside: avoid; page-break-inside: avoid; }
+            .acc-expiration-notice strong { color: #18375D; }
+
+            .acc-cards-row { display: flex; gap: 6mm; margin-bottom: 5mm; }
+            .acc-card { flex: 1; border-top: 2.5px solid #1D3B63; padding-top: 3mm; break-inside: avoid; page-break-inside: avoid; }
+            .acc-card-heading { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #1D3B63; margin: 0 0 1.5mm; padding-bottom: 1.5mm; border-bottom: 1.5px solid #C69A2B; }
+            .acc-card-row { display: flex; gap: 2mm; padding: 1mm 0; font-size: 9px; }
+            .acc-card-label { flex: 0 0 32mm; font-weight: 700; color: #1D3B63; }
+            .acc-card-value { flex: 1; color: #374151; }
+
+            .acc-section-heading { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #1D3B63; margin: 0 0 3mm; padding-bottom: 1.5mm; border-bottom: 2px solid #C69A2B; }
+
+            .acc-exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; margin-bottom: 5mm; }
+            .acc-exp-card { border: 1px solid #D7DDE4; border-radius: 3px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+            /* No real photo needed for this to look intentional — the
+               gradient IS the design when propertyImageUrl/roomImageUrl
+               is blank or fails to load (onerror just removes the
+               broken <img>, revealing the same gradient underneath), so
+               there's no separate dashed-border "placeholder" box to
+               maintain here the way other builders' galleries need one. */
+            .acc-exp-image { position: relative; height: 36mm; overflow: hidden; background: linear-gradient(135deg, #18375D, #2E5590); }
+            .acc-exp-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+            .acc-exp-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2mm; text-align: center; background: rgba(0, 0, 0, 0.18); padding: 3mm; }
+            .acc-exp-icon { font-size: 20px; line-height: 1; }
+            .acc-exp-overlay-title { color: #FFFFFF; font-weight: 700; font-size: 10.5px; letter-spacing: 0.75px; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); }
+            .acc-exp-caption { background: #FFFFFF; padding: 3mm; }
+            .acc-exp-caption-title { font-weight: 700; color: #1D3B63; font-size: 9.5px; margin-bottom: 1mm; text-align: center; }
+            .acc-exp-caption-body { font-size: 8.5px; color: #6B7280; text-align: center; line-height: 1.5; }
+
+            .acc-feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 6mm; margin-bottom: 2mm; }
+            .acc-feature-item { display: flex; align-items: flex-start; gap: 2mm; font-size: 9px; padding: 1mm 0; }
+            .acc-feature-check { color: #C69A2B; font-weight: 700; flex-shrink: 0; }
+            .acc-feature-text strong { color: #1D3B63; }
+
+            .acc-rate-heading { margin-top: 2mm; }
+            .acc-rate-intro { font-size: 9px; color: #374151; margin: 0 0 3mm; }
+            .acc-rate-intro strong { color: #1D3B63; }
+
+            table.acc-rate-table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
+            table.acc-rate-table tr { break-inside: avoid; page-break-inside: avoid; }
+            table.acc-rate-table th { background: #1D3B63; color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.3px; font-size: 8.5px; font-weight: 700; text-align: left; padding: 2.5mm 3mm; border: 1px solid #1D3B63; }
+            table.acc-rate-table td { border: 1px solid #D7DDE4; padding: 3mm; font-size: 9px; vertical-align: top; color: #374151; }
+            .acc-rate-name { font-weight: 700; color: #1D3B63; }
+            .acc-rate-total { text-align: right; font-weight: 700; color: #1D3B63; white-space: nowrap; }
+            .acc-popular-badge { display: inline-block; margin-top: 1mm; background: #C69A2B; color: #FFFFFF; font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 0.75mm 2mm; border-radius: 2px; }
+
+            .acc-inclusions-box { background: #EEF4F8; border: 1px solid #D7DDE4; border-radius: 3px; padding: 3.5mm 4mm; break-inside: avoid; page-break-inside: avoid; }
+            .acc-inclusions-heading { font-weight: 700; color: #1D3B63; font-size: 9.5px; margin-bottom: 1.5mm; }
+            .acc-inclusions-list { margin: 0; padding-left: 4mm; font-size: 8.5px; color: #374151; }
+            .acc-inclusions-list li { margin-bottom: 1mm; }
+            .acc-inclusions-list strong { color: #1D3B63; }
+
+            .acc-availability-line { text-align: center; font-size: 8px; color: #6B7280; margin-top: 4mm; padding-top: 3mm; border-top: 1px solid #D7DDE4; }
+
+            .acc-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding: 3mm 15mm; border-top: 1px solid #D7DDE4; font-size: 7.5px; color: #6B7280; }
+        `;
+
+        function accRow(label, rawValue) {
+            return `<div class="acc-card-row"><span class="acc-card-label">${escapeHtml(label)}:</span><span class="acc-card-value">${escapeHtml(String(rawValue))}</span></div>`;
         }
 
-        // One unified 2-col grid item per photo, tagged with its
-        // category (Exterior/Room/Interior/Amenities) via a small
-        // overlay badge — see .hp-gallery-item/.hp-gallery-tag in
-        // DOCUMENT_STYLES. A broken/unreachable URL swaps the whole
-        // cell for a same-sized placeholder box instead of leaving a
-        // broken-image icon or collapsing the grid.
-        function hotelProposalGalleryItemHTML(label, url, index) {
+        function buildAccommodationHeader(data) {
+            const tagline = data.experience && data.experience.tagline;
             return `
-                <div class="hp-gallery-item">
-                    <img src="${escapeHtml(url)}" alt="${escapeHtml(label)} photo ${index + 1}" onerror="this.parentElement.innerHTML='&lt;div class=&quot;hp-gallery-broken&quot;&gt;Photo unavailable&lt;/div&gt;'">
-                    <span class="hp-gallery-tag">${escapeHtml(label)}</span>
+                <div class="acc-header">
+                    <h1 class="acc-header-title">${escapeHtml(data.propertyName || 'Property Name Not Set')}</h1>
+                    <div class="acc-header-subtitle">Accommodation Proposal &amp; Rate Comparison</div>
+                    ${tagline ? `<div class="acc-header-tagline">${escapeHtml(tagline)}</div>` : ''}
                 </div>
             `;
         }
 
-        // Zero images anywhere → the whole gallery (including its
-        // heading) is omitted, same "don't show an empty section"
-        // rule the Voucher's gallery already follows.
-        function hotelProposalGalleryHTML(images) {
-            if (!images) return '';
-            const groups = [
-                ['Exterior', images.exterior],
-                ['Room', images.room],
-                ['Interior', images.interior],
-                ['Amenities', images.amenities],
-            ];
-            const items = [];
-            groups.forEach(([label, urls]) => {
-                (urls || []).forEach((url, i) => items.push(hotelProposalGalleryItemHTML(label, url, i)));
-            });
-            if (!items.length) return '';
-            // Deliberately NOT wrapped with break-inside: avoid the way
-            // the Voucher's (much smaller, max-9-photo) gallery is — a
-            // maxed-out proposal gallery (up to 13 photos) can genuinely
-            // run taller than a single page, so forcing the whole grid
-            // to stay unbroken would just reintroduce the cut-off bug
-            // this file's pagebreak config exists to prevent.
-            return `<div class="hp-section-heading">Photo Gallery</div><div class="hp-gallery-grid">${items.join('')}</div>`;
+        // Omitted entirely (not shown with placeholder text) when
+        // there's no expiration date — a proposal should never claim
+        // "valid until undefined" or "valid until —".
+        function buildExpirationNotice(data) {
+            const formatted = formatExpirationDate(data.expirationDate);
+            if (!formatted) return '';
+            return `
+                <div class="acc-expiration-notice">
+                    <strong>Option Expiration Notice:</strong> This proposal and special offer rate are valid until <strong>${escapeHtml(formatted)}</strong>.
+                </div>
+            `;
         }
 
-        // Room descriptions are deliberately left out of this table —
-        // see the comment on .hp-section-heading in DOCUMENT_STYLES.
-        function hotelProposalRoomTypesHTML(roomTypes) {
-            const rows = (roomTypes || []).filter(rt => rt.name || rt.size || rt.occupancy || rt.amenities);
+        function buildStayAndAccommodationCards(data) {
+            const nights = Number(data.durationNights) || 0;
+            const checkIn = formatAccommodationDate(data.checkInDate);
+            const checkOut = formatAccommodationDate(data.checkOutDate);
+            const adults = Number(data.occupancyAdults) || 0;
+            const rooms = Number(data.roomAllocation) || 0;
+            const roomLabel = data.roomLabel || 'Rooms';
+            const acc = data.accommodation || {};
+
+            const stayCard = `
+                <div class="acc-card">
+                    <h3 class="acc-card-heading">Stay Details</h3>
+                    ${accRow('Property', data.propertyName || '—')}
+                    ${accRow('Check-in', checkIn || '—')}
+                    ${accRow('Check-out', checkOut || '—')}
+                    ${accRow('Duration', nights > 0 ? `${nights} Night${nights === 1 ? '' : 's'}` : '—')}
+                    ${accRow('Occupancy', adults > 0 ? `${adults} Adult${adults === 1 ? '' : 's'}` : '—')}
+                    ${accRow('Room Allocation', rooms > 0 ? `${rooms} ${roomLabel}` : '—')}
+                </div>
+            `;
+            const roomCard = `
+                <div class="acc-card">
+                    <h3 class="acc-card-heading">Room Accommodation</h3>
+                    ${accRow('Category', acc.category || '—')}
+                    ${accRow('Feature', acc.feature || '—')}
+                    ${accRow('Room Size', acc.roomSize || '—')}
+                    ${accRow('Bedding Options', acc.beddingOptions || '—')}
+                    ${accRow('View / Vibe', acc.viewVibe || '—')}
+                </div>
+            `;
+            return `<div class="acc-cards-row">${stayCard}${roomCard}</div>`;
+        }
+
+        // A broken/unreachable or blank image URL both resolve to the
+        // same navy gradient backdrop (onerror just removes the <img>,
+        // revealing it) — see the comment on .acc-exp-image above for
+        // why that's a real placeholder, not a missing one.
+        function accExperienceCardHTML(img) {
+            const hasImage = !!(img.url && img.url.trim());
+            const imageTag = hasImage
+                ? `<img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.overlayTitle || 'Experience photo')}" onerror="this.remove()">`
+                : '';
+            return `
+                <div class="acc-exp-card">
+                    <div class="acc-exp-image">
+                        ${imageTag}
+                        <div class="acc-exp-overlay">
+                            ${img.icon ? `<div class="acc-exp-icon">${escapeHtml(img.icon)}</div>` : ''}
+                            ${img.overlayTitle ? `<div class="acc-exp-overlay-title">${escapeHtml(img.overlayTitle)}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="acc-exp-caption">
+                        <div class="acc-exp-caption-title">${escapeHtml(img.captionTitle || '')}</div>
+                        <div class="acc-exp-caption-body">${img.caption ? nl2br(img.caption) : ''}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Always renders both cards (unlike the old gallery, which hid
+        // itself entirely with zero photos) — the gradient-plus-title
+        // placeholder is meant to be shown, not treated as an empty
+        // state, per the reference design.
+        function buildExperienceCards(data) {
+            const exp = data.experience || {};
+            const propertyCard = accExperienceCardHTML({
+                url: exp.propertyImageUrl,
+                overlayTitle: exp.propertyImageTitle,
+                captionTitle: exp.propertyCaptionTitle,
+                caption: exp.propertyCaption,
+                icon: exp.propertyIcon,
+            });
+            const roomCard = accExperienceCardHTML({
+                url: exp.roomImageUrl,
+                overlayTitle: exp.roomImageTitle,
+                captionTitle: exp.roomCaptionTitle,
+                caption: exp.roomCaption,
+                icon: exp.roomIcon,
+            });
+            return `
+                <div class="acc-section-heading">Property &amp; Guest Room Experience</div>
+                <div class="acc-exp-grid">${propertyCard}${roomCard}</div>
+            `;
+        }
+
+        function buildFeatureGrid(features) {
+            const rows = (features || []).filter(f => f && (f.label || f.description));
             if (!rows.length) return '';
-            const rowsHTML = rows.map(rt => `
-                <tr>
-                    <td>${escapeHtml(rt.name || '—')}</td>
-                    <td>${escapeHtml(rt.size || '—')}</td>
-                    <td>${escapeHtml(rt.occupancy || '—')}</td>
-                    <td>${escapeHtml(rt.amenities || '—')}</td>
-                </tr>
+            const items = rows.map(f => `
+                <div class="acc-feature-item">
+                    <span class="acc-feature-check">✓</span>
+                    <span class="acc-feature-text">${f.label ? `<strong>${escapeHtml(f.label)}:</strong> ` : ''}${escapeHtml(f.description || '')}</span>
+                </div>
             `).join('');
             return `
-                <div class="hp-section-heading">Room Types</div>
-                <table class="hp-room-table">
-                    <tr><th>Room Type</th><th>Size</th><th>Occupancy</th><th>Amenities</th></tr>
+                <div class="acc-section-heading">Room Features &amp; Amenities</div>
+                <div class="acc-feature-grid">${items}</div>
+            `;
+        }
+
+        // Intro paragraph + table only — the "Rate Comparison
+        // Presentation" section heading itself stays on page 1 (see
+        // buildAccommodationProposalHTML) so the reference's exact
+        // page split (heading at the bottom of page 1, table starting
+        // fresh on page 2) is reproduced rather than approximated.
+        function buildRateComparisonSection(data) {
+            const nights = Number(data.durationNights) || 0;
+            const rooms = Number(data.roomAllocation) || 0;
+            const roomLabel = data.roomLabel || 'Rooms';
+            const options = (data.rateOptions || []).filter(o => o && o.name);
+            const rowsHTML = options.map(o => {
+                const total = calculateRateTotal(o, data);
+                return `
+                    <tr>
+                        <td>
+                            <div class="acc-rate-name">${escapeHtml(o.name)}${o.shortCode ? ` (${escapeHtml(o.shortCode)})` : ''}</div>
+                            ${o.popular ? '<span class="acc-popular-badge">Popular</span>' : ''}
+                        </td>
+                        <td>${o.description ? nl2br(o.description) : '—'}</td>
+                        <td class="acc-rate-total">${escapeHtml(formatAccommodationCurrency(total, data.currency))}</td>
+                    </tr>
+                `;
+            }).join('');
+            const roomLabelUpper = escapeHtml((roomLabel || 'Rooms').toUpperCase());
+
+            return `
+                <p class="acc-rate-intro">The rates below present the <strong>Total Stay Cost</strong> for <strong>${rooms} ${escapeHtml(roomLabel)}</strong> across all <strong>${nights} Night${nights === 1 ? '' : 's'}</strong> directly from the hotel:</p>
+                <table class="acc-rate-table">
+                    <tr>
+                        <th>Meal Plan Option</th>
+                        <th>Included Services</th>
+                        <th>Total Stay Cost (${rooms} ${roomLabelUpper} / ${nights} NIGHT${nights === 1 ? '' : 'S'})</th>
+                    </tr>
                     ${rowsHTML}
                 </table>
             `;
         }
 
-        function hotelProposalAmenitiesHTML(amenities) {
-            if (!amenities || !amenities.length) return '';
-            const items = amenities.map(a => `<div class="hp-amenity-item">${escapeHtml(a)}</div>`).join('');
-            return `<div class="hp-section-heading">Hotel Amenities</div><div class="hp-amenities-grid">${items}</div>`;
-        }
-
-        // Rendered as a plain text line, not an embedded map: html2pdf
-        // rasterizes the page via html2canvas, which cannot capture an
-        // iframe's (e.g. Google Maps embed) content — it would only
-        // ever produce a blank box in the exported PDF. Printing the
-        // URL is the honest option; the human reader can still open it.
-        function hotelProposalMapHTML(url) {
-            if (!url) return '';
-            return `<div class="hp-map-line"><strong>Location:</strong> ${escapeHtml(url)}</div>`;
-        }
-
-        function buildHotelProposalHTML(data) {
-            const body = `
-                <div class="doc-page">
-                    <div class="doc-header">
-                        <img class="doc-header-logo" src="${BRAND_HEADER_IMAGE}" alt="Atlantis Holidays & Wellness">
-                        <div class="p-title">HOTEL PROPOSAL</div>
-                    </div>
-
-                    ${hotelProposalHeroHTML(data.images)}
-
-                    <div class="hp-hotel-info">
-                        <h2>${escapeHtml(data.hotelName || 'Hotel Name')}</h2>
-                        ${data.hotelAddress ? `<p class="hp-hotel-meta">${escapeHtml(data.hotelAddress)}</p>` : ''}
-                        ${data.hotelWebsite ? `<p class="hp-hotel-meta">${escapeHtml(data.hotelWebsite)}</p>` : ''}
-                        ${data.hotelDescription ? `<p class="hp-description">${nl2br(escapeHtml(data.hotelDescription))}</p>` : ''}
-                    </div>
-
-                    ${hotelProposalGalleryHTML(data.images)}
-                    ${hotelProposalRoomTypesHTML(data.roomTypes)}
-                    ${hotelProposalAmenitiesHTML(data.amenities)}
-                    ${hotelProposalMapHTML(data.locationMap)}
-
-                    <div class="hp-contact-box">
-                        <h4>For More Information, Please Contact</h4>
-                        <div style="font-weight:600;margin-bottom:2mm;">${escapeHtml(data.consultantName)}</div>
-                        <div class="hp-contact-line">${VOUCHER_ICONS.phone}<span>${escapeHtml(data.consultantPhone)}</span></div>
-                        <div class="hp-contact-line">${VOUCHER_ICONS.mail}<span>${escapeHtml(data.consultantEmail)}</span></div>
-                    </div>
-
-                    <div class="doc-footer">
-                        <img class="doc-footer-logo" src="${BRAND_FOOTER_IMAGE}" alt="Serandipians Member Travel Designer — Atlantis Holidays contact details">
-                    </div>
+        function buildInclusionsAndTaxBreakdown(data) {
+            const inclusions = (data.inclusions || []).filter(Boolean);
+            const exclusions = (data.exclusions || []).filter(Boolean);
+            if (!inclusions.length && !exclusions.length) return '';
+            const inclusionItems = inclusions.map(i => `<li>${escapeHtml(i)}</li>`).join('');
+            const exclusionItems = exclusions.map(e => `<li><strong>Exclusion:</strong> ${escapeHtml(e)}</li>`).join('');
+            return `
+                <div class="acc-inclusions-box">
+                    <div class="acc-inclusions-heading">Inclusions &amp; Tax Breakdown:</div>
+                    <ul class="acc-inclusions-list">${inclusionItems}${exclusionItems}</ul>
                 </div>
             `;
-            return { styles: DOCUMENT_STYLES, body };
+        }
+
+        function buildAvailabilityLine(data) {
+            const note = data.availabilityNote || 'Subject to availability upon confirmation';
+            return `<div class="acc-availability-line">Prepared for Guest Review • ${escapeHtml(data.propertyName || 'Property')} • ${escapeHtml(note)}</div>`;
+        }
+
+        function buildAccommodationFooter(data, pageNum, totalPages) {
+            return `
+                <div class="acc-footer">
+                    <span>${escapeHtml(data.propertyName || 'Property')} — Proposal &amp; Rate Comparison</span>
+                    <span>Page ${pageNum} of ${totalPages}</span>
+                </div>
+            `;
+        }
+
+        function buildAccommodationProposalHTML(data) {
+            const page1 = `
+                <div class="acc-page-sheet">
+                    ${buildAccommodationHeader(data)}
+                    <div class="acc-body">
+                        ${buildExpirationNotice(data)}
+                        ${buildStayAndAccommodationCards(data)}
+                        ${buildExperienceCards(data)}
+                        ${buildFeatureGrid(data.features)}
+                        <div class="acc-section-heading acc-rate-heading">Rate Comparison Presentation</div>
+                    </div>
+                    ${buildAccommodationFooter(data, 1, 2)}
+                </div>
+            `;
+            const page2 = `
+                <div class="acc-page-sheet acc-page-break">
+                    <div class="acc-body">
+                        ${buildRateComparisonSection(data)}
+                        ${buildInclusionsAndTaxBreakdown(data)}
+                        ${buildAvailabilityLine(data)}
+                    </div>
+                    ${buildAccommodationFooter(data, 2, 2)}
+                </div>
+            `;
+            const body = `<div class="doc-page acc-page">${page1}${page2}</div>`;
+            return { styles: ACCOMMODATION_PROPOSAL_STYLES, body };
         }
 
         // ------------------------------------------------------------
@@ -3757,7 +4369,7 @@
                     await document.fonts.ready;
                 }
 
-                const nameSource = data.eventName || data.hotelName || 'Document';
+                const nameSource = data.eventName || data.propertyName || data.hotelName || 'Document';
                 const filename = `${filenamePrefix}_${nameSource.replace(/[^a-z0-9]/gi, '_')}.pdf`;
                 await window.html2pdf()
                     .from(container.querySelector('.doc-page'))
@@ -3807,32 +4419,23 @@
         const hotelProposalPdfLabel = document.getElementById('hotelProposalPdfLabel');
         hotelProposalPdfBtn.addEventListener('click', () => {
             const data = serializeHotelProposal();
-            exportPdf(hotelProposalPdfBtn, hotelProposalPdfLabel, 'Generate Hotel Proposal', buildHotelProposalHTML, 'Hotel_Proposal', data, hotelProposalFormStatus, {
-                // mode:'css' alone was measurably not enough — a real
-                // generated PDF with a full 2-col gallery showed a
-                // gallery photo sliced right across the page 1/2
-                // boundary despite its break-inside: avoid rule.
-                // 'avoid-all' makes html2pdf avoid breaking inside any
-                // block-level element as a blanket rule (catching cases
-                // its CSS-rule scan misses); 'legacy' keeps the classic
-                // .html2pdf__page-break fallback available. Together
-                // with the CSS rules on .hp-hero-wrap/.hp-gallery-item/
-                // table rows/.hp-contact-box (DOCUMENT_STYLES), this
-                // reliably keeps a page break from landing in the
-                // middle of an image or a table row (verified via an
-                // actual generated PDF with a maxed-out 13-photo
-                // gallery + long description).
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-                // .doc-page's own CSS padding (shared with the other
-                // two document types) only wraps the very top/bottom of
-                // the whole rendered content once, not every resulting
-                // PDF page — fine for a guaranteed single page, not
-                // enough for a proposal that runs past one. A explicit
-                // top/bottom page margin here is what actually repeats
-                // on page 2+ (left/right stay 0 since .doc-page's own
-                // horizontal padding already runs the full height
-                // uniformly, so it doesn't have this problem).
-                margin: [8, 0, 8, 0],
+            exportPdf(hotelProposalPdfBtn, hotelProposalPdfLabel, 'Generate Accommodation Proposal', buildAccommodationProposalHTML, 'Accommodation_Proposal', data, hotelProposalFormStatus, {
+                // Unlike the other document types, this one does NOT
+                // rely on html2pdf's own top/bottom margin to repeat
+                // spacing on page 2+ — margin stays at exportPdf()'s
+                // default 0. Each .acc-page-sheet already bakes its own
+                // header/body/footer spacing into exactly one page's
+                // worth of height (293mm, just under the true 297mm),
+                // and .acc-page-break's break-before: page forces the
+                // 2nd sheet onto a fresh physical page — adding an
+                // html2pdf margin on top of that precise sizing would
+                // push page 1 past 297mm and silently turn this into 3
+                // physical pages behind the hard-coded "Page 1 of 2"/
+                // "Page 2 of 2" footer text. mode:'css' is what makes
+                // html2pdf honor that break-before as well as the
+                // break-inside: avoid rules on the cards/table rows/
+                // inclusions box (ACCOMMODATION_PROPOSAL_STYLES).
+                pagebreak: { mode: ['css'] },
             });
         });
 
@@ -4429,9 +5032,7 @@
                avoid keeps a page break from landing in the middle of
                a photo. At most 9 photos (3 categories x 3), so even
                grouped with its heading as one unbreakable block this
-               never risks being taller than a full page (unlike Hotel
-               Proposal's up-to-13-photo gallery, deliberately left
-               breakable — see the comment on hotelProposalGalleryHTML). */
+               never risks being taller than a full page. */
             .v-gallery-section { break-inside: avoid; page-break-inside: avoid; }
             .v-gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-bottom: 4mm; }
             .v-gallery-item { position: relative; break-inside: avoid; page-break-inside: avoid; }
@@ -4464,11 +5065,10 @@
         }
 
         // One grid item per photo, tagged with its category (Exterior/
-        // Room/Interior) via a small overlay badge — same pattern as
-        // the Hotel Proposal's .hp-gallery-item/.hp-gallery-tag. A
-        // broken/unreachable URL (or one html2canvas can't rasterize
-        // due to missing CORS headers) becomes a placeholder box
-        // instead of a broken-image icon in the exported PDF.
+        // Room/Interior) via a small overlay badge. A broken/
+        // unreachable URL (or one html2canvas can't rasterize due to
+        // missing CORS headers) becomes a placeholder box instead of a
+        // broken-image icon in the exported PDF.
         function voucherGalleryItemHTML(label, url, index) {
             return `
                 <div class="v-gallery-item">
