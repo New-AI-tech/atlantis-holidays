@@ -4154,13 +4154,15 @@
         // to match), but still an explicit 2-page layout: .acc-page-sheet
         // is sized to one A4 page's usable height (293mm, just under
         // the true 297mm — the same kind of safety buffer that fixed a
-        // real cut-off bug in the Voucher/Hotel Proposal builders) with
-        // its own footer pinned to the bottom via margin-top: auto, and
-        // the second sheet forces a page break before it (break-before:
-        // page) rather than relying on natural content flow — deliberate,
-        // since a reliable 2-page count is what lets the footer print an
-        // exact "Page 1 of 2" / "Page 2 of 2" instead of guessing. This
-        // is a dedicated style block/builder, not a branch inside
+        // real cut-off bug in the Voucher/Hotel Proposal builders). The
+        // branded footer (BRAND_FOOTER_IMAGE) only ever appears on page
+        // 2's sheet — pinned to its bottom via margin-top: auto, not
+        // repeated on page 1 — and the second sheet forces a page break
+        // before it (break-before: page) rather than relying on natural
+        // content flow — deliberate, since a reliable 2-page count is
+        // what lets that footer's page-number text print an exact
+        // "Page 2 of 2" instead of guessing. This is a dedicated style
+        // block/builder, not a branch inside
         // DOCUMENT_STYLES/buildPricingProposalHTML's family — the older
         // single-hero "hotel fact sheet" version this replaces relied
         // on a large hero image + natural multi-page flow, which is a
@@ -4200,13 +4202,23 @@
                this used to be its own navy/gold theme; rebranded to match. */
             .doc-page.acc-page { width: 210mm; }
             /* Each sheet is sized to comfortably hold one physical A4
-               page (297mm) including its own header/footer, well under
-               that ceiling so the flex layout below never causes real
-               overflow on its own — see the comment on
-               buildAccommodationProposalHTML() for why this is an
-               explicit 2-sheet layout rather than natural page flow. */
+               page (297mm) including its own header (page 1 only) or
+               footer (page 2 only — see buildAccommodationProposalHTML()),
+               well under that ceiling so the flex layout below never
+               causes real overflow on its own. Explicit 2-sheet layout
+               rather than natural page flow, so a reliable page count
+               is what lets the footer only ever need to appear once. */
             .acc-page-sheet { width: 210mm; min-height: 293mm; padding: 18mm 16mm; display: flex; flex-direction: column; background: #FFFFFF; }
             .acc-page-sheet.acc-page-break { break-before: page; page-break-before: always; }
+
+            /* .doc-header/.doc-header-logo — same rule as DOCUMENT_STYLES'
+               copy. This block never actually had its own copy of these
+               two (buildAccommodationHeader() used the class names, but
+               nothing here styled them), so the logo was rendering at
+               its native pixel size, left-aligned — not the centered
+               brand header every other document type has. */
+            .doc-header { text-align: center; margin-bottom: 6mm; }
+            .doc-header-logo { max-width: 200px; width: 100%; height: auto; display: inline-block; margin-bottom: 10px; }
 
             .acc-title-bar { margin-top: 2mm; border-top: 1.5px solid #4A1C40; border-bottom: 1.5px solid #4A1C40; padding: 3mm 0; text-align: center; }
             .acc-property-name { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #4A1C40; text-transform: uppercase; }
@@ -4483,6 +4495,12 @@
         }
 
         function buildAccommodationProposalHTML(data) {
+            // The branded footer (BRAND_FOOTER_IMAGE + page number) is
+            // deliberately only on page 2 — this document is always
+            // exactly 2 sheets by construction, so "last page" is
+            // always page 2; page 1 ends with whatever blank space is
+            // left after its content, same as before this footer
+            // existed at all.
             const page1 = `
                 <div class="acc-page-sheet">
                     ${buildAccommodationHeader(data)}
@@ -4493,7 +4511,6 @@
                         ${buildFeatureGrid(data.features)}
                         <div class="acc-section-heading acc-rate-heading">Rate Comparison Presentation</div>
                     </div>
-                    ${buildAccommodationFooter(data, 1, 2)}
                 </div>
             `;
             const page2 = `
