@@ -4147,18 +4147,20 @@
         }
 
         // ------------------------------------------------------------
-        // Accommodation Proposal & Rate Comparison PDF — navy/gold
-        // branded, explicit 2-page layout (see ACCOMMODATION_PROPOSAL_STYLES
-        // below): .acc-page-sheet is sized to one A4 page's usable
-        // height (293mm, just under the true 297mm — the same kind of
-        // safety buffer that fixed a real cut-off bug in the Voucher/
-        // Hotel Proposal builders) with its own footer pinned to the
-        // bottom via margin-top: auto, and the second sheet forces a
-        // page break before it (break-before: page) rather than
-        // relying on natural content flow — deliberate, since a
-        // reliable 2-page count is what lets the footer print an exact
-        // "Page 1 of 2" / "Page 2 of 2" instead of guessing. This is a
-        // dedicated style block/builder, not a branch inside
+        // Accommodation Proposal & Rate Comparison PDF — same brand
+        // palette/header/footer as every other document type (see
+        // ACCOMMODATION_PROPOSAL_STYLES below; originally shipped with
+        // its own navy/gold theme and solid-color header bar, rebranded
+        // to match), but still an explicit 2-page layout: .acc-page-sheet
+        // is sized to one A4 page's usable height (293mm, just under
+        // the true 297mm — the same kind of safety buffer that fixed a
+        // real cut-off bug in the Voucher/Hotel Proposal builders) with
+        // its own footer pinned to the bottom via margin-top: auto, and
+        // the second sheet forces a page break before it (break-before:
+        // page) rather than relying on natural content flow — deliberate,
+        // since a reliable 2-page count is what lets the footer print an
+        // exact "Page 1 of 2" / "Page 2 of 2" instead of guessing. This
+        // is a dedicated style block/builder, not a branch inside
         // DOCUMENT_STYLES/buildPricingProposalHTML's family — the older
         // single-hero "hotel fact sheet" version this replaces relied
         // on a large hero image + natural multi-page flow, which is a
@@ -4184,98 +4186,114 @@
             body {
                 margin: 0;
                 font-family: Calibri, Carlito, 'Segoe UI', Arial, sans-serif;
-                color: #374151;
-                background: #FFFDF6;
+                color: #1A1A1A;
+                background: #FFFFFF;
                 font-size: 9.5px;
                 font-weight: 400;
                 line-height: 1.55;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            /* Palette (Accommodation Proposal only — the Atlantis purple
-               used by every other document type is untouched):
-               navy #1D3B63 / navy-dark #18375D / gold #C69A2B /
-               gold-soft #E5D39A / yellow-bg #FFF9E8 / info-bg #EEF4F8 /
-               border #D7DDE4 / text #374151 / muted #6B7280 */
+            /* Same brand palette as every other document type (DOCUMENT_STYLES/
+               VOUCHER_STYLES) — #4A1C40 purple, #1A1A1A body text, #FFFFFF
+               background, #F7F4FA soft tint, #DDD3DA border, #777 muted —
+               this used to be its own navy/gold theme; rebranded to match. */
             .doc-page.acc-page { width: 210mm; }
-            .acc-page-sheet { width: 210mm; min-height: 293mm; display: flex; flex-direction: column; background: #FFFDF6; }
+            /* Each sheet is sized to comfortably hold one physical A4
+               page (297mm) including its own header/footer, well under
+               that ceiling so the flex layout below never causes real
+               overflow on its own — see the comment on
+               buildAccommodationProposalHTML() for why this is an
+               explicit 2-sheet layout rather than natural page flow. */
+            .acc-page-sheet { width: 210mm; min-height: 293mm; padding: 18mm 16mm; display: flex; flex-direction: column; background: #FFFFFF; }
             .acc-page-sheet.acc-page-break { break-before: page; page-break-before: always; }
 
-            .acc-header { background: #1D3B63; padding: 8mm 15mm 6mm; border-bottom: 3px solid #C69A2B; text-align: center; }
-            .acc-header-title { color: #FFFFFF; font-size: 19px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 2mm; }
-            .acc-header-subtitle { color: #FFFFFF; font-size: 10px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; opacity: 0.92; }
-            .acc-header-tagline { color: #E5D39A; font-size: 8.5px; font-style: italic; margin-top: 1.5mm; }
+            .acc-title-bar { margin-top: 2mm; border-top: 1.5px solid #4A1C40; border-bottom: 1.5px solid #4A1C40; padding: 3mm 0; text-align: center; }
+            .acc-property-name { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #4A1C40; text-transform: uppercase; }
+            .acc-header-subtitle { font-size: 9.5px; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; color: #777; margin-top: 1.5mm; }
+            .acc-header-tagline { color: #777; font-size: 8.5px; font-style: italic; margin-top: 1.5mm; }
 
-            .acc-body { padding: 6mm 15mm 4mm; flex: 1; }
+            .acc-body { flex: 1; }
 
-            .acc-expiration-notice { background: #FFF9E8; border-left: 3px solid #C69A2B; padding: 3mm 4mm; margin-bottom: 5mm; font-size: 9px; color: #374151; break-inside: avoid; page-break-inside: avoid; }
-            .acc-expiration-notice strong { color: #18375D; }
+            .acc-expiration-notice { background: #F7F4FA; border-left: 3px solid #4A1C40; padding: 3mm 4mm; margin-bottom: 5mm; font-size: 9px; color: #1A1A1A; break-inside: avoid; page-break-inside: avoid; }
+            .acc-expiration-notice strong { color: #4A1C40; }
 
             .acc-cards-row { display: flex; gap: 6mm; margin-bottom: 5mm; }
-            .acc-card { flex: 1; border-top: 2.5px solid #1D3B63; padding-top: 3mm; break-inside: avoid; page-break-inside: avoid; }
-            .acc-card-heading { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #1D3B63; margin: 0 0 1.5mm; padding-bottom: 1.5mm; border-bottom: 1.5px solid #C69A2B; }
+            .acc-card { flex: 1; border-top: 2.5px solid #4A1C40; padding-top: 3mm; break-inside: avoid; page-break-inside: avoid; }
+            .acc-card-heading { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 0 0 1.5mm; padding-bottom: 1.5mm; border-bottom: 1.5px solid #DDD3DA; }
             .acc-card-row { display: flex; gap: 2mm; padding: 1mm 0; font-size: 9px; }
-            .acc-card-label { flex: 0 0 32mm; font-weight: 700; color: #1D3B63; }
-            .acc-card-value { flex: 1; color: #374151; }
+            .acc-card-label { flex: 0 0 32mm; font-weight: 700; color: #4A1C40; }
+            .acc-card-value { flex: 1; color: #1A1A1A; }
 
-            .acc-section-heading { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #1D3B63; margin: 0 0 3mm; padding-bottom: 1.5mm; border-bottom: 2px solid #C69A2B; }
+            .acc-section-heading { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4A1C40; margin: 0 0 3mm; padding-bottom: 1.5mm; border-bottom: 2px solid #4A1C40; }
 
             .acc-exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; margin-bottom: 5mm; }
-            .acc-exp-card { border: 1px solid #D7DDE4; border-radius: 3px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+            .acc-exp-card { border: 1px solid #DDD3DA; border-radius: 3px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
             /* No real photo needed for this to look intentional — the
                gradient IS the design when propertyImageUrl/roomImageUrl
                is blank or fails to load (onerror just removes the
                broken <img>, revealing the same gradient underneath), so
                there's no separate dashed-border "placeholder" box to
                maintain here the way other builders' galleries need one. */
-            .acc-exp-image { position: relative; height: 36mm; overflow: hidden; background: linear-gradient(135deg, #18375D, #2E5590); }
+            .acc-exp-image { position: relative; height: 36mm; overflow: hidden; background: linear-gradient(135deg, #2E0F28, #4A1C40); }
             .acc-exp-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
-            .acc-exp-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2mm; text-align: center; background: rgba(0, 0, 0, 0.18); padding: 3mm; }
+            .acc-exp-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2mm; text-align: center; background: rgba(74, 28, 64, 0.28); padding: 3mm; }
             .acc-exp-icon { font-size: 20px; line-height: 1; }
             .acc-exp-overlay-title { color: #FFFFFF; font-weight: 700; font-size: 10.5px; letter-spacing: 0.75px; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); }
             .acc-exp-caption { background: #FFFFFF; padding: 3mm; }
-            .acc-exp-caption-title { font-weight: 700; color: #1D3B63; font-size: 9.5px; margin-bottom: 1mm; text-align: center; }
-            .acc-exp-caption-body { font-size: 8.5px; color: #6B7280; text-align: center; line-height: 1.5; }
+            .acc-exp-caption-title { font-weight: 700; color: #4A1C40; font-size: 9.5px; margin-bottom: 1mm; text-align: center; }
+            .acc-exp-caption-body { font-size: 8.5px; color: #777; text-align: center; line-height: 1.5; }
 
             .acc-feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 6mm; margin-bottom: 2mm; }
             .acc-feature-item { display: flex; align-items: flex-start; gap: 2mm; font-size: 9px; padding: 1mm 0; }
-            .acc-feature-check { color: #C69A2B; font-weight: 700; flex-shrink: 0; }
-            .acc-feature-text strong { color: #1D3B63; }
+            .acc-feature-check { color: #4A1C40; font-weight: 700; flex-shrink: 0; }
+            .acc-feature-text strong { color: #4A1C40; }
 
             .acc-rate-heading { margin-top: 2mm; }
-            .acc-rate-intro { font-size: 9px; color: #374151; margin: 0 0 3mm; }
-            .acc-rate-intro strong { color: #1D3B63; }
+            .acc-rate-intro { font-size: 9px; color: #1A1A1A; margin: 0 0 3mm; }
+            .acc-rate-intro strong { color: #4A1C40; }
 
             table.acc-rate-table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
             table.acc-rate-table tr { break-inside: avoid; page-break-inside: avoid; }
-            table.acc-rate-table th { background: #1D3B63; color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.3px; font-size: 8.5px; font-weight: 700; text-align: left; padding: 2.5mm 3mm; border: 1px solid #1D3B63; }
-            table.acc-rate-table td { border: 1px solid #D7DDE4; padding: 3mm; font-size: 9px; vertical-align: top; color: #374151; }
-            .acc-rate-name { font-weight: 700; color: #1D3B63; }
-            .acc-rate-total { text-align: right; font-weight: 700; color: #1D3B63; white-space: nowrap; }
-            .acc-popular-badge { display: inline-block; margin-top: 1mm; background: #C69A2B; color: #FFFFFF; font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 0.75mm 2mm; border-radius: 2px; }
+            table.acc-rate-table th { background: #4A1C40; color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.3px; font-size: 8.5px; font-weight: 700; text-align: left; padding: 2.5mm 3mm; border: 1px solid #4A1C40; }
+            table.acc-rate-table td { border: 1px solid #DDD3DA; padding: 3mm; font-size: 9px; vertical-align: top; color: #1A1A1A; }
+            .acc-rate-name { font-weight: 700; color: #4A1C40; }
+            .acc-rate-total { text-align: right; font-weight: 700; color: #4A1C40; white-space: nowrap; }
+            .acc-popular-badge { display: inline-block; margin-top: 1mm; background: #4A1C40; color: #FFFFFF; font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; padding: 0.75mm 2mm; border-radius: 2px; }
 
-            .acc-inclusions-box { background: #EEF4F8; border: 1px solid #D7DDE4; border-radius: 3px; padding: 3.5mm 4mm; break-inside: avoid; page-break-inside: avoid; }
-            .acc-inclusions-heading { font-weight: 700; color: #1D3B63; font-size: 9.5px; margin-bottom: 1.5mm; }
-            .acc-inclusions-list { margin: 0; padding-left: 4mm; font-size: 8.5px; color: #374151; }
+            .acc-inclusions-box { background: #F7F4FA; border: 1px solid #DDD3DA; border-radius: 3px; padding: 3.5mm 4mm; break-inside: avoid; page-break-inside: avoid; }
+            .acc-inclusions-heading { font-weight: 700; color: #4A1C40; font-size: 9.5px; margin-bottom: 1.5mm; }
+            .acc-inclusions-list { margin: 0; padding-left: 4mm; font-size: 8.5px; color: #1A1A1A; }
             .acc-inclusions-list li { margin-bottom: 1mm; }
-            .acc-inclusions-list strong { color: #1D3B63; }
+            .acc-inclusions-list strong { color: #4A1C40; }
 
-            .acc-availability-line { text-align: center; font-size: 8px; color: #6B7280; margin-top: 4mm; padding-top: 3mm; border-top: 1px solid #D7DDE4; }
+            .acc-availability-line { text-align: center; font-size: 8px; color: #777; margin-top: 4mm; padding-top: 3mm; border-top: 1px solid #DDD3DA; }
 
-            .acc-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding: 3mm 15mm; border-top: 1px solid #D7DDE4; font-size: 7.5px; color: #6B7280; }
+            .doc-footer { margin-top: auto; padding-top: 8px; border-top: 1px solid #DDD3DA; text-align: center; }
+            .doc-footer-logo { max-width: 600px; width: 100%; height: auto; }
+            .acc-page-number { margin-top: 2mm; font-size: 7.5px; color: #777; }
         `;
 
         function accRow(label, rawValue) {
             return `<div class="acc-card-row"><span class="acc-card-label">${escapeHtml(label)}:</span><span class="acc-card-value">${escapeHtml(String(rawValue))}</span></div>`;
         }
 
+        // Same .doc-header/.doc-header-logo (BRAND_HEADER_IMAGE) pattern
+        // as Pricing Proposal/Itinerary/Voucher, with a bordered title
+        // bar underneath matching .p-title/.v-title exactly (purple
+        // top/bottom rule, centered bold text) — just with a subtitle
+        // line added below the property name for this document's own
+        // "ACCOMMODATION PROPOSAL & RATE COMPARISON" label.
         function buildAccommodationHeader(data) {
             const tagline = data.experience && data.experience.tagline;
             return `
-                <div class="acc-header">
-                    <h1 class="acc-header-title">${escapeHtml(data.propertyName || 'Property Name Not Set')}</h1>
-                    <div class="acc-header-subtitle">Accommodation Proposal &amp; Rate Comparison</div>
-                    ${tagline ? `<div class="acc-header-tagline">${escapeHtml(tagline)}</div>` : ''}
+                <div class="doc-header">
+                    <img class="doc-header-logo" src="${BRAND_HEADER_IMAGE}" alt="Atlantis Holidays & Wellness">
+                    <div class="acc-title-bar">
+                        <div class="acc-property-name">${escapeHtml(data.propertyName || 'Property Name Not Set')}</div>
+                        <div class="acc-header-subtitle">Accommodation Proposal &amp; Rate Comparison</div>
+                        ${tagline ? `<div class="acc-header-tagline">${escapeHtml(tagline)}</div>` : ''}
+                    </div>
                 </div>
             `;
         }
@@ -4450,11 +4468,16 @@
             return `<div class="acc-availability-line">Prepared for Guest Review • ${escapeHtml(data.propertyName || 'Property')} • ${escapeHtml(note)}</div>`;
         }
 
+        // Same .doc-footer/.doc-footer-logo (BRAND_FOOTER_IMAGE — the
+        // full Serandipians contact block: logo, phone, email, website,
+        // address) as every other document type, with a small page
+        // number line underneath — the one thing this document needs
+        // that the single-page-oriented others don't.
         function buildAccommodationFooter(data, pageNum, totalPages) {
             return `
-                <div class="acc-footer">
-                    <span>${escapeHtml(data.propertyName || 'Property')} — Proposal &amp; Rate Comparison</span>
-                    <span>Page ${pageNum} of ${totalPages}</span>
+                <div class="doc-footer">
+                    <img class="doc-footer-logo" src="${BRAND_FOOTER_IMAGE}" alt="Serandipians Member Travel Designer — Atlantis Holidays contact details">
+                    <div class="acc-page-number">${escapeHtml(data.propertyName || 'Property')} — Proposal &amp; Rate Comparison — Page ${pageNum} of ${totalPages}</div>
                 </div>
             `;
         }
