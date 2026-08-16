@@ -4154,15 +4154,16 @@
         // to match), but still an explicit 2-page layout: .acc-page-sheet
         // is sized to one A4 page's usable height (293mm, just under
         // the true 297mm — the same kind of safety buffer that fixed a
-        // real cut-off bug in the Voucher/Hotel Proposal builders). The
-        // branded footer (BRAND_FOOTER_IMAGE) only ever appears on page
-        // 2's sheet — pinned to its bottom via margin-top: auto, not
-        // repeated on page 1 — and the second sheet forces a page break
-        // before it (break-before: page) rather than relying on natural
-        // content flow — deliberate, since a reliable 2-page count is
-        // what lets that footer's page-number text print an exact
-        // "Page 2 of 2" instead of guessing. This is a dedicated style
-        // block/builder, not a branch inside
+        // real cut-off bug in the Voucher/Hotel Proposal builders). Both
+        // the header and the branded footer (BRAND_FOOTER_IMAGE) render
+        // on EVERY sheet — a full branded page each, not just the
+        // first/last one — with the footer pinned to each sheet's own
+        // bottom via margin-top: auto. The second sheet forces a page
+        // break before it (break-before: page) rather than relying on
+        // natural content flow — deliberate, since a reliable 2-page
+        // count is what lets that footer's page-number text print an
+        // exact "Page 1 of 2" / "Page 2 of 2" instead of guessing. This
+        // is a dedicated style block/builder, not a branch inside
         // DOCUMENT_STYLES/buildPricingProposalHTML's family — the older
         // single-hero "hotel fact sheet" version this replaces relied
         // on a large hero image + natural multi-page flow, which is a
@@ -4202,12 +4203,13 @@
                this used to be its own navy/gold theme; rebranded to match. */
             .doc-page.acc-page { width: 210mm; }
             /* Each sheet is sized to comfortably hold one physical A4
-               page (297mm) including its own header (page 1 only) or
-               footer (page 2 only — see buildAccommodationProposalHTML()),
-               well under that ceiling so the flex layout below never
-               causes real overflow on its own. Explicit 2-sheet layout
-               rather than natural page flow, so a reliable page count
-               is what lets the footer only ever need to appear once. */
+               page (297mm) including its own header AND footer (see
+               buildAccommodationProposalHTML() — both now render on
+               every sheet, not just the first/last one), well under
+               that ceiling so the flex layout below never causes real
+               overflow on its own. Explicit 2-sheet layout rather than
+               natural page flow, so a reliable page count is what lets
+               the footer's "Page N of 2" text print an exact value. */
             .acc-page-sheet { width: 210mm; min-height: 293mm; padding: 18mm 16mm; display: flex; flex-direction: column; background: #FFFFFF; }
             .acc-page-sheet.acc-page-break { break-before: page; page-break-before: always; }
 
@@ -4495,12 +4497,12 @@
         }
 
         function buildAccommodationProposalHTML(data) {
-            // The branded footer (BRAND_FOOTER_IMAGE + page number) is
-            // deliberately only on page 2 — this document is always
-            // exactly 2 sheets by construction, so "last page" is
-            // always page 2; page 1 ends with whatever blank space is
-            // left after its content, same as before this footer
-            // existed at all.
+            // Header and footer repeat on both sheets — matching how
+            // the Voucher/Itinerary PDFs are meant to read (a full
+            // branded page, not just the first/last one). Each
+            // .acc-page-sheet's 293mm budget accounts for carrying both
+            // now, not just one or the other — see the sizing comment
+            // on .acc-page-sheet in ACCOMMODATION_PROPOSAL_STYLES.
             const page1 = `
                 <div class="acc-page-sheet">
                     ${buildAccommodationHeader(data)}
@@ -4511,10 +4513,12 @@
                         ${buildFeatureGrid(data.features)}
                         <div class="acc-section-heading acc-rate-heading">Rate Comparison Presentation</div>
                     </div>
+                    ${buildAccommodationFooter(data, 1, 2)}
                 </div>
             `;
             const page2 = `
                 <div class="acc-page-sheet acc-page-break">
+                    ${buildAccommodationHeader(data)}
                     <div class="acc-body">
                         ${buildRateComparisonSection(data)}
                         ${buildInclusionsAndTaxBreakdown(data)}
