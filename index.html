@@ -4052,6 +4052,7 @@
             .it-day-block { margin: 8mm 0 3mm; }
             .it-day-heading { font-size: 18px; font-weight: 700; color: #4A1C40; margin: 0 0 3mm; }
             .it-day-text { font-size: 9.5px; font-weight: 400; margin: 0 0 3mm; }
+            .it-day-text-empty { color: #999; font-style: italic; }
             .it-divider { border: none; border-top: 1px solid #DDD3DA; margin: 6mm 0; }
         `;
 
@@ -4123,9 +4124,25 @@
 
         // Groups rows by their Day/Date field (in order of first
         // appearance) so every row sharing a day prints under one
-        // heading instead of repeating it — days with no non-empty
-        // Client-Facing Details are skipped entirely rather than
-        // printing an empty heading.
+        // heading instead of repeating it.
+        //
+        // A day the agent actually labeled (gave a real, non-blank
+        // "Day / Date" value) always shows in the exported Itinerary PDF,
+        // even before its Client-Facing Details text has been filled in —
+        // that field is a separate, easy-to-skip textarea below each row,
+        // and previously ANY day where every one of its rows still had
+        // that field empty was dropped from this list entirely, which
+        // silently truncated the client-facing document to however many
+        // days happened to have it filled in (e.g. 2 out of 5), while the
+        // Builder's own row list — which doesn't require it — kept
+        // showing every day. buildItineraryHTML() below renders a muted
+        // placeholder line for a day with no entries instead of leaving
+        // it blank, so it's visibly present but still obviously
+        // incomplete. The unlabeled "Itinerary" fallback group (rows
+        // whose Day field itself is blank) is still dropped when it has
+        // no content, so a brand-new, still-empty itinerary keeps
+        // showing the "nothing entered yet" message below instead of one
+        // empty heading.
         function groupRowsByDay(rows) {
             const order = [];
             const map = new Map();
@@ -4134,7 +4151,9 @@
                 if (!map.has(key)) { map.set(key, []); order.push(key); }
                 if (r.clientDesc) map.get(key).push(r.clientDesc);
             });
-            return order.map(key => ({ label: key, entries: map.get(key) })).filter(d => d.entries.length > 0);
+            return order
+                .map(key => ({ label: key, entries: map.get(key) }))
+                .filter(d => d.label !== 'Itinerary' || d.entries.length > 0);
         }
 
         // Button 2: "Generate Itinerary PDF" — purely a client-facing
@@ -4147,7 +4166,9 @@
                 ? days.map(day => `
                     <div class="it-day-block">
                         <div class="it-day-heading">${escapeHtml(day.label)}</div>
-                        ${day.entries.map(text => `<p class="it-day-text">${nl2br(escapeHtml(text))}</p>`).join('')}
+                        ${day.entries.length
+                            ? day.entries.map(text => `<p class="it-day-text">${nl2br(escapeHtml(text))}</p>`).join('')
+                            : `<p class="it-day-text it-day-text-empty">No client-facing details entered yet.</p>`}
                     </div>
                     <hr class="it-divider">
                 `).join('')
@@ -4560,6 +4581,32 @@
             return { styles: ACCOMMODATION_PROPOSAL_STYLES, body };
         }
 
+        // Waits for every <img> already in `container` to settle (loaded
+        // or errored) before html2canvas rasterizes it. Without this, the
+        // container is appended to the DOM and captured on essentially
+        // the same tick — document.fonts.ready alone doesn't block on
+        // images — so a photo that hasn't finished fetching yet (a
+        // cross-origin hotel photo not already browser-cached is the
+        // common case; a same-origin one usually wins the race and
+        // renders fine) shows up blank in the exported PDF even though
+        // it's fully loaded and visible a moment later on-screen. This is
+        // exactly why the same voucher can export with some photos
+        // present and others missing from one run to the next. Each
+        // img's own onerror handler (see buildVoucherHTML et al.) still
+        // does the actual placeholder swap on failure — this only waits
+        // for that to have already happened, it doesn't handle errors
+        // itself.
+        function waitForImages(container) {
+            const images = Array.from(container.querySelectorAll('img'));
+            return Promise.all(images.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                    img.addEventListener('load', resolve, { once: true });
+                    img.addEventListener('error', resolve, { once: true });
+                });
+            }));
+        }
+
         // ------------------------------------------------------------
         // PDF export — shared by both buttons (same html2pdf/offscreen-
         // container/font-ready pattern the old single Proposal PDF
@@ -4606,11 +4653,16 @@
 
             try {
                 // Wait for the self-hosted Carlito @font-face (just
-                // declared in styleEl above) to actually finish loading —
-                // html2canvas rasterizes whatever's painted at call time.
+                // declared in styleEl above) to actually finish loading,
+                // and for every image in the container (hotel/property
+                // photos on Accommodation Proposal) to finish loading or
+                // erroring — html2canvas rasterizes whatever's painted at
+                // call time, and neither of those is guaranteed to be
+                // "ready" on the same tick the container was appended.
                 if (document.fonts && document.fonts.ready) {
                     await document.fonts.ready;
                 }
+                await waitForImages(container);
 
                 const nameSource = data.eventName || data.propertyName || data.hotelName || 'Document';
                 const filename = `${filenamePrefix}_${nameSource.replace(/[^a-z0-9]/gi, '_')}.pdf`;
@@ -5576,11 +5628,17 @@
 
             try {
                 // See the matching comment in the proposal PDF handler —
-                // waits for the self-hosted Carlito @font-face to finish
-                // loading before html2canvas rasterizes the container.
+                // waits for the self-hosted Carlito @font-face, and every
+                // hotel/room/gallery photo, to finish loading (or erroring)
+                // before html2canvas rasterizes the container. This is the
+                // fix for photos that show up fine on-screen but come out
+                // blank in the exported PDF: without it, html2canvas can
+                // capture the container before a slower cross-origin photo
+                // has actually finished fetching.
                 if (document.fonts && document.fonts.ready) {
                     await document.fonts.ready;
                 }
+                await waitForImages(container);
 
                 const filename = `Voucher_${(data.guestName || 'Guest').replace(/[^a-z0-9]/gi, '_')}.pdf`;
                 await window.html2pdf()
