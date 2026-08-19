@@ -8,8 +8,10 @@
    filled from here.
 
    `category` values must match one of the Itinerary Builder's actual
-   Category <select> options (Flight / Accommodation /
-   Tours - Activities - Transfers / Extra) — not an arbitrary taxonomy.
+   Category <select> options (Flight / Accommodation / Tours /
+   Activities / Transfers / Meals / Other — see CATEGORIES_BY_TYPE in
+   index.html; Flight is offered on FIT/Groups only, not Land Package)
+   — not an arbitrary taxonomy.
 
    IMPORTANT: only the five entries below are confirmed real rates
    (provided directly, not invented). The client's full rate table has
@@ -17,9 +19,9 @@
    data from Atlantis Holidays.
    ================================================================ */
 const COST_LIST = [
-    { description: 'Arrival transfer + Parking fee', category: 'Tours - Activities - Transfers', rate: 1000 },
-    { description: 'Full day Bus DXB', category: 'Tours - Activities - Transfers', rate: 1155 },
-    { description: 'Full day Bus AUH', category: 'Tours - Activities - Transfers', rate: 1350 },
-    { description: 'Half day Bus DXB', category: 'Tours - Activities - Transfers', rate: 900 },
-    { description: 'Departure transfer', category: 'Tours - Activities - Transfers', rate: 1200 },
+    { description: 'Arrival transfer + Parking fee', category: 'Transfers', rate: 1000 },
+    { description: 'Full day Bus DXB', category: 'Transfers', rate: 1155 },
+    { description: 'Full day Bus AUH', category: 'Transfers', rate: 1350 },
+    { description: 'Half day Bus DXB', category: 'Transfers', rate: 900 },
+    { description: 'Departure transfer', category: 'Transfers', rate: 1200 },
 ];
