@@ -4560,6 +4560,32 @@
             return { styles: ACCOMMODATION_PROPOSAL_STYLES, body };
         }
 
+        // Waits for every <img> already in `container` to settle (loaded
+        // or errored) before html2canvas rasterizes it. Without this, the
+        // container is appended to the DOM and captured on essentially
+        // the same tick — document.fonts.ready alone doesn't block on
+        // images — so a photo that hasn't finished fetching yet (a
+        // cross-origin hotel photo not already browser-cached is the
+        // common case; a same-origin one usually wins the race and
+        // renders fine) shows up blank in the exported PDF even though
+        // it's fully loaded and visible a moment later on-screen. This is
+        // exactly why the same voucher can export with some photos
+        // present and others missing from one run to the next. Each
+        // img's own onerror handler (see buildVoucherHTML et al.) still
+        // does the actual placeholder swap on failure — this only waits
+        // for that to have already happened, it doesn't handle errors
+        // itself.
+        function waitForImages(container) {
+            const images = Array.from(container.querySelectorAll('img'));
+            return Promise.all(images.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                    img.addEventListener('load', resolve, { once: true });
+                    img.addEventListener('error', resolve, { once: true });
+                });
+            }));
+        }
+
         // ------------------------------------------------------------
         // PDF export — shared by both buttons (same html2pdf/offscreen-
         // container/font-ready pattern the old single Proposal PDF
@@ -4606,11 +4632,16 @@
 
             try {
                 // Wait for the self-hosted Carlito @font-face (just
-                // declared in styleEl above) to actually finish loading —
-                // html2canvas rasterizes whatever's painted at call time.
+                // declared in styleEl above) to actually finish loading,
+                // and for every image in the container (hotel/property
+                // photos on Accommodation Proposal) to finish loading or
+                // erroring — html2canvas rasterizes whatever's painted at
+                // call time, and neither of those is guaranteed to be
+                // "ready" on the same tick the container was appended.
                 if (document.fonts && document.fonts.ready) {
                     await document.fonts.ready;
                 }
+                await waitForImages(container);
 
                 const nameSource = data.eventName || data.propertyName || data.hotelName || 'Document';
                 const filename = `${filenamePrefix}_${nameSource.replace(/[^a-z0-9]/gi, '_')}.pdf`;
@@ -5576,11 +5607,17 @@
 
             try {
                 // See the matching comment in the proposal PDF handler —
-                // waits for the self-hosted Carlito @font-face to finish
-                // loading before html2canvas rasterizes the container.
+                // waits for the self-hosted Carlito @font-face, and every
+                // hotel/room/gallery photo, to finish loading (or erroring)
+                // before html2canvas rasterizes the container. This is the
+                // fix for photos that show up fine on-screen but come out
+                // blank in the exported PDF: without it, html2canvas can
+                // capture the container before a slower cross-origin photo
+                // has actually finished fetching.
                 if (document.fonts && document.fonts.ready) {
                     await document.fonts.ready;
                 }
+                await waitForImages(container);
 
                 const filename = `Voucher_${(data.guestName || 'Guest').replace(/[^a-z0-9]/gi, '_')}.pdf`;
                 await window.html2pdf()
