@@ -4052,6 +4052,7 @@
             .it-day-block { margin: 8mm 0 3mm; }
             .it-day-heading { font-size: 18px; font-weight: 700; color: #4A1C40; margin: 0 0 3mm; }
             .it-day-text { font-size: 9.5px; font-weight: 400; margin: 0 0 3mm; }
+            .it-day-text-empty { color: #999; font-style: italic; }
             .it-divider { border: none; border-top: 1px solid #DDD3DA; margin: 6mm 0; }
         `;
 
@@ -4123,9 +4124,25 @@
 
         // Groups rows by their Day/Date field (in order of first
         // appearance) so every row sharing a day prints under one
-        // heading instead of repeating it — days with no non-empty
-        // Client-Facing Details are skipped entirely rather than
-        // printing an empty heading.
+        // heading instead of repeating it.
+        //
+        // A day the agent actually labeled (gave a real, non-blank
+        // "Day / Date" value) always shows in the exported Itinerary PDF,
+        // even before its Client-Facing Details text has been filled in —
+        // that field is a separate, easy-to-skip textarea below each row,
+        // and previously ANY day where every one of its rows still had
+        // that field empty was dropped from this list entirely, which
+        // silently truncated the client-facing document to however many
+        // days happened to have it filled in (e.g. 2 out of 5), while the
+        // Builder's own row list — which doesn't require it — kept
+        // showing every day. buildItineraryHTML() below renders a muted
+        // placeholder line for a day with no entries instead of leaving
+        // it blank, so it's visibly present but still obviously
+        // incomplete. The unlabeled "Itinerary" fallback group (rows
+        // whose Day field itself is blank) is still dropped when it has
+        // no content, so a brand-new, still-empty itinerary keeps
+        // showing the "nothing entered yet" message below instead of one
+        // empty heading.
         function groupRowsByDay(rows) {
             const order = [];
             const map = new Map();
@@ -4134,7 +4151,9 @@
                 if (!map.has(key)) { map.set(key, []); order.push(key); }
                 if (r.clientDesc) map.get(key).push(r.clientDesc);
             });
-            return order.map(key => ({ label: key, entries: map.get(key) })).filter(d => d.entries.length > 0);
+            return order
+                .map(key => ({ label: key, entries: map.get(key) }))
+                .filter(d => d.label !== 'Itinerary' || d.entries.length > 0);
         }
 
         // Button 2: "Generate Itinerary PDF" — purely a client-facing
@@ -4147,7 +4166,9 @@
                 ? days.map(day => `
                     <div class="it-day-block">
                         <div class="it-day-heading">${escapeHtml(day.label)}</div>
-                        ${day.entries.map(text => `<p class="it-day-text">${nl2br(escapeHtml(text))}</p>`).join('')}
+                        ${day.entries.length
+                            ? day.entries.map(text => `<p class="it-day-text">${nl2br(escapeHtml(text))}</p>`).join('')
+                            : `<p class="it-day-text it-day-text-empty">No client-facing details entered yet.</p>`}
                     </div>
                     <hr class="it-divider">
                 `).join('')
