@@ -2833,6 +2833,24 @@
             { id: 'groups', label: 'Groups' },
             { id: 'hotelProposal', label: 'Hotel Proposal' },
         ];
+
+        // Itinerary row Category options, per sub-tab. Tours/Activities/
+        // Transfers are kept as distinct options (rather than the old
+        // combined "Tours - Activities - Transfers" value) so agents pick
+        // the specific service type; categorizeRows() below still rolls
+        // all three into one "tours" bucket for the Pricing Proposal/Word
+        // export, which only ever showed one combined total. Land Package
+        // has no Flight option — flights aren't sold as part of a land-only
+        // package.
+        const CATEGORIES_BY_TYPE = {
+            landPackage: ['Accommodation', 'Tours', 'Activities', 'Transfers', 'Meals', 'Other'],
+            fit: ['Flight', 'Accommodation', 'Tours', 'Activities', 'Transfers', 'Meals', 'Other'],
+            groups: ['Flight', 'Accommodation', 'Tours', 'Activities', 'Transfers', 'Meals', 'Other'],
+        };
+
+        function getCategoriesForActiveType() {
+            return CATEGORIES_BY_TYPE[currentQuotationType] || CATEGORIES_BY_TYPE.fit;
+        }
         const QUOTATIONS_STORAGE_KEY = 'atlantis-quotations-v1';
         const ACTIVE_QUOTATION_TYPE_KEY = 'atlantis-active-quotation-type';
         let currentQuotationType = 'landPackage';
@@ -3053,6 +3071,7 @@
                 btn.setAttribute('aria-selected', String(isActive));
             });
 
+            populateActivitySuggestions();
             mountActiveQuotationPanel();
         }
 
@@ -3101,10 +3120,7 @@
                             <div class="field">
                                 <label>Category</label>
                                 <select class="ib-category">
-                                    <option value="Flight">Flight</option>
-                                    <option value="Accommodation">Accommodation</option>
-                                    <option value="Tours - Activities - Transfers">Tours - Activities - Transfers</option>
-                                    <option value="Extra">Extra</option>
+                                    ${getCategoriesForActiveType().map(cat => `<option value="${cat}">${cat}</option>`).join('')}
                                 </select>
                             </div>
                             <div class="field">
@@ -3173,14 +3189,18 @@
         }
 
         // Aggregates Selling Price by category into the four buckets the
-        // two PDF exports and the Word export all read from — "Extra" or
-        // any unrecognized category value falls into extras.
+        // two PDF exports and the Word export all read from — Tours,
+        // Activities and Transfers (the split-out options in the Category
+        // <select>) all roll into the one combined "tours" bucket those
+        // documents show, same as the old single "Tours - Activities -
+        // Transfers" option did. Meals/Other/Extra — and any unrecognized
+        // value, e.g. from data saved before this split — fall into extras.
         function categorizeRows(rows) {
             const buckets = { flight: 0, accommodation: 0, tours: 0, extras: 0 };
             rows.forEach(r => {
                 if (r.category === 'Flight') buckets.flight += r.sellingPrice;
                 else if (r.category === 'Accommodation') buckets.accommodation += r.sellingPrice;
-                else if (r.category === 'Tours - Activities - Transfers') buckets.tours += r.sellingPrice;
+                else if (r.category === 'Tours' || r.category === 'Activities' || r.category === 'Transfers' || r.category === 'Tours - Activities - Transfers') buckets.tours += r.sellingPrice;
                 else buckets.extras += r.sellingPrice;
             });
             return buckets;
@@ -3259,23 +3279,32 @@
         // ------------------------------------------------------------
         // Cost-list autocomplete — COST_LIST (assets/js/costList.js,
         // loaded synchronously above so it's guaranteed defined here)
-        // populates the shared <datalist> once; typing or picking an
-        // exact (case-insensitive) match into a row's Internal
-        // Description auto-fills that row's Category and Net Cost. A
-        // typed description with no match is left alone — the agent
-        // sets category/rate manually, same as before this feature.
+        // populates the shared <datalist>, filtered to entries whose
+        // category is offered on the active sub-tab (e.g. a Flight entry
+        // won't suggest itself while Land Package is active). Re-run on
+        // every sub-tab switch so the suggestions track
+        // getCategoriesForActiveType(). Typing or picking an exact (case-
+        // insensitive) match into a row's Internal Description auto-fills
+        // that row's Category and Net Cost. A typed description with no
+        // match is left alone — the agent sets category/rate manually,
+        // same as before this feature.
         // ------------------------------------------------------------
-        if (typeof COST_LIST !== 'undefined') {
+        function populateActivitySuggestions() {
+            if (typeof COST_LIST === 'undefined') return;
+            const allowed = getCategoriesForActiveType();
             document.getElementById('activity-suggestions').innerHTML = COST_LIST
+                .filter(item => allowed.includes(item.category))
                 .map(item => `<option value="${escapeHtml(item.description)}"></option>`)
                 .join('');
         }
+        populateActivitySuggestions();
 
         function applyCostListMatch(inputEl) {
             if (typeof COST_LIST === 'undefined') return;
             const typed = inputEl.value.trim().toLowerCase();
             if (!typed) return;
-            const match = COST_LIST.find(item => item.description.toLowerCase() === typed);
+            const allowed = getCategoriesForActiveType();
+            const match = COST_LIST.find(item => item.description.toLowerCase() === typed && allowed.includes(item.category));
             if (!match) return;
 
             const row = inputEl.closest('.ib-row');
