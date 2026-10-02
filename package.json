@@ -4,7 +4,10 @@
   "description": "Client-side Word proposal generator for Atlantis Holidays & Wellness.",
   "main": "index.js",
   "scripts": {
-    "test": "node test/render.test.js"
+    "test": "node test/render.test.js && node test/voucher-render.test.js",
+    "test:proposal": "node test/render.test.js",
+    "test:voucher": "node test/voucher-render.test.js",
+    "start": "npx serve ."
   },
   "repository": {
     "type": "git",

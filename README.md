@@ -45,10 +45,10 @@ test/                   Node/Playwright scripts: template render checks,
 
 ## Running locally
 
-No build step is required — open `index.html` directly in a browser, or serve the folder statically, e.g.:
+No build step is required — open `index.html` directly in a browser, or run the local server script:
 
 ```bash
-npx serve .
+npm start
 ```
 
 ## Tests
@@ -58,7 +58,12 @@ npm install
 npm test
 ```
 
-`npm test` runs `test/render.test.js`, which renders `template.docx` with sample data and asserts the subtotal/VAT/grand-total calculations and field substitution are correct. The `test/` directory also contains standalone Playwright-based scripts used during development to verify the voucher template, admin dashboard, design system, and PDF exports.
+`npm test` runs both `test/render.test.js` (proposal template verification) and `test/voucher-render.test.js` (hotel confirmation voucher template verification), asserting calculations, field substitutions, and template structural integrity across both Word templates. You can also run them individually:
+
+- `npm run test:proposal` — runs the proposal template test suite.
+- `npm run test:voucher` — runs the voucher template test suite.
+
+The `test/` directory also contains standalone Playwright-based scripts used during development to verify page layout, theme switching, admin dashboard interactions, and PDF exports.
 
 ## Deployment
 
